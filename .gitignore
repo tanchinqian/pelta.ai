@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js build output
+.next/
+out/
+build/
+
+# env files (may contain API keys)
+.env*
+!.env.example
+
+# OS cruft
+.DS_Store
+Thumbs.db
+*.log
+
+# editor
+.vscode/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

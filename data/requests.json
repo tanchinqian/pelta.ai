@@ -1,0 +1,74 @@
+[
+  {
+    "id": "d0e1f2a3-b4c5-6789-defa-789012345678",
+    "employeeName": "Alice Chen",
+    "department": "Engineering",
+    "toolRequested": "Claude Code",
+    "status": "denied",
+    "requestedAt": "2026-07-15T08:30:00.000Z",
+    "decidedAt": "2026-07-16T08:22:36.208Z"
+  },
+  {
+    "id": "e1f2a3b4-c5d6-7890-efab-890123456789",
+    "employeeName": "Bob Martinez",
+    "department": "Marketing",
+    "toolRequested": "Midjourney",
+    "status": "denied",
+    "requestedAt": "2026-07-15T09:15:00.000Z",
+    "decidedAt": "2026-07-16T08:22:35.683Z"
+  },
+  {
+    "id": "f2a3b4c5-d6e7-8901-fabc-901234567890",
+    "employeeName": "Carol Ng",
+    "department": "Sales",
+    "toolRequested": "Perplexity Pro",
+    "status": "approved",
+    "requestedAt": "2026-07-14T16:00:00.000Z",
+    "decidedAt": "2026-07-15T09:30:00.000Z"
+  },
+  {
+    "id": "a3b4c5d6-e7f8-9012-abcd-012345678901",
+    "employeeName": "David Kim",
+    "department": "Engineering",
+    "toolRequested": "Cursor",
+    "status": "approved",
+    "requestedAt": "2026-07-13T14:00:00.000Z",
+    "decidedAt": "2026-07-14T10:00:00.000Z"
+  },
+  {
+    "id": "b4c5d6e7-f8a9-0123-bcde-123456789012",
+    "employeeName": "Eva Torres",
+    "department": "Finance",
+    "toolRequested": "Jasper AI",
+    "status": "denied",
+    "requestedAt": "2026-07-13T11:00:00.000Z",
+    "decidedAt": "2026-07-14T15:00:00.000Z"
+  },
+  {
+    "id": "c5d6e7f8-a9b0-1234-cdef-234567890123",
+    "employeeName": "Frank Li",
+    "department": "HR",
+    "toolRequested": "Grammarly Business",
+    "status": "approved",
+    "requestedAt": "2026-07-12T09:00:00.000Z",
+    "decidedAt": "2026-07-12T16:00:00.000Z"
+  },
+  {
+    "id": "d6e7f8a9-b0c1-2345-defa-345678901234",
+    "employeeName": "Grace Park",
+    "department": "Engineering",
+    "toolRequested": "DeepL Pro",
+    "status": "approved",
+    "requestedAt": "2026-07-11T10:00:00.000Z",
+    "decidedAt": "2026-07-11T14:00:00.000Z"
+  },
+  {
+    "id": "e7f8a9b0-c1d2-3456-efab-456789012345",
+    "employeeName": "Henry Wu",
+    "department": "Sales",
+    "toolRequested": "ChatGPT Enterprise",
+    "status": "denied",
+    "requestedAt": "2026-07-16T08:00:00.000Z",
+    "decidedAt": "2026-07-16T08:22:35.099Z"
+  }
+]

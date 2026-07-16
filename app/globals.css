@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* ── Dark mode (default) ─────────────────────────────── */
+:root {
+  --bg: #08080a;
+  --surface: #111113;
+  --surface-hover: #18181b;
+  --border: #1e1e22;
+  --border-hover: #2e2e34;
+  --text-primary: #f0efed;
+  --text-secondary: #9e9b94;
+  --text-tertiary: #5c5a55;
+  --text-muted: #3a3835;
+
+  --accent: #c9922a;
+  --accent-dim: rgba(201,146,42,0.08);
+  --accent-hover: #d9a23a;
+
+  --risk-low: #22c55e;
+  --risk-low-bg: rgba(34,197,94,0.06);
+  --risk-medium: #f59e0b;
+  --risk-medium-bg: rgba(245,158,11,0.06);
+  --risk-high: #ef4444;
+  --risk-high-bg: rgba(239,68,68,0.06);
+
+  --chart-grid: #1e1e22;
+  --chart-tooltip-bg: #111113;
+  --chart-tooltip-border: #27272a;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+
+  color-scheme: dark;
+}
+
+/* ── Light mode ──────────────────────────────────────── */
+[data-theme="light"] {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface-hover: #f0efeb;
+  --border: #e2e0db;
+  --border-hover: #cdcbc5;
+  --text-primary: #1a1918;
+  --text-secondary: #5c5a55;
+  --text-tertiary: #8e8b84;
+  --text-muted: #b5b2ab;
+
+  --accent: #a07820;
+  --accent-dim: rgba(160,120,32,0.06);
+  --accent-hover: #8a6818;
+
+  --risk-low: #16a34a;
+  --risk-low-bg: rgba(22,163,74,0.06);
+  --risk-medium: #d97706;
+  --risk-medium-bg: rgba(217,119,6,0.06);
+  --risk-high: #dc2626;
+  --risk-high-bg: rgba(220,38,38,0.06);
+
+  --chart-grid: #e2e0db;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #e2e0db;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface-hover: #f0efeb;
+    --border: #e2e0db;
+    --border-hover: #cdcbc5;
+    --text-primary: #1a1918;
+    --text-secondary: #5c5a55;
+    --text-tertiary: #8e8b84;
+    --text-muted: #b5b2ab;
+
+    --accent: #a07820;
+    --accent-dim: rgba(160,120,32,0.06);
+    --accent-hover: #8a6818;
+
+    --risk-low: #16a34a;
+    --risk-low-bg: rgba(22,163,74,0.06);
+    --risk-medium: #d97706;
+    --risk-medium-bg: rgba(217,119,6,0.06);
+    --risk-high: #dc2626;
+    --risk-high-bg: rgba(220,38,38,0.06);
+
+    --chart-grid: #e2e0db;
+    --chart-tooltip-bg: #ffffff;
+    --chart-tooltip-border: #e2e0db;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+
+    color-scheme: light;
+  }
+}
+
+/* ── Tailwind v4 theme tokens ────────────────────────── */
+@theme {
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Base ────────────────────────────────────────────── */
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+/* ── Animations ──────────────────────────────────────── */
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--border); }
+  50% { border-color: var(--border-hover); }
+}
+.animate-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+/* Radar sweep animation for loading states */
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-radar {
+  animation: radar-spin 2s linear infinite;
+}
+
+@keyframes radar-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+.animate-radar-pulse {
+  animation: radar-pulse 2s ease-in-out infinite;
+}
+
+/* Sensitive span highlight */
+.sensitive-highlight {
+  background: var(--risk-high-bg);
+  border-bottom: 1.5px solid var(--risk-high);
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+/* Skeleton loading */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.12; }
+}
+.skeleton {
+  background: currentColor;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* ── Panel variants ──────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.panel-accent {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 8px;
+}
+.panel-primary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  background-image: linear-gradient(135deg, var(--accent-dim) 0%, transparent 40%);
+  border-radius: 8px;
+}

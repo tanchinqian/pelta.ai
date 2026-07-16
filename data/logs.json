@@ -1,0 +1,162 @@
+[
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
+    "promptSnippet": "Can you review this financial statement for Q3? Revenue: $12.4M, expenses include payroll for senior executives: CTO $340k, CFO $290k...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Contains executive compensation details and internal financial figures.",
+    "detectionMethod": "regex",
+    "dataCategory": "Financial",
+    "timestamp": "2026-07-14T09:15:00.000Z"
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-fabc-345678901234",
+    "promptSnippet": "Summarise the key points from this customer feedback CSV. Focus on feature requests only.",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No PII, financial data, or confidential business information detected.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "timestamp": "2026-07-14T10:30:00.000Z"
+  },
+  {
+    "id": "a7b8c9d0-e1f2-3456-abcd-456789012345",
+    "promptSnippet": "Draft an email to john.smith@acme-corp.com regarding the merger terms. Attach the NDA signed on 2024-03-15.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Contains email address, NDA reference, and deal-sensitive information.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "timestamp": "2026-07-14T11:00:00.000Z"
+  },
+  {
+    "id": "b8c9d0e1-f2a3-4567-bcde-567890123456",
+    "promptSnippet": "Write a Python script to parse JSON logs and output a summary table grouped by error code.",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "Generic coding task, no sensitive data detected.",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "timestamp": "2026-07-14T11:45:00.000Z"
+  },
+  {
+    "id": "c9d0e1f2-a3b4-5678-cdef-678901234567",
+    "promptSnippet": "My phone number is 555-0199 and my email is sarah.connors@cyberdyne.internal. Can you update my profile?",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "Contains personal phone number and email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "timestamp": "2026-07-14T13:00:00.000Z"
+  },
+  {
+    "id": "d0e1f2a3-b4c5-6789-defa-789012345678",
+    "promptSnippet": "Review the attached source code for the payment gateway integration module. Focus on error handling and retry logic.",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "References payment infrastructure. May expose financial processing patterns.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "timestamp": "2026-07-14T14:20:00.000Z"
+  },
+  {
+    "id": "e1f2a3b4-c5d6-7890-efab-890123456789",
+    "promptSnippet": "What's the best approach to implementing a rate limiter in Node.js?",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "Generic technical question, no sensitive data.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "timestamp": "2026-07-14T15:00:00.000Z"
+  },
+  {
+    "id": "f2a3b4c5-d6e7-8901-fabc-901234567890",
+    "promptSnippet": "Summarise our Q3 revenue breakdown by region: NA $4.2M, EMEA $3.1M, APAC $2.8M. Total pipeline: $18.5M.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Contains detailed revenue figures and pipeline data — confidential financial information.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "timestamp": "2026-07-15T09:00:00.000Z"
+  },
+  {
+    "id": "a3b4c5d6-e7f8-9012-abcd-012345678901",
+    "promptSnippet": "Create a README for our new microservice that handles user authentication via OAuth2.",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "Documentation task, no sensitive data detected.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "timestamp": "2026-07-15T10:15:00.000Z"
+  },
+  {
+    "id": "b4c5d6e7-f8a9-0123-bcde-123456789012",
+    "promptSnippet": "The patient record for John Doe (DOB: 03/15/1985, SSN: 123-45-6789) needs to be reviewed for HIPAA compliance.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Contains PII: full name, date of birth, and Social Security Number.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "timestamp": "2026-07-15T11:30:00.000Z"
+  },
+  {
+    "id": "c5d6e7f8-a9b0-1234-cdef-234567890123",
+    "promptSnippet": "Help me refactor this React component to use hooks instead of class components.",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "Generic coding task, no sensitive data.",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "timestamp": "2026-07-15T13:45:00.000Z"
+  },
+  {
+    "id": "d6e7f8a9-b0c1-2345-defa-345678901234",
+    "promptSnippet": "Can you analyse this API key sk-proj-abc123def456ghi789jkl012mno345pq for potential security issues?",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Detected what appears to be an API key pattern in the prompt.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "timestamp": "2026-07-15T14:00:00.000Z"
+  },
+  {
+    "id": "e7f8a9b0-c1d2-3456-efab-456789012345",
+    "promptSnippet": "Draft the quarterly board meeting agenda. Include sections on product roadmap, hiring plan, and budget review.",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "References board-level strategic content. May contain sensitive business information.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "timestamp": "2026-07-15T15:30:00.000Z"
+  },
+  {
+    "id": "f8a9b0c1-d2e3-4567-fabc-567890123456",
+    "promptSnippet": "What are the best practices for securing a Redis instance in production?",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "Generic technical question, no sensitive data.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "timestamp": "2026-07-15T16:00:00.000Z"
+  },
+  {
+    "id": "a9b0c1d2-e3f4-5678-abcd-678901234567",
+    "promptSnippet": "Generate a test report for the payment module. Include test coverage metrics: unit 87%, integration 72%, e2e 65%.",
+    "verdict": "allow",
+    "riskLevel": "low",
+    "reason": "Internal test metrics but not directly sensitive. Low risk.",
+    "detectionMethod": "llm",
+    "dataCategory": "Source Code",
+    "timestamp": "2026-07-16T09:00:00.000Z"
+  },
+  {
+    "id": "b0c1d2e3-f4a5-6789-bcde-789012345678",
+    "promptSnippet": "Send the revised contract to sarah.chen@lawfirm.com. CC j.martinez@company.internal. Reference deal #ACQ-2026-042.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Contains two email addresses and a deal reference number — external communication with legal context.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "timestamp": "2026-07-16T10:30:00.000Z"
+  }
+]

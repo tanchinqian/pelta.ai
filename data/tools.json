@@ -1,0 +1,122 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Grammarly",
+    "description": "AI writing assistant for drafting customer support emails and internal documentation",
+    "status": "approved",
+    "riskTier": "Low",
+    "nistFunctions": ["Govern", "Measure"],
+    "dataCategories": ["None"],
+    "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
+    "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
+    "createdAt": "2026-07-14T10:00:00.000Z"
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "name": "GitHub Copilot",
+    "description": "AI pair programmer integrated into VS Code for code completion",
+    "status": "approved",
+    "riskTier": "Medium",
+    "nistFunctions": ["Govern", "Map", "Manage"],
+    "dataCategories": ["Source Code"],
+    "justification": "Copilot sends code snippets to GitHub servers. Exposes internal code patterns to a third party.",
+    "recommendedPolicy": "Allow for open-source repos. Block for proprietary repositories containing trade secrets.",
+    "createdAt": "2026-07-14T11:00:00.000Z"
+  },
+  {
+    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "name": "ChatGPT (GPT-4)",
+    "description": "General-purpose LLM used by engineering for code review, brainstorming, and debugging",
+    "status": "approved",
+    "riskTier": "High",
+    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
+    "dataCategories": ["PII", "Source Code"],
+    "justification": "General-purpose LLM with broad data handling. Can process PII, source code, and confidential prompts. Data retention policies vary.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Block file uploads. Require quarterly compliance review.",
+    "createdAt": "2026-07-14T14:00:00.000Z"
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
+    "name": "Notion AI",
+    "description": "AI-powered note-taking assistant for meeting summaries and action items",
+    "status": "approved",
+    "riskTier": "Low",
+    "nistFunctions": ["Govern"],
+    "dataCategories": ["None"],
+    "justification": "Lightweight AI features within Notion workspace. Limited data exposure scope.",
+    "recommendedPolicy": "Allow for internal note-taking. Restrict from financial or HR documents.",
+    "createdAt": "2026-07-14T15:00:00.000Z"
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
+    "name": "Perplexity Pro",
+    "description": "AI research assistant with real-time web search for technical research",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": ["Map", "Measure"],
+    "dataCategories": ["None"],
+    "justification": "Search queries are sent to external servers. May expose internal project names and research direction.",
+    "recommendedPolicy": "Allow for general research. Block queries containing project codenames or internal URLs.",
+    "createdAt": "2026-07-15T09:00:00.000Z"
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-fabc-345678901234",
+    "name": "Midjourney",
+    "description": "AI image generation for marketing materials and social media content",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": ["Govern", "Manage"],
+    "dataCategories": ["None"],
+    "justification": "Image prompts sent to external servers. Potential for brand/IP exposure through prompt leakage.",
+    "recommendedPolicy": "Allow for marketing use. Require prompt review for client-facing content.",
+    "createdAt": "2026-07-15T10:00:00.000Z"
+  },
+  {
+    "id": "a7b8c9d0-e1f2-3456-abcd-456789012345",
+    "name": "Claude Code",
+    "description": "Anthropic's CLI coding assistant for development workflows",
+    "status": "pending",
+    "riskTier": "High",
+    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
+    "dataCategories": ["Source Code", "PII"],
+    "justification": "Full codebase access with file system operations. Can read source code, configs, and environment variables containing secrets.",
+    "recommendedPolicy": "Evaluate for engineering use only. Require IP audit before approval.",
+    "createdAt": "2026-07-15T11:00:00.000Z"
+  },
+  {
+    "id": "b8c9d0e1-f2a3-4567-bcde-567890123456",
+    "name": "Jasper AI",
+    "description": "Enterprise marketing content generation platform",
+    "status": "blocked",
+    "riskTier": "High",
+    "nistFunctions": ["Govern", "Manage"],
+    "dataCategories": ["PII", "Financial"],
+    "justification": "Handles marketing copy with potential customer PII and campaign financial data. Third-party data processing.",
+    "recommendedPolicy": "Blocked pending legal review of data processing agreement.",
+    "createdAt": "2026-07-14T09:00:00.000Z"
+  },
+  {
+    "id": "c9d0e1f2-a3b4-5678-cdef-678901234567",
+    "name": "Cursor",
+    "description": "AI-first code editor with multi-model support",
+    "status": "approved",
+    "riskTier": "Medium",
+    "nistFunctions": ["Govern", "Map"],
+    "dataCategories": ["Source Code"],
+    "justification": "Code editor that sends snippets to multiple LLM providers. Supports local models for sensitive repos.",
+    "recommendedPolicy": "Allow with local model for proprietary code. Cloud model only for open-source.",
+    "createdAt": "2026-07-15T08:00:00.000Z"
+  },
+  {
+    "id": "d0e1f2a3-b4c5-6789-defa-789012345678",
+    "name": "DeepL",
+    "description": "AI translation service for international communications",
+    "status": "approved",
+    "riskTier": "Low",
+    "nistFunctions": ["Measure"],
+    "dataCategories": ["None"],
+    "justification": "Translation service with GDPR compliance. Text sent to servers but processed ephemerally.",
+    "recommendedPolicy": "Allow for general translation. Block for legal/contract documents.",
+    "createdAt": "2026-07-14T16:00:00.000Z"
+  }
+]
