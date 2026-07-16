@@ -18,7 +18,7 @@ export default function RedressPage() {
         <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">Example Scenario</span>
         <p className="text-xs text-text-secondary leading-relaxed">
           An employee&apos;s access to <span className="text-text-primary font-medium">ChatGPT (GPT-4)</span> was automatically
-          blocked by peris.ai&apos;s Prompt Guard after it detected a prompt containing what appeared to be
+          blocked by pelta.ai&apos;s Prompt Guard after it detected a prompt containing what appeared to be
           PII (email address + phone number). Under the <span className="text-text-primary font-medium">EU AI Act</span>,
           the employee has the right to an explanation of this decision.
         </p>
@@ -65,7 +65,7 @@ export default function RedressPage() {
         <div className="bg-background border border-risk-high/30 rounded-lg p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase text-risk-high">Prompt Blocked</span>
-            <span className="text-[10px] text-text-tertiary font-mono">peris.ai Prompt Guard</span>
+            <span className="text-[10px] text-text-tertiary font-mono">pelta.ai Prompt Guard</span>
           </div>
           <p className="text-xs text-text-secondary leading-relaxed">
             Your prompt was <span className="text-risk-high font-medium">blocked</span> because it contains
@@ -96,7 +96,7 @@ export default function RedressPage() {
           <p className="font-semibold text-text-secondary mb-0.5">Why this matters (EU AI Act Article 86)</p>
           <p className="text-text-tertiary">
             Individuals have the right to clear and meaningful information about the role of AI systems
-            in decisions that affect them. peris.ai provides this through real-time verdict explanations,
+            in decisions that affect them. pelta.ai provides this through real-time verdict explanations,
             logged audit trails, and the ability to appeal decisions via an administrator.
           </p>
         </div>

@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "peris.ai",
-  description: "peris.ai — AI governance platform for prompt guard, tool classification, and compliance dashboards.",
+  title: "pelta.ai",
+  description: "pelta.ai — AI governance platform for prompt guard, tool classification, and compliance dashboards.",
 };
 
 export default function RootLayout({
@@ -42,7 +42,7 @@ export default function RootLayout({
               <circle cx="12" cy="12" r="1.5" fill="currentColor" />
             </svg>
             <span className="text-sm tracking-tight">
-              <span className="font-bold text-text-primary">peris</span>
+              <span className="font-bold text-text-primary">pelta</span>
               <span className="text-accent">.</span>
               <span className="font-light text-text-secondary">ai</span>
             </span>

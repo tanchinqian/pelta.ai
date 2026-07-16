@@ -8,7 +8,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem('peris-theme') as 'dark' | 'light' | null;
+    const stored = localStorage.getItem('pelta-theme') as 'dark' | 'light' | null;
     if (stored) {
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
@@ -23,7 +23,7 @@ export default function ThemeToggle() {
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    localStorage.setItem('peris-theme', next);
+    localStorage.setItem('pelta-theme', next);
     document.documentElement.setAttribute('data-theme', next);
   };
 

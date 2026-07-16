@@ -40,7 +40,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <RadarIcon size={28} className="text-accent" />
               <h1 className="text-3xl tracking-tight">
-                <span className="font-bold text-text-primary">peris</span>
+                <span className="font-bold text-text-primary">pelta</span>
                 <span className="text-accent font-bold">.</span>
                 <span className="font-light text-text-secondary">ai</span>
               </h1>
@@ -111,7 +111,7 @@ export default function LandingPage() {
       {/* Footer */}
       <div className="px-6 py-3 border-t border-border text-[10px] text-text-tertiary font-mono flex items-center justify-between">
         <span>Govern · Map · Measure · Manage</span>
-        <span className="text-accent">peris.ai</span>
+        <span className="text-accent">pelta.ai</span>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-# peris.ai — Demo Script (2–3 min)
+# pelta.ai — Demo Script (2–3 min)
 
 ## Setup (before judges arrive)
 
@@ -13,7 +13,7 @@
 
 > *Landing page visible. Toggle between Employee and Admin once.*
 
-**"peris.ai is an AI governance platform built for the NIST AI RMF framework. It solves three challenges from the case study: employee compliance without blocking productivity, data privacy before data leaves the org, and full transparency for every AI-related decision. I'll show you two live features — both using real LLM inference, not mock data."**
+**"pelta.ai is an AI governance platform built for the NIST AI RMF framework. It solves three challenges from the case study: employee compliance without blocking productivity, data privacy before data leaves the org, and full transparency for every AI-related decision. I'll show you two live features — both using real LLM inference, not mock data."**
 
 ---
 
@@ -52,7 +52,7 @@
 
 > *Click "Prompt Guard" in the nav or navigate to `/employee/prompt-guard`*
 
-**"The other side of the platform — the employee-facing proxy. An engineer wants to paste a message into ChatGPT. Before it leaves the organisation, peris.ai scans it."**
+**"The other side of the platform — the employee-facing proxy. An engineer wants to paste a message into ChatGPT. Before it leaves the organisation, pelta.ai scans it."**
 
 > *Paste this prompt (or something similar):*
 
@@ -94,7 +94,7 @@ Our internal budget is confidential — do not share externally.
 
 ## 5. Close (10s)
 
-**"peris.ai addresses all three case study challenges: frictionless approval workflows, real-time data privacy protection, and full explainability. Built in ~2 days on Next.js with Gemini for LLM inference, recharts for visualisation, and zero infrastructure — everything runs off flat files on disk. Happy to take questions."**
+**"pelta.ai addresses all three case study challenges: frictionless approval workflows, real-time data privacy protection, and full explainability. Built in ~2 days on Next.js with Gemini for LLM inference, recharts for visualisation, and zero infrastructure — everything runs off flat files on disk. Happy to take questions."**
 
 ---
 

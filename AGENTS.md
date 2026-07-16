@@ -1,7 +1,7 @@
 # agent.md — AI Governance Platform (Hackathon Build)
 
 ## Project Name (working title)
-**peris.ai** — a hybrid AI governance platform combining a real-time prompt-risk proxy with an admin dashboard for AI tool approval, usage tracking, and risk classification.
+**pelta.ai** — a hybrid AI governance platform combining a real-time prompt-risk proxy with an admin dashboard for AI tool approval, usage tracking, and risk classification.
 
 ## Case Study Alignment
 Case Study 3: AI Governance — Responsible AI in Enterprise. This build directly answers:

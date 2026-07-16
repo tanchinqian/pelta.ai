@@ -1,4 +1,4 @@
-# peris.ai
+# pelta.ai
 
 A hybrid AI governance platform that sits between employees and external AI tools. Two real, LLM-powered features: risk classification for new AI tools (calls Gemini to produce a structured risk profile), and a prompt guard that scans outbound text for sensitive data using regex rules escalated to Gemini for ambiguous cases. Built for a hackathon, aligned to NIST AI RMF framework and EU AI Act transparency requirements.
 
