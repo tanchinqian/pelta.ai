@@ -179,7 +179,7 @@
     "id": "9ba3253a-dcbf-44e0-adab-0ff76801215e",
     "name": "Grammarly",
     "description": "soeijfoisejfes",
-    "status": "pending",
+    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
@@ -191,5 +191,124 @@
     "justification": "Mock classification: \"Grammarly\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
     "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
     "createdAt": "2026-07-17T05:32:37.181Z"
+  },
+  {
+    "id": "49f07703-23a5-4211-bbd8-306a1a9bc360",
+    "name": "DeepSeek Coder",
+    "description": "Open-source code completion model used in local IDEs for software development",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:18:18.148Z"
+  },
+  {
+    "id": "84b24555-a9dc-4f96-90f8-ecb4c0d037e2",
+    "name": "v0 by Vercel",
+    "description": "Generative UI system to build frontends from natural language prompts",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"v0 by Vercel\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:20:07.164Z"
+  },
+  {
+    "id": "2a924218-ab54-4ba7-a26c-df72d71eafa1",
+    "name": "Jasper AI",
+    "description": "Marketing copywriter tool for drafting blog posts, social media, and ad copy",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"Jasper AI\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:20:10.671Z"
+  },
+  {
+    "id": "ab8f73b6-0145-44e6-a9e9-1bae9059aba5",
+    "name": "Claude 3.5 Sonnet",
+    "description": "Advanced conversational LLM used for brainstorming and complex analysis",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"Claude 3.5 Sonnet\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:20:12.683Z"
+  },
+  {
+    "id": "04b78a6b-3f71-46ca-81ed-e27ec9ea9605",
+    "name": "DeepSeek Coder",
+    "description": "Open-source code completion model used in local IDEs for software development",
+    "status": "approved",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:20:14.912Z"
+  },
+  {
+    "id": "032863f4-8b41-42cd-9234-6af933ef058e",
+    "name": "DeepSeek Coder",
+    "description": "Open-source code completion model used in local IDEs for software development",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:20:37.776Z"
+  },
+  {
+    "id": "1daa9bd2-f3e5-4053-bece-22b6e55c5b4e",
+    "name": "DeepSeek Coder",
+    "description": "Open-source code completion model used in local IDEs for software development",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:21:12.859Z"
   }
 ]

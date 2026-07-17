@@ -12,6 +12,13 @@ interface ToolRecord {
 
 const RISK: Record<string, string> = { Low: 'var(--risk-low)', Medium: 'var(--risk-medium)', High: 'var(--risk-high)' };
 
+const PRESETS = [
+  { name: 'DeepSeek Coder', description: 'Open-source code completion model used in local IDEs for software development' },
+  { name: 'v0 by Vercel', description: 'Generative UI system to build frontends from natural language prompts' },
+  { name: 'Jasper AI', description: 'Marketing copywriter tool for drafting blog posts, social media, and ad copy' },
+  { name: 'Claude 3.5 Sonnet', description: 'Advanced conversational LLM used for brainstorming and complex analysis' }
+];
+
 type SortDir = 'asc' | 'desc' | null;
 type SortKey = 'name' | 'riskTier' | 'status' | null;
 
@@ -156,6 +163,26 @@ export default function ClassifyToolPage() {
             />
           </div>
         </div>
+        
+        {/* Preset suggestions */}
+        <div className="flex items-center gap-2 flex-wrap text-[10px] pt-1">
+          <span className="text-text-tertiary uppercase font-semibold tracking-wider font-mono">Suggestions:</span>
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.name}
+              type="button"
+              onClick={() => {
+                setName(preset.name);
+                setDescription(preset.description);
+              }}
+              disabled={loading}
+              className="px-2 py-1 rounded bg-background border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-mono text-text-tertiary">Result persists to tool registry</span>
           <button
