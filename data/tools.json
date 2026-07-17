@@ -129,19 +129,17 @@
   {
     "id": "b8c9d0e1-f2a3-4567-bcde-567890123456",
     "name": "Jasper AI",
-    "description": "Enterprise marketing content generation platform",
+    "description": "Marketing copywriter tool for drafting blog posts, social media, and ad copy",
     "status": "blocked",
-    "riskTier": "High",
+    "riskTier": "Low",
     "nistFunctions": [
-      "Govern",
-      "Manage"
+      "Govern"
     ],
     "dataCategories": [
-      "PII",
-      "Financial"
+      "None"
     ],
-    "justification": "Handles marketing copy with potential customer PII and campaign financial data. Third-party data processing.",
-    "recommendedPolicy": "Blocked pending legal review of data processing agreement.",
+    "justification": "Mock classification: \"Jasper AI\" was classified as Low Risk since it appears to be a general utility, design, or formatting tool that does not process source code, corporate financials, or personal customer data.",
+    "recommendedPolicy": "Allow for general organization use. Restrict clipboard integration for any internal document containing trade secrets.",
     "createdAt": "2026-07-14T09:00:00.000Z"
   },
   {
