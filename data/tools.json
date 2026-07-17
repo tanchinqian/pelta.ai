@@ -2,20 +2,18 @@
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Grammarly",
-    "description": "Brand new description for email writing",
+    "description": "AI writing assistant for drafting customer support emails and internal documentation",
     "status": "approved",
-    "riskTier": "High",
+    "riskTier": "Low",
     "nistFunctions": [
       "Govern",
-      "Map",
-      "Measure",
-      "Manage"
+      "Measure"
     ],
     "dataCategories": [
-      "PII"
+      "None"
     ],
-    "justification": "Mock classification: \"Grammarly\" was classified as High Risk because it interacts with PII (Personally Identifiable Information), customer data, or internal employee records. Transferring PII outside corporate boundaries is heavily regulated under GDPR and other privacy regimes.",
-    "recommendedPolicy": "Block direct text uploads containing actual names, emails, or personal identifiers. Require local anonymization/redaction before processing.",
+    "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
+    "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
     "createdAt": "2026-07-14T10:00:00.000Z"
   },
   {
@@ -55,22 +53,6 @@
     "justification": "General-purpose LLM with broad data handling. Can process PII, source code, and confidential prompts. Data retention policies vary.",
     "recommendedPolicy": "Allow for non-sensitive tasks. Block file uploads. Require quarterly compliance review.",
     "createdAt": "2026-07-14T14:00:00.000Z"
-  },
-  {
-    "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
-    "name": "Notion AI",
-    "description": "AI-powered note-taking assistant for meeting summaries and action items",
-    "status": "approved",
-    "riskTier": "Low",
-    "nistFunctions": [
-      "Govern"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Lightweight AI features within Notion workspace. Limited data exposure scope.",
-    "recommendedPolicy": "Allow for internal note-taking. Restrict from financial or HR documents.",
-    "createdAt": "2026-07-14T15:00:00.000Z"
   },
   {
     "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
@@ -178,7 +160,7 @@
     "createdAt": "2026-07-14T16:00:00.000Z"
   },
   {
-    "id": "47f819fb-62e6-4769-9a0b-06da7713555c",
+    "id": "4a11f086-d0b3-46f4-a717-a6c02e99a314",
     "name": "DeepSeek Coder",
     "description": "Open-source code completion model used in local IDEs for software development",
     "riskTier": "Medium",
@@ -193,22 +175,6 @@
     "justification": "Mock classification: \"DeepSeek Coder\" was classified as Medium Risk because its description implies access to or interaction with software source code. Exposing proprietary algorithms or code patterns to third-party models poses intermediate IP security risks.",
     "recommendedPolicy": "Allow only for open-source repositories or non-proprietary modules. Require scanning for secrets or credentials before usage.",
     "status": "pending",
-    "createdAt": "2026-07-17T07:01:19.618Z"
-  },
-  {
-    "id": "58d7772e-effd-487b-ac63-3e8686af3ae7",
-    "name": "elson",
-    "description": "not gay",
-    "riskTier": "Low",
-    "nistFunctions": [
-      "Govern"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"elson\" was classified as Low Risk since it appears to be a general utility, design, or formatting tool that does not process source code, corporate financials, or personal customer data.",
-    "recommendedPolicy": "Allow for general organization use. Restrict clipboard integration for any internal document containing trade secrets.",
-    "status": "pending",
-    "createdAt": "2026-07-17T07:08:05.864Z"
+    "createdAt": "2026-07-17T10:23:43.528Z"
   }
 ]

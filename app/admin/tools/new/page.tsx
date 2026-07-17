@@ -48,6 +48,15 @@ export default function ClassifyToolPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const autocompleteSuggestions = name.trim()
+    ? tools.filter(
+        (t) =>
+          t.name.toLowerCase().startsWith(name.toLowerCase()) &&
+          t.name.toLowerCase() !== name.toLowerCase()
+      )
+    : [];
 
   const fetchTools = async () => {
     const res = await fetch('/api/tools');
@@ -183,19 +192,48 @@ export default function ClassifyToolPage() {
                 className="w-full bg-background border border-border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                 placeholder="e.g. Grammarly, GitHub Copilot"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 required
                 disabled={loading}
               />
               {name && !loading && (
                 <button
                   type="button"
-                  onClick={() => setName('')}
+                  onClick={() => {
+                    setName('');
+                    setShowSuggestions(false);
+                  }}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
                   title="Clear Tool Name"
                 >
                   <X size={12} />
                 </button>
+              )}
+
+              {/* Autocomplete suggestions dropdown */}
+              {showSuggestions && autocompleteSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 z-50 mt-1 bg-surface border border-border rounded shadow-md max-h-48 overflow-y-auto">
+                  {autocompleteSuggestions.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        setName(t.name);
+                        setDescription(t.description);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
+                    >
+                      <span className="font-semibold">{t.name}</span>
+                      <span className="text-[10px] text-text-tertiary ml-2 block sm:inline truncate max-w-[250px]">{t.description}</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
