@@ -7,11 +7,11 @@
       "Phone number"
     ],
     "reason": "This contact list is for an internal team offsite. The email and phone belong to our own staff, not external customers.",
-    "status": "approved",
+    "status": "pending",
     "adminComment": null,
     "logRef": "b0c1d2e3-f4a5-6789-bcde-789012345678",
     "requestedAt": "2026-07-16T14:45:00.000Z",
-    "decidedAt": "2026-07-17T03:16:23.405Z"
+    "decidedAt": null
   },
   {
     "id": "cc110002-ac00-0000-0000-000000000002",
@@ -39,32 +39,5 @@
     "logRef": "a7b8c9d0-e1f2-3456-abcd-456789012345",
     "requestedAt": "2026-07-14T11:30:00.000Z",
     "decidedAt": "2026-07-14T14:00:00.000Z"
-  },
-  {
-    "id": "54ec6f07-c0be-4ff8-aeda-ab484a1648aa",
-    "employeeName": "Demo Employee",
-    "sections": [
-      "Email address"
-    ],
-    "reason": "hi",
-    "status": "rejected",
-    "adminComment": "Noob",
-    "logRef": "log_a1b2c3d4",
-    "requestedAt": "2026-07-16T15:24:37.272Z",
-    "decidedAt": "2026-07-16T15:25:08.895Z"
-  },
-  {
-    "id": "a650ebeb-7d29-4bcc-afd0-e780f8e06ac6",
-    "employeeName": "Demo Employee",
-    "sections": [
-      "Email address",
-      "Phone number"
-    ],
-    "reason": "hi",
-    "status": "approved",
-    "adminComment": null,
-    "logRef": "log_a1b2c3d4",
-    "requestedAt": "2026-07-16T15:25:31.490Z",
-    "decidedAt": "2026-07-16T15:25:38.117Z"
   }
 ]

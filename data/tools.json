@@ -2,25 +2,27 @@
   {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Grammarly",
-    "description": "AI writing assistant for drafting customer support emails and internal documentation",
+    "description": "Brand new description for email writing",
     "status": "approved",
-    "riskTier": "Low",
+    "riskTier": "High",
     "nistFunctions": [
       "Govern",
-      "Measure"
+      "Map",
+      "Measure",
+      "Manage"
     ],
     "dataCategories": [
-      "None"
+      "PII"
     ],
-    "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
-    "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
+    "justification": "Mock classification: \"Grammarly\" was classified as High Risk because it interacts with PII (Personally Identifiable Information), customer data, or internal employee records. Transferring PII outside corporate boundaries is heavily regulated under GDPR and other privacy regimes.",
+    "recommendedPolicy": "Block direct text uploads containing actual names, emails, or personal identifiers. Require local anonymization/redaction before processing.",
     "createdAt": "2026-07-14T10:00:00.000Z"
   },
   {
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "GitHub Copilot",
     "description": "AI pair programmer integrated into VS Code for code completion",
-    "status": "blocked",
+    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
@@ -58,7 +60,7 @@
     "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
     "name": "Notion AI",
     "description": "AI-powered note-taking assistant for meeting summaries and action items",
-    "status": "blocked",
+    "status": "approved",
     "riskTier": "Low",
     "nistFunctions": [
       "Govern"
@@ -74,7 +76,7 @@
     "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
     "name": "Perplexity Pro",
     "description": "AI research assistant with real-time web search for technical research",
-    "status": "approved",
+    "status": "pending",
     "riskTier": "Medium",
     "nistFunctions": [
       "Map",
@@ -176,139 +178,37 @@
     "createdAt": "2026-07-14T16:00:00.000Z"
   },
   {
-    "id": "9ba3253a-dcbf-44e0-adab-0ff76801215e",
-    "name": "Grammarly",
-    "description": "soeijfoisejfes",
-    "status": "approved",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"Grammarly\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T05:32:37.181Z"
-  },
-  {
-    "id": "84b24555-a9dc-4f96-90f8-ecb4c0d037e2",
-    "name": "v0 by Vercel",
-    "description": "Generative UI system to build frontends from natural language prompts",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"v0 by Vercel\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:20:07.164Z"
-  },
-  {
-    "id": "2a924218-ab54-4ba7-a26c-df72d71eafa1",
-    "name": "Jasper AI",
-    "description": "Marketing copywriter tool for drafting blog posts, social media, and ad copy",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"Jasper AI\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:20:10.671Z"
-  },
-  {
-    "id": "ab8f73b6-0145-44e6-a9e9-1bae9059aba5",
-    "name": "Claude 3.5 Sonnet",
-    "description": "Advanced conversational LLM used for brainstorming and complex analysis",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"Claude 3.5 Sonnet\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:20:12.683Z"
-  },
-  {
-    "id": "04b78a6b-3f71-46ca-81ed-e27ec9ea9605",
+    "id": "47f819fb-62e6-4769-9a0b-06da7713555c",
     "name": "DeepSeek Coder",
     "description": "Open-source code completion model used in local IDEs for software development",
-    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
-      "Map"
+      "Map",
+      "Manage"
     ],
     "dataCategories": [
-      "None"
+      "Source Code"
     ],
-    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:20:14.912Z"
+    "justification": "Mock classification: \"DeepSeek Coder\" was classified as Medium Risk because its description implies access to or interaction with software source code. Exposing proprietary algorithms or code patterns to third-party models poses intermediate IP security risks.",
+    "recommendedPolicy": "Allow only for open-source repositories or non-proprietary modules. Require scanning for secrets or credentials before usage.",
+    "status": "pending",
+    "createdAt": "2026-07-17T07:01:19.618Z"
   },
   {
-    "id": "c4bd3bd3-dd87-4ea8-bdc8-9280ce3f61b7",
-    "name": "v0 by Vercel",
-    "description": "Generative UI system to build frontends from natural language prompts",
-    "status": "pending",
-    "riskTier": "Medium",
+    "id": "58d7772e-effd-487b-ac63-3e8686af3ae7",
+    "name": "elson",
+    "description": "not gay",
+    "riskTier": "Low",
     "nistFunctions": [
-      "Govern",
-      "Map"
+      "Govern"
     ],
     "dataCategories": [
       "None"
     ],
-    "justification": "Mock classification: \"v0 by Vercel\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:25:48.044Z"
-  },
-  {
-    "id": "83017e28-895b-4e07-ad88-d68404c9f270",
-    "name": "faeawfa",
-    "description": "fwafwa",
+    "justification": "Mock classification: \"elson\" was classified as Low Risk since it appears to be a general utility, design, or formatting tool that does not process source code, corporate financials, or personal customer data.",
+    "recommendedPolicy": "Allow for general organization use. Restrict clipboard integration for any internal document containing trade secrets.",
     "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"faeawfa\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:25:52.305Z"
-  },
-  {
-    "id": "af3d8ca3-24f8-4a38-89d5-5722b39fed6e",
-    "name": "Elson",
-    "description": "is gay",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"Elson\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:28:26.097Z"
+    "createdAt": "2026-07-17T07:08:05.864Z"
   }
 ]
