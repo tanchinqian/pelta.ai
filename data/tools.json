@@ -58,7 +58,7 @@
     "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
     "name": "Notion AI",
     "description": "AI-powered note-taking assistant for meeting summaries and action items",
-    "status": "approved",
+    "status": "blocked",
     "riskTier": "Low",
     "nistFunctions": [
       "Govern"

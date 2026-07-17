@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
@@ -48,6 +48,9 @@ export default function ClassifyToolPage() {
     setTools((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
     );
+    if (result && result.id === id) {
+      setResult((prev) => prev ? { ...prev, status: newStatus } : null);
+    }
     try {
       const res = await fetch('/api/tools', {
         method: 'PATCH',
@@ -178,17 +181,27 @@ export default function ClassifyToolPage() {
 
       {/* Result Card — accent panel */}
       {result && (
-        <div className="animate-slide-in panel-primary p-4 space-y-3">
+        <div className="animate-slide-in panel-primary p-4 space-y-3 relative">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-text-primary">{result.name}</p>
               <p className="text-xs text-text-secondary mt-0.5">{result.description}</p>
             </div>
-            <span className="shrink-0 text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
-              style={{ color: RISK[result.riskTier ?? 'Low'], background: `color-mix(in srgb, ${RISK[result.riskTier ?? 'Low']} 10%, transparent)` }}
-            >
-              {result.riskTier ?? 'Unclassified'}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
+                style={{ color: RISK[result.riskTier ?? 'Low'], background: `color-mix(in srgb, ${RISK[result.riskTier ?? 'Low']} 10%, transparent)` }}
+              >
+                {result.riskTier ?? 'Unclassified'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setResult(null)}
+                className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer"
+                title="Dismiss details"
+              >
+                <X size={12} />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
@@ -250,35 +263,48 @@ export default function ClassifyToolPage() {
                   </div>
                 </td></tr>
               )}
-              {sortedTools.map((t, i) => (
-                <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                  <td className="py-2 px-4">
-                    <p className="font-medium text-text-primary">{t.name}</p>
-                    <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
-                  </td>
-                  <td className="py-2 px-4">
-                    {t.riskTier ? (
-                      <span className="text-[10px] font-bold font-mono uppercase" style={{ color: RISK[t.riskTier] }}>{t.riskTier}</span>
-                    ) : <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden sm:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
-                  <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{t.dataCategories.join(', ') || '—'}</td>
-                  <td className="py-2 px-4">
-                    <select
-                      value={t.status}
-                      onChange={(e) => handleStatusChange(t.id, e.target.value as any)}
-                      className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
-                        t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
-                        t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
-                      }`}
-                    >
-                      <option value="approved" className="text-risk-low bg-background">Accept</option>
-                      <option value="pending" className="text-risk-medium bg-background">Pending</option>
-                      <option value="blocked" className="text-risk-high bg-background">Decline</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
+              {sortedTools.map((t, i) => {
+                const isSelected = result?.id === t.id;
+                return (
+                  <tr
+                    key={t.id}
+                    onClick={() => setResult(t)}
+                    className={`border-b border-border/40 hover:bg-surface-hover/70 transition-colors cursor-pointer ${
+                      isSelected ? 'bg-[var(--accent-dim)] border-l-2 border-l-[var(--accent)] font-medium' : i % 2 === 1 ? 'bg-surface-hover/20' : ''
+                    }`}
+                  >
+                    <td className="py-2 px-4">
+                      <p className="font-medium text-text-primary">{t.name}</p>
+                      <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
+                    </td>
+                    <td className="py-2 px-4">
+                      {t.riskTier ? (
+                        <span className="text-[10px] font-bold font-mono uppercase" style={{ color: RISK[t.riskTier] }}>{t.riskTier}</span>
+                      ) : <span className="text-text-muted">—</span>}
+                    </td>
+                    <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden sm:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
+                    <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{t.dataCategories.join(', ') || '—'}</td>
+                    <td className="py-2 px-4">
+                      <select
+                        value={t.status}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(t.id, e.target.value as any);
+                        }}
+                        className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
+                          t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
+                          t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
+                        }`}
+                      >
+                        <option value="approved" className="text-risk-low bg-background">Accept</option>
+                        <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                        <option value="blocked" className="text-risk-high bg-background">Decline</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
