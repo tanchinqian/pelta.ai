@@ -4,26 +4,30 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export default function ApprovalsNavLink() {
+export default function RequestsNavLink() {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const pathname = usePathname();
-  const isActive = pathname.startsWith('/admin/approvals');
+  const isActive = pathname.startsWith('/admin/approvals') || pathname.startsWith('/admin/requests');
 
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const res = await fetch('/api/access-requests');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setPendingCount(data.filter((r: { status: string }) => r.status === 'pending').length);
-        }
+        const [appeals, tools] = await Promise.all([
+          fetch('/api/access-requests').then((r) => r.json()),
+          fetch('/api/requests').then((r) => r.json()),
+        ]);
+        const appealPending = Array.isArray(appeals)
+          ? appeals.filter((r: { status: string }) => r.status === 'pending').length
+          : 0;
+        const toolPending = Array.isArray(tools)
+          ? tools.filter((r: { status: string }) => r.status === 'pending').length
+          : 0;
+        setPendingCount(appealPending + toolPending);
       } catch {
         // fail silently — nav badge is non-critical
       }
     };
     fetchCount();
-    // Refresh every 30 s so the count stays current without a hard reload
     const interval = setInterval(fetchCount, 30_000);
     return () => clearInterval(interval);
   }, []);
@@ -35,14 +39,11 @@ export default function ApprovalsNavLink() {
         isActive ? 'text-text-primary bg-surface-hover' : ''
       }`}
     >
-      Approvals
+      Requests
       {pendingCount > 0 && (
         <span
           className="text-[9px] font-bold font-mono px-1 py-0.5 rounded leading-none"
-          style={{
-            color: 'var(--risk-medium)',
-            background: 'rgba(245,158,11,0.12)',
-          }}
+          style={{ color: 'var(--risk-medium)', background: 'rgba(245,158,11,0.12)' }}
         >
           {pendingCount}
         </span>

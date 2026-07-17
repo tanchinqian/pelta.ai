@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
@@ -49,6 +49,8 @@ export default function ClassifyToolPage() {
   const [riskFilter, setRiskFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [flyoutTool, setFlyoutTool] = useState<ToolRecord | null>(null);
+  const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
 
   const autocompleteSuggestions = name.trim()
     ? tools.filter(
@@ -263,6 +265,24 @@ export default function ClassifyToolPage() {
       </html>
     `);
     printWindow.document.close();
+  };
+
+  const handleReclassify = async (tool: ToolRecord) => {
+    setReclassifyingId(tool.id);
+    try {
+      const res = await fetch('/api/tools/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tool.name, description: tool.description, existingId: tool.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult(data);
+        fetchTools();
+        if (flyoutTool?.id === tool.id) setFlyoutTool(data);
+      }
+    } catch {}
+    finally { setReclassifyingId(null); }
   };
 
   const toggleSort = (key: SortKey) => {
@@ -599,14 +619,21 @@ export default function ClassifyToolPage() {
                 return (
                   <tr
                     key={t.id}
-                    onClick={() => setResult(t)}
-                    className={`border-b border-border/40 hover:bg-surface-hover/70 transition-colors cursor-pointer ${
+                    className={`border-b border-border/40 hover:bg-surface-hover/70 transition-colors ${
                       isSelected ? 'bg-[var(--accent-dim)] border-l-2 border-l-[var(--accent)] font-medium' : i % 2 === 1 ? 'bg-surface-hover/20' : ''
                     }`}
                   >
                     <td className="py-2 px-4">
-                      <p className="font-medium text-text-primary">{t.name}</p>
-                      <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setFlyoutTool(t); }}
+                        className="text-left hover:underline decoration-border"
+                      >
+                        <p className="font-medium text-text-primary flex items-center gap-1">
+                          {t.name}
+                          <ChevronRight size={10} className="text-text-muted" />
+                        </p>
+                        <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
+                      </button>
                     </td>
                     <td className="py-2 px-4">
                       {t.riskTier ? (
@@ -635,6 +662,15 @@ export default function ClassifyToolPage() {
                         </select>
                         <button
                           type="button"
+                          onClick={(e) => { e.stopPropagation(); handleReclassify(t); }}
+                          title="Re-classify with Gemini"
+                          disabled={reclassifyingId === t.id}
+                          className="text-text-secondary hover:text-accent p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40"
+                        >
+                          <RotateCw size={12} className={reclassifyingId === t.id ? 'animate-spin' : ''} />
+                        </button>
+                        <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteTool(t.id);
@@ -653,6 +689,96 @@ export default function ClassifyToolPage() {
           </table>
         </div>
       </div>
+
+      {/* Tool Detail Flyout */}
+      {flyoutTool && (
+        <div
+          className="fixed inset-0 z-50 flex justify-end"
+          style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(1px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setFlyoutTool(null); }}
+        >
+          <div className="bg-surface border-l border-border h-full w-full max-w-sm overflow-y-auto animate-slide-in p-5 space-y-4 shadow-2xl flex flex-col">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-text-primary truncate">{flyoutTool.name}</p>
+                <p className="text-[11px] text-text-tertiary mt-0.5 leading-relaxed">{flyoutTool.description}</p>
+              </div>
+              <button onClick={() => setFlyoutTool(null)} className="text-text-tertiary hover:text-text-primary transition-colors cursor-pointer mt-0.5 shrink-0">
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Risk + Status */}
+            <div className="flex items-center gap-2">
+              {flyoutTool.riskTier && (
+                <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
+                  style={{ color: RISK[flyoutTool.riskTier], background: `color-mix(in srgb, ${RISK[flyoutTool.riskTier]} 10%, transparent)` }}>
+                  {flyoutTool.riskTier} Risk
+                </span>
+              )}
+              <span className={`text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded border ${
+                flyoutTool.status === 'approved' ? 'text-risk-low border-risk-low/30 bg-risk-low/10' :
+                flyoutTool.status === 'blocked' ? 'text-risk-high border-risk-high/30 bg-risk-high/10' :
+                'text-risk-medium border-risk-medium/30 bg-risk-medium/10'
+              }`}>
+                {flyoutTool.status}
+              </span>
+            </div>
+
+            {/* NIST + Data */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">NIST Functions</p>
+                <div className="flex flex-wrap gap-1">
+                  {flyoutTool.nistFunctions.length > 0
+                    ? flyoutTool.nistFunctions.map((f) => (
+                        <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{f}</span>
+                      ))
+                    : <span className="text-text-muted text-[10px]">—</span>}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Data Categories</p>
+                <div className="flex flex-wrap gap-1">
+                  {flyoutTool.dataCategories.length > 0
+                    ? flyoutTool.dataCategories.map((c) => (
+                        <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{c}</span>
+                      ))
+                    : <span className="text-text-muted text-[10px]">—</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Justification */}
+            <div>
+              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Justification</p>
+              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{flyoutTool.justification || '—'}</p>
+            </div>
+
+            {/* Recommended Policy */}
+            <div>
+              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Recommended Policy</p>
+              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{flyoutTool.recommendedPolicy || '—'}</p>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+              <span className="text-[10px] font-mono text-text-muted">
+                Added {new Date(flyoutTool.createdAt).toLocaleDateString('en-SG', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <button
+                onClick={() => handleReclassify(flyoutTool)}
+                disabled={reclassifyingId === flyoutTool.id}
+                className="flex items-center gap-1.5 text-[11px] font-medium text-text-secondary hover:text-text-primary border border-border rounded px-3 py-1.5 hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <RotateCw size={11} className={reclassifyingId === flyoutTool.id ? 'animate-spin' : ''} />
+                Re-classify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

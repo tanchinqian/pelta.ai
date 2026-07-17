@@ -55,7 +55,6 @@ export default function RootLayout({
             <span className="text-text-muted">/</span>
             <NavLink href="/admin/dashboard">Dashboard</NavLink>
             <NavLink href="/admin/tools/new">Classify</NavLink>
-            <NavLink href="/admin/requests">Requests</NavLink>
             <ApprovalsNavLink />
           </nav>
 

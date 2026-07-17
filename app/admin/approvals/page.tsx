@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Shield,
+  Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
@@ -18,6 +19,16 @@ interface AccessRequest {
   adminComment: string | null;
   reviewerName: string | null;
   logRef: string;
+  requestedAt: string;
+  decidedAt: string | null;
+}
+
+interface ToolRequest {
+  id: string;
+  employeeName: string;
+  department: string;
+  toolRequested: string;
+  status: 'pending' | 'approved' | 'denied';
   requestedAt: string;
   decidedAt: string | null;
 }
@@ -41,16 +52,15 @@ const RISK_COLOR: Record<string, string> = {
   medium: 'var(--risk-medium)',
   low: 'var(--risk-low)',
 };
-
 const RISK_BG: Record<string, string> = {
   high: 'var(--risk-high-bg)',
   medium: 'var(--risk-medium-bg)',
   low: 'var(--risk-low-bg)',
 };
-
 const STATUS_COLOR: Record<string, string> = {
   approved: 'var(--risk-low)',
   rejected: 'var(--risk-high)',
+  denied: 'var(--risk-high)',
   pending: 'var(--risk-medium)',
 };
 
@@ -95,32 +105,20 @@ function SectionTag({ label }: { label: string }) {
   );
 }
 
-/* ── Detail Modal ───────────────────────────────────────── */
+/* ── Redress Appeal Detail Modal ────────────────────────── */
 
-function DetailModal({
-  req,
-  onClose,
-  onApprove,
-  onStartReject,
-  rejectingId,
-  rejectionDraft,
-  onRejectionChange,
-  onSendRejection,
-  onCancelReject,
+function AppealDetailModal({
+  req, onClose, onApprove, onStartReject,
+  rejectingId, rejectionDraft, onRejectionChange, onSendRejection, onCancelReject,
 }: {
-  req: AccessRequest;
-  onClose: () => void;
-  onApprove: (id: string) => void;
-  onStartReject: (id: string) => void;
-  rejectingId: string | null;
-  rejectionDraft: string;
+  req: AccessRequest; onClose: () => void;
+  onApprove: (id: string) => void; onStartReject: (id: string) => void;
+  rejectingId: string | null; rejectionDraft: string;
   onRejectionChange: (v: string) => void;
-  onSendRejection: (id: string) => void;
-  onCancelReject: () => void;
+  onSendRejection: (id: string) => void; onCancelReject: () => void;
 }) {
   const isRejecting = rejectingId === req.id;
   const isPending = req.status === 'pending';
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -128,57 +126,32 @@ function DetailModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="panel w-full max-w-lg animate-slide-in" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-        {/* Modal header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <FileText size={13} className="text-accent" />
-            <span className="text-sm font-semibold text-text-primary">Request Details</span>
+            <ShieldAlert size={13} className="text-accent" />
+            <span className="text-sm font-semibold text-text-primary">Redress Appeal</span>
           </div>
-          <button
-            onClick={onClose}
-            className="text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover"
-          >
-            ESC
-          </button>
+          <button onClick={onClose} className="text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover">ESC</button>
         </div>
-
-        {/* Body */}
         <div className="p-4 space-y-4">
-          {/* Identity row */}
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-primary">{req.employeeName}</p>
-              <p className="text-[10px] font-mono text-text-tertiary mt-0.5">
-                ID: {req.id.slice(0, 16)}…
-              </p>
+              <p className="text-[10px] font-mono text-text-tertiary mt-0.5">ID: {req.id.slice(0, 16)}…</p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <StatusBadge status={req.status} />
               {req.riskLevel && <RiskBadge level={req.riskLevel} />}
             </div>
           </div>
-
-          {/* Data categories */}
           <div>
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Requested Data Categories
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {req.sections.map((s) => <SectionTag key={s} label={s} />)}
-            </div>
+            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Requested Data Categories</p>
+            <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
           </div>
-
-          {/* Reason */}
           <div>
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Reason for Access
-            </p>
-            <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">
-              {req.reason}
-            </p>
+            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Reason for Access</p>
+            <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{req.reason}</p>
           </div>
-
-          {/* Timestamps */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-background border border-border rounded p-2.5">
               <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
@@ -186,55 +159,35 @@ function DetailModal({
             </div>
             <div className="bg-background border border-border rounded p-2.5">
               <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
-              <p className="text-[11px] font-mono text-text-secondary mt-0.5">
-                {req.decidedAt ? fmt(req.decidedAt) : '—'}
-              </p>
+              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
             </div>
           </div>
-
-          {/* Reviewer / admin comment */}
           {req.reviewerName && (
             <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                Reviewed by
-              </p>
+              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Reviewed by</p>
               <p className="text-xs font-mono text-text-secondary">{req.reviewerName}</p>
             </div>
           )}
           {req.adminComment && (
             <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                Admin Comment
-              </p>
-              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">
-                {req.adminComment}
-              </p>
+              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Admin Comment</p>
+              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{req.adminComment}</p>
             </div>
           )}
-
-          {/* NIST / compliance note */}
           <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-tertiary border-t border-border pt-3">
             <Shield size={10} />
             <span>NIST AI RMF — Govern · Manage &nbsp;|&nbsp; Audit trail logged</span>
           </div>
-
-          {/* Actions */}
           {isPending && (
             <div>
               {!isRejecting ? (
                 <div className="flex items-center gap-2">
-                  <button
-                    id={`approve-modal-${req.id}`}
-                    onClick={() => onApprove(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
-                  >
+                  <button id={`approve-modal-${req.id}`} onClick={() => onApprove(req.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <CheckCircle size={12} /> Approve
                   </button>
-                  <button
-                    id={`reject-modal-${req.id}`}
-                    onClick={() => onStartReject(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
-                  >
+                  <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <XCircle size={12} /> Decline
                   </button>
                 </div>
@@ -243,25 +196,15 @@ function DetailModal({
                   <textarea
                     className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
                     placeholder="Reason for declining (required)..."
-                    rows={3}
-                    value={rejectionDraft}
-                    onChange={(e) => onRejectionChange(e.target.value)}
-                    autoFocus
+                    rows={3} value={rejectionDraft}
+                    onChange={(e) => onRejectionChange(e.target.value)} autoFocus
                   />
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onSendRejection(req.id)}
-                      disabled={!rejectionDraft.trim()}
-                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
+                    <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
+                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                       Confirm Decline
                     </button>
-                    <button
-                      onClick={onCancelReject}
-                      className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
+                    <button onClick={onCancelReject} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
                   </div>
                 </div>
               )}
@@ -273,83 +216,70 @@ function DetailModal({
   );
 }
 
-/* ── Request row ────────────────────────────────────────── */
+/* ── Tool Request Detail Modal ──────────────────────────── */
 
-function RequestRow({
-  req, idx, onViewDetail, onApprove, onDecline,
+function ToolDetailModal({
+  req, onClose, onApprove, onDeny,
 }: {
-  req: AccessRequest;
-  idx: number;
-  onViewDetail: (req: AccessRequest) => void;
-  onApprove: (id: string) => void;
-  onDecline: (id: string) => void;
+  req: ToolRequest; onClose: () => void;
+  onApprove: (id: string) => void; onDeny: (id: string) => void;
 }) {
   const isPending = req.status === 'pending';
   return (
-    <tr
-      className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${idx % 2 === 1 ? 'bg-surface-hover/20' : ''}`}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Employee */}
-      <td className="py-2 pr-3 text-xs font-medium text-text-primary whitespace-nowrap">
-        {req.employeeName}
-      </td>
-      {/* Request ID */}
-      <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">
-        {req.id.slice(0, 8)}…
-      </td>
-      {/* Data categories */}
-      <td className="py-2 pr-3 hidden md:table-cell">
-        <div className="flex flex-wrap gap-1">
-          {req.sections.map((s) => <SectionTag key={s} label={s} />)}
+      <div className="panel w-full max-w-md animate-slide-in">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Briefcase size={13} className="text-accent" />
+            <span className="text-sm font-semibold text-text-primary">Tool Request</span>
+          </div>
+          <button onClick={onClose} className="text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover">ESC</button>
         </div>
-      </td>
-      {/* Risk */}
-      <td className="py-2 pr-3 whitespace-nowrap">
-        <RiskBadge level={req.riskLevel} />
-      </td>
-      {/* Reason */}
-      <td className="py-2 pr-3 text-[10px] text-text-tertiary max-w-[180px] truncate hidden lg:table-cell">
-        {req.reason}
-      </td>
-      {/* Submitted */}
-      <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">
-        {fmt(req.requestedAt)}
-      </td>
-      {/* Status */}
-      <td className="py-2 pr-3 whitespace-nowrap">
-        <StatusBadge status={req.status} />
-      </td>
-      {/* Actions */}
-      <td className="py-2">
-        <div className="flex items-center gap-1.5">
-          <button
-            id={`view-detail-${req.id}`}
-            onClick={() => onViewDetail(req)}
-            className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover"
-          >
-            View
-          </button>
+        <div className="p-4 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-text-primary">{req.employeeName}</p>
+              <p className="text-[10px] font-mono text-text-tertiary mt-0.5">{req.department}</p>
+            </div>
+            <StatusBadge status={req.status} />
+          </div>
+          <div className="bg-background border border-border rounded p-3">
+            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider mb-1">Requested Tool</p>
+            <p className="text-sm font-medium text-text-primary">{req.toolRequested}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-background border border-border rounded p-2.5">
+              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
+              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{fmt(req.requestedAt)}</p>
+            </div>
+            <div className="bg-background border border-border rounded p-2.5">
+              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
+              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-tertiary border-t border-border pt-3">
+            <Shield size={10} />
+            <span>NIST AI RMF — Govern · Map</span>
+          </div>
           {isPending && (
-            <>
-              <button
-                id={`approve-row-${req.id}`}
-                onClick={() => onApprove(req.id)}
-                className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer"
-              >
-                <CheckCircle size={10} /> Approve
+            <div className="flex items-center gap-2">
+              <button onClick={() => onApprove(req.id)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                <CheckCircle size={12} /> Approve
               </button>
-              <button
-                id={`decline-row-${req.id}`}
-                onClick={() => onDecline(req.id)}
-                className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer"
-              >
-                <XCircle size={10} /> Decline
+              <button onClick={() => onDeny(req.id)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                <XCircle size={12} /> Deny
               </button>
-            </>
+            </div>
           )}
         </div>
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
 
@@ -366,77 +296,103 @@ function StatMini({ label, value, color }: { label: string; value: number; color
 
 /* ── Page ───────────────────────────────────────────────── */
 
-export default function ApprovalsPage() {
-  const [requests, setRequests] = useState<AccessRequest[]>([]);
+type Tab = 'appeals' | 'tools';
+type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
+type ToolFilterStatus = 'all' | 'pending' | 'approved' | 'denied';
+
+export default function RequestsPage() {
+  const [activeTab, setActiveTab] = useState<Tab>('appeals');
+
+  // ── Redress Appeals state ──
+  const [appeals, setAppeals] = useState<AccessRequest[]>([]);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedReq, setSelectedReq] = useState<AccessRequest | null>(null);
+  const [selectedAppeal, setSelectedAppeal] = useState<AccessRequest | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionDraft, setRejectionDraft] = useState('');
   const [showAudit, setShowAudit] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [appealFilter, setAppealFilter] = useState<FilterStatus>('all');
+
+  // ── Tool Requests state ──
+  const [toolReqs, setToolReqs] = useState<ToolRequest[]>([]);
+  const [selectedTool, setSelectedTool] = useState<ToolRequest | null>(null);
+  const [toolFilter, setToolFilter] = useState<ToolFilterStatus>('all');
+
+  const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    const [reqs, audit] = await Promise.all([
+    const [reqs, audit, tools] = await Promise.all([
       fetch('/api/access-requests').then((r) => r.json()),
       fetch('/api/audit-log').then((r) => r.json()),
+      fetch('/api/requests').then((r) => r.json()),
     ]);
-    setRequests(Array.isArray(reqs) ? reqs : []);
+    setAppeals(Array.isArray(reqs) ? reqs : []);
     setAuditLog(Array.isArray(audit) ? audit : []);
+    setToolReqs(Array.isArray(tools) ? tools : []);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Close modal on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedReq(null); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setSelectedAppeal(null); setSelectedTool(null); }
+    };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
-  const updateRequest = async (
-    id: string,
-    status: 'approved' | 'rejected',
-    adminComment?: string,
-  ) => {
+  // ── Appeal actions ──
+  const updateAppeal = async (id: string, status: 'approved' | 'rejected', adminComment?: string) => {
     const now = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? { ...r, status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now }
-          : r,
-      ),
-    );
-    // Update selected req if it's open
-    setSelectedReq((prev) =>
-      prev && prev.id === id
-        ? { ...prev, status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now }
-        : prev,
-    );
+    const patch = { status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now };
+    setAppeals((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
+    setSelectedAppeal((prev) => prev && prev.id === id ? { ...prev, ...patch } : prev);
     await fetch('/api/access-requests', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, adminComment, reviewerName: 'Admin' }),
     });
-    setRejectingId(null);
-    setRejectionDraft('');
-    // Refresh audit log
+    setRejectingId(null); setRejectionDraft('');
     const audit = await fetch('/api/audit-log').then((r) => r.json());
     setAuditLog(Array.isArray(audit) ? audit : []);
   };
 
-  const pending = requests.filter((r) => r.status === 'pending');
-  const approved = requests.filter((r) => r.status === 'approved');
-  const rejected = requests.filter((r) => r.status === 'rejected');
+  // ── Tool request actions ──
+  const updateToolReq = async (id: string, status: 'approved' | 'denied') => {
+    setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt: new Date().toISOString() } : r));
+    setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt: new Date().toISOString() } : prev);
+    await fetch('/api/requests', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+  };
 
-  const filtered = filterStatus === 'all' ? requests : requests.filter((r) => r.status === filterStatus);
+  // ── Derived ──
+  const pendingAppeals = appeals.filter((r) => r.status === 'pending');
+  const pendingTools = toolReqs.filter((r) => r.status === 'pending');
+  const totalPending = pendingAppeals.length + pendingTools.length;
+
+  const filteredAppeals = appealFilter === 'all' ? appeals : appeals.filter((r) => r.status === appealFilter);
+  const filteredTools = toolFilter === 'all' ? toolReqs : toolReqs.filter((r) => r.status === toolFilter);
+
+  const sortedAppeals = [...filteredAppeals].sort((a, b) => {
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
+    return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
+  });
+
+  const sortedTools = [...filteredTools].sort((a, b) => {
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
+    return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
+  });
 
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-        <span className="text-xs text-text-tertiary font-mono">Loading approvals...</span>
+        <span className="text-xs text-text-tertiary font-mono">Loading requests...</span>
       </div>
     );
   }
@@ -448,14 +404,12 @@ export default function ApprovalsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <RadarIcon size={14} className="text-accent" />
-            <span className="text-sm font-semibold text-text-primary">Approvals</span>
+            <span className="text-sm font-semibold text-text-primary">Requests</span>
             <span className="text-[10px] font-mono text-text-tertiary">/ admin only</span>
-            {pending.length > 0 && (
-              <span
-                className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
-                style={{ color: STATUS_COLOR.pending, background: `${STATUS_COLOR.pending}15` }}
-              >
-                {pending.length} pending
+            {totalPending > 0 && (
+              <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
+                style={{ color: STATUS_COLOR.pending, background: `${STATUS_COLOR.pending}15` }}>
+                {totalPending} pending
               </span>
             )}
           </div>
@@ -465,153 +419,114 @@ export default function ApprovalsPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2">
-          <StatMini label="Pending" value={pending.length} color={STATUS_COLOR.pending} />
-          <StatMini label="Approved" value={approved.length} color={STATUS_COLOR.approved} />
-          <StatMini label="Declined" value={rejected.length} color={STATUS_COLOR.rejected} />
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Appeals stats */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider font-mono flex items-center gap-1">
+              <ShieldAlert size={10} /> Redress Appeals
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              <StatMini label="Pending" value={pendingAppeals.length} color={STATUS_COLOR.pending} />
+              <StatMini label="Approved" value={appeals.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
+              <StatMini label="Rejected" value={appeals.filter(r => r.status === 'rejected').length} color={STATUS_COLOR.rejected} />
+            </div>
+          </div>
+          {/* Tool request stats */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider font-mono flex items-center gap-1">
+              <Briefcase size={10} /> Tool Requests
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              <StatMini label="Pending" value={pendingTools.length} color={STATUS_COLOR.pending} />
+              <StatMini label="Approved" value={toolReqs.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
+              <StatMini label="Denied" value={toolReqs.filter(r => r.status === 'denied').length} color={STATUS_COLOR.rejected} />
+            </div>
+          </div>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex items-center gap-1 text-[11px] font-medium">
-          {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
-            <button
-              key={f}
-              id={`filter-${f}`}
-              onClick={() => setFilterStatus(f)}
-              className={`px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                filterStatus === f
-                  ? 'bg-surface-hover text-text-primary'
-                  : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div className="flex items-center border-b border-border gap-0">
+          <TabButton
+            active={activeTab === 'appeals'} onClick={() => setActiveTab('appeals')}
+            label="Redress Appeals" badge={pendingAppeals.length}
+            icon={<ShieldAlert size={11} />}
+          />
+          <TabButton
+            active={activeTab === 'tools'} onClick={() => setActiveTab('tools')}
+            label="Tool Requests" badge={pendingTools.length}
+            icon={<Briefcase size={11} />}
+          />
         </div>
 
-        {/* Table */}
-        <div className="panel p-0 overflow-hidden">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-              <span className="text-xs text-text-tertiary">
-                {filterStatus === 'all' ? 'No requests yet.' : `No ${filterStatus} requests.`}
-              </span>
+        {/* ── Tab: Redress Appeals ──────────────────────────── */}
+        {activeTab === 'appeals' && (
+          <div className="space-y-3 animate-slide-in">
+            {/* Filter tabs */}
+            <div className="flex items-center gap-1 text-[11px] font-medium">
+              {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
+                <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
+                  className={`px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                    appealFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
+                  }`}>
+                  {f}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border bg-surface/60">
-                    <th className="py-2 px-3 pr-3 font-medium">Employee</th>
-                    <th className="py-2 pr-3 font-medium hidden sm:table-cell">Request ID</th>
-                    <th className="py-2 pr-3 font-medium hidden md:table-cell">Data Categories</th>
-                    <th className="py-2 pr-3 font-medium">Risk</th>
-                    <th className="py-2 pr-3 font-medium hidden lg:table-cell">Reason</th>
-                    <th className="py-2 pr-3 font-medium hidden lg:table-cell">Submitted</th>
-                    <th className="py-2 pr-3 font-medium">Status</th>
-                    <th className="py-2 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...filtered]
-                    // pending first, then by date desc
-                    .sort((a, b) => {
-                      if (a.status === 'pending' && b.status !== 'pending') return -1;
-                      if (a.status !== 'pending' && b.status === 'pending') return 1;
-                      return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
-                    })
-                    .map((req, i) => (
-                      <RequestRow
-                        key={req.id}
-                        req={req}
-                        idx={i}
-                        onViewDetail={setSelectedReq}
-                        onApprove={(id) => updateRequest(id, 'approved')}
-                        onDecline={(id) => { setRejectingId(id); setSelectedReq(requests.find((r) => r.id === id) ?? null); }}
-                      />
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
 
-        {/* Audit log accordion */}
-        <div className="panel overflow-hidden">
-          <button
-            id="toggle-audit-log"
-            onClick={() => setShowAudit((v) => !v)}
-            className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-surface-hover/50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <FileText size={12} className="text-text-tertiary" />
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-                Audit Trail
-              </span>
-              <span className="text-[10px] font-mono text-text-tertiary">
-                ({auditLog.length} entries)
-              </span>
-            </div>
-            {showAudit ? (
-              <ChevronUp size={13} className="text-text-tertiary" />
-            ) : (
-              <ChevronDown size={13} className="text-text-tertiary" />
-            )}
-          </button>
-
-          {showAudit && (
-            <div className="border-t border-border">
-              {auditLog.length === 0 ? (
-                <p className="text-[11px] text-text-tertiary text-center py-4">No audit entries yet.</p>
+            {/* Table */}
+            <div className="panel p-0 overflow-hidden">
+              {sortedAppeals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <RadarIcon size={24} className="text-accent animate-radar-pulse" />
+                  <span className="text-xs text-text-tertiary">{appealFilter === 'all' ? 'No appeals yet.' : `No ${appealFilter} appeals.`}</span>
+                </div>
               ) : (
-                <div className="overflow-x-auto" style={{ maxHeight: 320 }}>
+                <div className="overflow-x-auto">
                   <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-surface">
-                      <tr className="text-left text-text-secondary border-b border-border">
-                        <th className="py-1.5 px-3 pr-3 font-medium">Timestamp</th>
-                        <th className="py-1.5 pr-3 font-medium">Employee</th>
-                        <th className="py-1.5 pr-3 font-medium">Action</th>
-                        <th className="py-1.5 pr-3 font-medium hidden sm:table-cell">Reviewer</th>
-                        <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Categories</th>
-                        <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Risk</th>
-                        <th className="py-1.5 font-medium hidden lg:table-cell">Comment</th>
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border bg-surface/60">
+                        <th className="py-2 px-3 font-medium">Employee</th>
+                        <th className="py-2 pr-3 font-medium hidden sm:table-cell">Request ID</th>
+                        <th className="py-2 pr-3 font-medium hidden md:table-cell">Data Categories</th>
+                        <th className="py-2 pr-3 font-medium">Risk</th>
+                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Reason</th>
+                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Submitted</th>
+                        <th className="py-2 pr-3 font-medium">Status</th>
+                        <th className="py-2 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {auditLog.map((entry, i) => (
-                        <tr
-                          key={entry.id}
-                          className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}
-                        >
-                          <td className="py-1.5 px-3 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap">
-                            {fmt(entry.timestamp)}
+                      {sortedAppeals.map((req, i) => (
+                        <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
+                          <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
+                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
+                          <td className="py-2 pr-3 hidden md:table-cell">
+                            <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                           </td>
-                          <td className="py-1.5 pr-3 text-[11px] font-medium text-text-primary whitespace-nowrap">
-                            {entry.employeeName}
-                          </td>
-                          <td className="py-1.5 pr-3 whitespace-nowrap">
-                            <span
-                              className="text-[9px] font-bold font-mono uppercase"
-                              style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}
-                            >
-                              {entry.action}
-                            </span>
-                          </td>
-                          <td className="py-1.5 pr-3 text-[10px] font-mono text-text-secondary hidden sm:table-cell whitespace-nowrap">
-                            {entry.reviewerName}
-                          </td>
-                          <td className="py-1.5 pr-3 hidden md:table-cell">
-                            <div className="flex flex-wrap gap-1">
-                              {entry.sections.map((s) => <SectionTag key={s} label={s} />)}
+                          <td className="py-2 pr-3 whitespace-nowrap"><RiskBadge level={req.riskLevel} /></td>
+                          <td className="py-2 pr-3 text-[10px] text-text-tertiary max-w-[160px] truncate hidden lg:table-cell">{req.reason}</td>
+                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
+                          <td className="py-2">
+                            <div className="flex items-center gap-1.5">
+                              <button id={`view-appeal-${req.id}`} onClick={() => setSelectedAppeal(req)}
+                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
+                                View
+                              </button>
+                              {req.status === 'pending' && (
+                                <>
+                                  <button id={`approve-appeal-${req.id}`} onClick={() => updateAppeal(req.id, 'approved')}
+                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    <CheckCircle size={10} /> Approve
+                                  </button>
+                                  <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
+                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    <XCircle size={10} /> Decline
+                                  </button>
+                                </>
+                              )}
                             </div>
-                          </td>
-                          <td className="py-1.5 pr-3 hidden md:table-cell whitespace-nowrap">
-                            <RiskBadge level={entry.riskLevel} />
-                          </td>
-                          <td className="py-1.5 text-[10px] text-text-tertiary truncate max-w-[160px] hidden lg:table-cell">
-                            {entry.adminComment ?? '—'}
                           </td>
                         </tr>
                       ))}
@@ -620,24 +535,190 @@ export default function ApprovalsPage() {
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* Audit log accordion */}
+            <div className="panel overflow-hidden">
+              <button id="toggle-audit-log" onClick={() => setShowAudit((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-surface-hover/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <FileText size={12} className="text-text-tertiary" />
+                  <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Audit Trail</span>
+                  <span className="text-[10px] font-mono text-text-tertiary">({auditLog.length} entries)</span>
+                </div>
+                {showAudit ? <ChevronUp size={13} className="text-text-tertiary" /> : <ChevronDown size={13} className="text-text-tertiary" />}
+              </button>
+              {showAudit && (
+                <div className="border-t border-border">
+                  {auditLog.length === 0 ? (
+                    <p className="text-[11px] text-text-tertiary text-center py-4">No audit entries yet.</p>
+                  ) : (
+                    <div className="overflow-x-auto" style={{ maxHeight: 280 }}>
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-surface">
+                          <tr className="text-left text-text-secondary border-b border-border">
+                            <th className="py-1.5 px-3 font-medium">Timestamp</th>
+                            <th className="py-1.5 pr-3 font-medium">Employee</th>
+                            <th className="py-1.5 pr-3 font-medium">Action</th>
+                            <th className="py-1.5 pr-3 font-medium hidden sm:table-cell">Reviewer</th>
+                            <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Categories</th>
+                            <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Risk</th>
+                            <th className="py-1.5 font-medium hidden lg:table-cell">Comment</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {auditLog.map((entry, i) => (
+                            <tr key={entry.id} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
+                              <td className="py-1.5 px-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap">{fmt(entry.timestamp)}</td>
+                              <td className="py-1.5 pr-3 text-[11px] font-medium text-text-primary whitespace-nowrap">{entry.employeeName}</td>
+                              <td className="py-1.5 pr-3 whitespace-nowrap">
+                                <span className="text-[9px] font-bold font-mono uppercase"
+                                  style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}>
+                                  {entry.action}
+                                </span>
+                              </td>
+                              <td className="py-1.5 pr-3 text-[10px] font-mono text-text-secondary hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
+                              <td className="py-1.5 pr-3 hidden md:table-cell">
+                                <div className="flex flex-wrap gap-1">{entry.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
+                              </td>
+                              <td className="py-1.5 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge level={entry.riskLevel} /></td>
+                              <td className="py-1.5 text-[10px] text-text-tertiary truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab: Tool Requests ───────────────────────────── */}
+        {activeTab === 'tools' && (
+          <div className="space-y-3 animate-slide-in">
+            {/* Filter tabs */}
+            <div className="flex items-center gap-1 text-[11px] font-medium">
+              {(['all', 'pending', 'approved', 'denied'] as const).map((f) => (
+                <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
+                  className={`px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                    toolFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
+                  }`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            {/* Table */}
+            <div className="panel p-0 overflow-hidden">
+              {sortedTools.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <RadarIcon size={24} className="text-accent animate-radar-pulse" />
+                  <span className="text-xs text-text-tertiary">{toolFilter === 'all' ? 'No tool requests yet.' : `No ${toolFilter} tool requests.`}</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border bg-surface/60">
+                        <th className="py-2 px-3 font-medium">Employee</th>
+                        <th className="py-2 pr-3 font-medium hidden sm:table-cell">Department</th>
+                        <th className="py-2 pr-3 font-medium">Tool Requested</th>
+                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Submitted</th>
+                        <th className="py-2 pr-3 font-medium">Status</th>
+                        <th className="py-2 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedTools.map((req, i) => (
+                        <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
+                          <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
+                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.department}</td>
+                          <td className="py-2 pr-3 font-medium text-text-primary">{req.toolRequested}</td>
+                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
+                          <td className="py-2">
+                            <div className="flex items-center gap-1.5">
+                              <button id={`view-tool-${req.id}`} onClick={() => setSelectedTool(req)}
+                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
+                                View
+                              </button>
+                              {req.status === 'pending' && (
+                                <>
+                                  <button id={`approve-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'approved')}
+                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    <CheckCircle size={10} /> Approve
+                                  </button>
+                                  <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
+                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    <XCircle size={10} /> Deny
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Modal */}
-      {selectedReq && (
-        <DetailModal
-          req={selectedReq}
-          onClose={() => { setSelectedReq(null); setRejectingId(null); setRejectionDraft(''); }}
-          onApprove={(id) => updateRequest(id, 'approved')}
+      {/* Appeal Detail Modal */}
+      {selectedAppeal && (
+        <AppealDetailModal
+          req={selectedAppeal}
+          onClose={() => { setSelectedAppeal(null); setRejectingId(null); setRejectionDraft(''); }}
+          onApprove={(id) => updateAppeal(id, 'approved')}
           onStartReject={(id) => setRejectingId(id)}
           rejectingId={rejectingId}
           rejectionDraft={rejectionDraft}
           onRejectionChange={setRejectionDraft}
-          onSendRejection={(id) => updateRequest(id, 'rejected', rejectionDraft)}
+          onSendRejection={(id) => updateAppeal(id, 'rejected', rejectionDraft)}
           onCancelReject={() => { setRejectingId(null); setRejectionDraft(''); }}
         />
       )}
+
+      {/* Tool Detail Modal */}
+      {selectedTool && (
+        <ToolDetailModal
+          req={selectedTool}
+          onClose={() => setSelectedTool(null)}
+          onApprove={(id) => { updateToolReq(id, 'approved'); setSelectedTool(null); }}
+          onDeny={(id) => { updateToolReq(id, 'denied'); setSelectedTool(null); }}
+        />
+      )}
     </>
+  );
+}
+
+/* ── TabButton ──────────────────────────────────────────── */
+
+function TabButton({ active, onClick, label, badge, icon }: {
+  active: boolean; onClick: () => void;
+  label: string; badge: number; icon: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors cursor-pointer ${
+        active
+          ? 'border-accent text-text-primary'
+          : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border'
+      }`}
+    >
+      {icon}
+      {label}
+      {badge > 0 && (
+        <span className="text-[9px] font-bold font-mono px-1 py-0.5 rounded leading-none"
+          style={{ color: 'var(--risk-medium)', background: 'rgba(245,158,11,0.12)' }}>
+          {badge}
+        </span>
+      )}
+    </button>
   );
 }
