@@ -777,7 +777,7 @@ function AccessStatusCard({ request }: { request: AccessRequest }) {
         <p className="text-[10px] text-text-secondary leading-relaxed">
           Your appeal was approved. You may proceed using the requested data categories with the approved AI tool.
           {request.adminComment && (
-            <span className="block mt-1 text-text-tertiary italic">"{request.adminComment}"</span>
+            <span className="block mt-1 text-text-tertiary italic">&ldquo;{request.adminComment}&rdquo;</span>
           )}
         </p>
       )}

@@ -309,8 +309,8 @@ export default function ClassifyToolPage() {
   const displayedTools = [...filteredTools].sort((a, b) => {
     if (!sortKey || !sortDir) return 0;
     
-    let av: any;
-    let bv: any;
+    let av: string | number;
+    let bv: string | number;
     
     if (sortKey === 'riskTier') {
       av = RISK_ORDER[a.riskTier ?? ''] ?? 0;
@@ -325,6 +325,7 @@ export default function ClassifyToolPage() {
     return 0;
   });
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchTools(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -344,8 +345,8 @@ export default function ClassifyToolPage() {
       setName('');
       setDescription('');
       fetchTools();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -649,7 +650,7 @@ export default function ClassifyToolPage() {
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => {
                             e.stopPropagation();
-                            handleStatusChange(t.id, e.target.value as any);
+                            handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
                           }}
                           className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
                             t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
