@@ -710,7 +710,7 @@ function AccessStatusCard({ request }: { request: AccessRequest }) {
 
   return (
     <div
-      className={`rounded-lg border p-3.5 space-y-2 animate-slide-in ${
+      className={`rounded-lg border p-3.5 space-y-4 animate-slide-in ${
         isPending
           ? 'border-border bg-surface-hover/20'
           : isApproved
@@ -738,6 +738,29 @@ function AccessStatusCard({ request }: { request: AccessRequest }) {
         </span>
       </div>
 
+      {isPending && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center text-[9px] font-mono text-text-tertiary">
+            <span>Submitted</span>
+            <span>Reviewing</span>
+            <span>Deciding</span>
+          </div>
+          <div className="h-1 bg-background rounded-full overflow-hidden flex">
+            <div className="w-1/3 bg-accent" />
+            <div className="w-1/3 bg-accent/50 animate-pulse" />
+            <div className="w-1/3 bg-border" />
+          </div>
+          <div className="flex items-center gap-2 bg-background border border-border/60 rounded px-2.5 py-1.5">
+            <span className="size-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              You will be notified at{' '}
+              <span className="font-mono text-text-secondary">demo@corp.sg</span>{' '}
+              when a decision is made.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Sections */}
       <div className="flex flex-wrap gap-1">
         {request.sections.map((s) => (
@@ -749,12 +772,6 @@ function AccessStatusCard({ request }: { request: AccessRequest }) {
           </span>
         ))}
       </div>
-
-      {isPending && (
-        <p className="text-[10px] text-text-tertiary font-mono">
-          Submitted · Awaiting admin review · est. 5 min
-        </p>
-      )}
 
       {isApproved && (
         <p className="text-[10px] text-text-secondary leading-relaxed">
