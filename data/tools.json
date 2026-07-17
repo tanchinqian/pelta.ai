@@ -20,7 +20,7 @@
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "GitHub Copilot",
     "description": "AI pair programmer integrated into VS Code for code completion",
-    "status": "approved",
+    "status": "blocked",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
@@ -74,7 +74,7 @@
     "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
     "name": "Perplexity Pro",
     "description": "AI research assistant with real-time web search for technical research",
-    "status": "pending",
+    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Map",
@@ -174,5 +174,22 @@
     "justification": "Translation service with GDPR compliance. Text sent to servers but processed ephemerally.",
     "recommendedPolicy": "Allow for general translation. Block for legal/contract documents.",
     "createdAt": "2026-07-14T16:00:00.000Z"
+  },
+  {
+    "id": "9ba3253a-dcbf-44e0-adab-0ff76801215e",
+    "name": "Grammarly",
+    "description": "soeijfoisejfes",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"Grammarly\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T05:32:37.181Z"
   }
 ]

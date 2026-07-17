@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
@@ -12,6 +12,23 @@ interface ToolRecord {
 
 const RISK: Record<string, string> = { Low: 'var(--risk-low)', Medium: 'var(--risk-medium)', High: 'var(--risk-high)' };
 
+type SortDir = 'asc' | 'desc' | null;
+type SortKey = 'name' | 'riskTier' | 'status' | null;
+
+function SortTh({ label, sortKey: key, active, dir, onToggle }: {
+  label: string; sortKey: SortKey; active: SortKey; dir: SortDir; onToggle: (k: SortKey) => void;
+}) {
+  const isActive = active === key;
+  return (
+    <th className="py-2 px-4 font-medium cursor-pointer select-none hover:text-text-primary transition-colors text-left" onClick={() => onToggle(key)}>
+      <span className="flex items-center gap-1">
+        {label}
+        {isActive ? (dir === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />) : <ArrowUpDown size={10} className="text-text-muted" />}
+      </span>
+    </th>
+  );
+}
+
 export default function ClassifyToolPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -19,11 +36,61 @@ export default function ClassifyToolPage() {
   const [result, setResult] = useState<ToolRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<ToolRecord[]>([]);
+  const [sortKey, setSortKey] = useState<SortKey>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
 
   const fetchTools = async () => {
     const res = await fetch('/api/tools');
     if (res.ok) setTools(await res.json());
   };
+
+  const handleStatusChange = async (id: string, newStatus: 'approved' | 'pending' | 'blocked') => {
+    setTools((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+    );
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update status');
+      }
+      fetchTools();
+    } catch (err) {
+      console.error(err);
+      fetchTools();
+    }
+  };
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      if (sortDir === 'asc') setSortDir('desc');
+      else if (sortDir === 'desc') { setSortKey(null); setSortDir(null); }
+    } else { setSortKey(key); setSortDir('asc'); }
+  };
+
+  const RISK_ORDER: Record<string, number> = { Low: 1, Medium: 2, High: 3 };
+
+  const sortedTools = [...tools].sort((a, b) => {
+    if (!sortKey || !sortDir) return 0;
+    
+    let av: any;
+    let bv: any;
+    
+    if (sortKey === 'riskTier') {
+      av = RISK_ORDER[a.riskTier ?? ''] ?? 0;
+      bv = RISK_ORDER[b.riskTier ?? ''] ?? 0;
+    } else {
+      av = (a[sortKey] ?? '').toLowerCase();
+      bv = (b[sortKey] ?? '').toLowerCase();
+    }
+    
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   useEffect(() => { fetchTools(); }, []);
 
@@ -167,15 +234,15 @@ export default function ClassifyToolPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-text-secondary border-b border-border">
-                <th className="py-2 px-4 font-medium">Name</th>
-                <th className="py-2 px-4 font-medium">Risk</th>
+                <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
+                <SortTh label="Risk" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                 <th className="py-2 px-4 font-medium hidden sm:table-cell">NIST</th>
                 <th className="py-2 px-4 font-medium hidden md:table-cell">Data</th>
-                <th className="py-2 px-4 font-medium">Status</th>
+                <SortTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} />
               </tr>
             </thead>
             <tbody>
-              {tools.length === 0 && (
+              {sortedTools.length === 0 && (
                 <tr><td colSpan={5} className="py-8 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <RadarIcon size={24} className="text-accent animate-radar-pulse" />
@@ -183,7 +250,7 @@ export default function ClassifyToolPage() {
                   </div>
                 </td></tr>
               )}
-              {tools.map((t, i) => (
+              {sortedTools.map((t, i) => (
                 <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                   <td className="py-2 px-4">
                     <p className="font-medium text-text-primary">{t.name}</p>
@@ -197,10 +264,18 @@ export default function ClassifyToolPage() {
                   <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden sm:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                   <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{t.dataCategories.join(', ') || '—'}</td>
                   <td className="py-2 px-4">
-                    <span className={`text-[10px] font-mono uppercase ${
-                      t.status === 'approved' ? 'text-risk-low' :
-                      t.status === 'blocked' ? 'text-risk-high' : 'text-risk-medium'
-                    }`}>{t.status}</span>
+                    <select
+                      value={t.status}
+                      onChange={(e) => handleStatusChange(t.id, e.target.value as any)}
+                      className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
+                        t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
+                        t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
+                      }`}
+                    >
+                      <option value="approved" className="text-risk-low bg-background">Accept</option>
+                      <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                      <option value="blocked" className="text-risk-high bg-background">Decline</option>
+                    </select>
                   </td>
                 </tr>
               ))}
