@@ -45,6 +45,9 @@ export default function ClassifyToolPage() {
   const [tools, setTools] = useState<ToolRecord[]>([]);
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [riskFilter, setRiskFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const fetchTools = async () => {
     const res = await fetch('/api/tools');
@@ -83,7 +86,19 @@ export default function ClassifyToolPage() {
 
   const RISK_ORDER: Record<string, number> = { Low: 1, Medium: 2, High: 3 };
 
-  const sortedTools = [...tools].sort((a, b) => {
+  const filteredTools = tools.filter((t) => {
+    const matchesSearch =
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.justification ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesRisk = riskFilter === 'all' || t.riskTier === riskFilter;
+    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+
+    return matchesSearch && matchesRisk && matchesStatus;
+  });
+
+  const displayedTools = [...filteredTools].sort((a, b) => {
     if (!sortKey || !sortDir) return 0;
     
     let av: any;
@@ -265,10 +280,39 @@ export default function ClassifyToolPage() {
 
       {/* Registry Table */}
       <div className="panel">
-        <div className="px-4 py-2 border-b border-border">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-            Tool Registry <span className="text-text-tertiary font-normal">({tools.length})</span>
+        <div className="px-4 py-2 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider shrink-0">
+            Tool Registry <span className="text-text-tertiary font-normal">({displayedTools.length} of {tools.length})</span>
           </span>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-36 transition-colors"
+            />
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+              className="bg-background border border-border rounded px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:border-accent cursor-pointer transition-colors"
+            >
+              <option value="all">All Risks</option>
+              <option value="Low">Low Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="High">High Risk</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-background border border-border rounded px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:border-accent cursor-pointer transition-colors"
+            >
+              <option value="all">All Statuses</option>
+              <option value="approved">Accept</option>
+              <option value="pending">Pending</option>
+              <option value="blocked">Decline</option>
+            </select>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -282,15 +326,15 @@ export default function ClassifyToolPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedTools.length === 0 && (
+              {displayedTools.length === 0 && (
                 <tr><td colSpan={5} className="py-8 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-                    <span className="text-text-tertiary text-xs">No tools classified yet — submit one for assessment.</span>
+                    <span className="text-text-tertiary text-xs">No tools found matching your filters.</span>
                   </div>
                 </td></tr>
               )}
-              {sortedTools.map((t, i) => {
+              {displayedTools.map((t, i) => {
                 const isSelected = result?.id === t.id;
                 return (
                   <tr
