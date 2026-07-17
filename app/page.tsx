@@ -23,6 +23,7 @@ const views = {
       { href: '/admin/tools/new', label: 'Classify a Tool', desc: 'Submit an AI tool for Gemini-powered risk assessment', icon: <BarChart3 size={14} /> },
       { href: '/admin/dashboard', label: 'Dashboard', desc: 'Usage charts, tool registry, prompt guard logs', icon: <BarChart3 size={14} /> },
       { href: '/admin/requests', label: 'Approval Requests', desc: 'Review and approve/deny employee tool requests', icon: <Users size={14} /> },
+      { href: '/admin/approvals', label: 'Approvals', desc: 'Review access requests — approve or decline with full audit trail', icon: <Shield size={14} /> },
     ],
   },
 };

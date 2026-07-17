@@ -174,5 +174,22 @@
     "justification": "Translation service with GDPR compliance. Text sent to servers but processed ephemerally.",
     "recommendedPolicy": "Allow for general translation. Block for legal/contract documents.",
     "createdAt": "2026-07-14T16:00:00.000Z"
+  },
+  {
+    "id": "28429a4d-4ee3-4044-9e9f-3e64fa7a4c8a",
+    "name": "ChinGoo",
+    "description": "Writting daily conversation text",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"ChinGoo\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T05:32:08.458Z"
   }
 ]
