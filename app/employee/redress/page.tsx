@@ -2,7 +2,21 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { X, ChevronDown, ChevronUp, Copy, Check, Clock } from 'lucide-react';
+import {
+  X,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+  Clock,
+  ShieldAlert,
+  History,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+
+  ChevronRight,
+} from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface AccessRequest {
@@ -25,6 +39,13 @@ const DETECTED_SECTIONS = [
 const SCENARIO_PROMPT =
   'Please help me draft a follow-up message to john.doe@company.com (+65 9123 4567) regarding the internal project handover. CC manager@corp.sg for sign-off.';
 
+// Spans to highlight within the prompt
+const SENSITIVE_SPANS = [
+  { text: 'john.doe@company.com', type: 'high', label: 'Email' },
+  { text: '+65 9123 4567', type: 'medium', label: 'Phone' },
+  { text: 'manager@corp.sg', type: 'high', label: 'Email' },
+];
+
 const NIST_COLORS: Record<string, string> = {
   Govern: '#3b82f6',
   Map: '#06b6d4',
@@ -32,11 +53,51 @@ const NIST_COLORS: Record<string, string> = {
   Manage: '#a855f7',
 };
 
+const TIMELINE_STEPS = [
+  {
+    time: '14:23:05 UTC',
+    title: 'Prompt Submitted',
+    description: 'Employee pasted a message containing internal contact details into ChatGPT.',
+    badge: null,
+  },
+  {
+    time: '14:23:06 UTC',
+    title: 'Regex Scan — Match Found',
+    description:
+      'Prompt Guard matched 1 high-severity pattern: email address, 1 medium-severity pattern: phone number.',
+    badge: { label: 'Regex', color: 'text-accent border-accent/30 bg-accent-dim' },
+  },
+  {
+    time: '14:23:07 UTC',
+    title: 'Verdict: Blocked',
+    description:
+      'High-severity regex match triggered automatic block. The prompt was not sent to the external AI tool.',
+    badge: { label: 'Blocked', color: 'text-risk-high border-risk-high/30 bg-risk-high/10' },
+  },
+  {
+    time: '14:23:08 UTC',
+    title: 'Logged to Audit Trail',
+    description:
+      'Event recorded with verdict, risk level, detection method, and truncated prompt snippet for review.',
+    badge: null,
+  },
+  {
+    time: '14:23:10 UTC',
+    title: 'Employee Notified',
+    description:
+      'Real-time explanation showing why the prompt was blocked, which patterns were detected, and how to remediate.',
+    badge: null,
+  },
+];
+
+const REASON_SOFT_LIMIT = 500;
+
 export default function RedressPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSections, setSelectedSections] = useState<string[]>(['email', 'phone']);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [accessRequest, setAccessRequest] = useState<AccessRequest | null>(null);
 
@@ -44,6 +105,14 @@ export default function RedressPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedRef, setCopiedRef] = useState(false);
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [history, setHistory] = useState<AccessRequest[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Staggered timeline reveal
+  const [visibleSteps, setVisibleSteps] = useState(0);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -71,6 +140,17 @@ export default function RedressPage() {
 
   useEffect(() => () => stopPolling(), [stopPolling]);
 
+  // Stagger timeline steps in on mount
+  useEffect(() => {
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      setVisibleSteps(step);
+      if (step >= TIMELINE_STEPS.length) clearInterval(interval);
+    }, 220);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleSection = (id: string) => {
     setSelectedSections((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
@@ -80,6 +160,7 @@ export default function RedressPage() {
   const handleSubmitRequest = async () => {
     if (!reason.trim() || selectedSections.length === 0) return;
     setSubmitting(true);
+    setSubmitSuccess(false);
     try {
       const res = await fetch('/api/access-requests', {
         method: 'POST',
@@ -94,10 +175,15 @@ export default function RedressPage() {
         }),
       });
       const data: AccessRequest = await res.json();
-      setAccessRequest(data);
-      setModalOpen(false);
-      setReason('');
-      startPolling(data.id);
+      setSubmitSuccess(true);
+      // Brief success flash then close
+      setTimeout(() => {
+        setAccessRequest(data);
+        setModalOpen(false);
+        setReason('');
+        setSubmitSuccess(false);
+        startPolling(data.id);
+      }, 800);
     } catch {}
     finally { setSubmitting(false); }
   };
@@ -127,14 +213,38 @@ export default function RedressPage() {
     } finally { setLoadingSuggestions(false); }
   };
 
+  const handleToggleHistory = async () => {
+    if (historyOpen) { setHistoryOpen(false); return; }
+    setHistoryOpen(true);
+    if (history.length > 0) return;
+    setLoadingHistory(true);
+    try {
+      const res = await fetch('/api/access-requests');
+      const data: AccessRequest[] = await res.json();
+      setHistory(data.sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()));
+    } catch {}
+    finally { setLoadingHistory(false); }
+  };
+
   const copyToClipboard = async (text: string, index: number) => {
     await navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const copyRef = async () => {
+    await navigator.clipboard.writeText('log_a1b2c3d4');
+    setCopiedRef(true);
+    setTimeout(() => setCopiedRef(false), 2000);
+  };
+
   const showActionButtons =
     !accessRequest || accessRequest.status === 'rejected';
+
+  const reasonLength = reason.length;
+  const reasonNearLimit = reasonLength > REASON_SOFT_LIMIT * 0.8;
+  const reasonOverLimit = reasonLength > REASON_SOFT_LIMIT;
+  const reasonTooShort = reason.trim().length > 0 && reason.trim().length < 20;
 
   return (
     <div className="flex-1 p-4 max-w-4xl mx-auto w-full space-y-4">
@@ -158,6 +268,27 @@ export default function RedressPage() {
           <span className="text-text-primary font-medium">EU AI Act</span>,
           the employee has the right to an explanation of this decision.
         </p>
+
+        {/* Highlighted prompt preview */}
+        <div className="mt-1 bg-background border border-border rounded-lg p-3">
+          <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider mb-1.5">Submitted Prompt</p>
+          <HighlightedPrompt text={SCENARIO_PROMPT} spans={SENSITIVE_SPANS} />
+          <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border">
+            {SENSITIVE_SPANS.map((s, i) => (
+              <span
+                key={i}
+                className={`inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded border ${
+                  s.type === 'high'
+                    ? 'text-risk-high border-risk-high/30 bg-risk-high/10'
+                    : 'text-risk-medium border-risk-medium/30 bg-risk-medium/10'
+                }`}
+              >
+                <span className={`size-1 rounded-full ${s.type === 'high' ? 'bg-risk-high' : 'bg-risk-medium'}`} />
+                {s.text} · {s.label}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Timeline */}
@@ -166,33 +297,18 @@ export default function RedressPage() {
           Decision Timeline
         </span>
         <div className="relative pl-8 border-l-2 border-border space-y-5">
-          <TimelineStep
-            time="14:23:05 UTC"
-            title="Prompt Submitted"
-            description="Employee pasted a message containing internal contact details into ChatGPT."
-          />
-          <TimelineStep
-            time="14:23:06 UTC"
-            title="Regex Scan — Match Found"
-            description="Prompt Guard matched 1 high-severity pattern: email address, 1 medium-severity pattern: phone number."
-            badge={{ label: 'Regex', color: 'text-accent border-accent/30 bg-accent-dim' }}
-          />
-          <TimelineStep
-            time="14:23:07 UTC"
-            title="Verdict: Blocked"
-            description="High-severity regex match triggered automatic block. The prompt was not sent to the external AI tool."
-            badge={{ label: 'Blocked', color: 'text-risk-high border-risk-high/30 bg-risk-high/10' }}
-          />
-          <TimelineStep
-            time="14:23:08 UTC"
-            title="Logged to Audit Trail"
-            description="Event recorded with verdict, risk level, detection method, and truncated prompt snippet for review."
-          />
-          <TimelineStep
-            time="14:23:10 UTC"
-            title="Employee Notified"
-            description="Real-time explanation showing why the prompt was blocked, which patterns were detected, and how to remediate."
-          />
+          {TIMELINE_STEPS.map((step, i) => (
+            <div
+              key={i}
+              className="transition-all duration-500"
+              style={{
+                opacity: visibleSteps > i ? 1 : 0,
+                transform: visibleSteps > i ? 'translateY(0)' : 'translateY(10px)',
+              }}
+            >
+              <TimelineStep {...step} isLast={i === TIMELINE_STEPS.length - 1} />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -203,11 +319,27 @@ export default function RedressPage() {
         </span>
 
         {/* Notification card */}
-        <div className="bg-background border border-risk-high/30 rounded-lg p-3 space-y-2">
+        <div className="bg-background border border-risk-high/30 rounded-lg p-3 space-y-2.5">
+          {/* Severity bar */}
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase text-risk-high">Prompt Blocked</span>
+            <div className="flex items-center gap-1.5">
+              <ShieldAlert size={12} className="text-risk-high" />
+              <span className="text-[10px] font-bold uppercase text-risk-high">Prompt Blocked</span>
+            </div>
             <span className="text-[10px] text-text-tertiary font-mono">pelta.ai Prompt Guard</span>
           </div>
+
+          {/* Risk level bar */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[9px] font-mono text-text-tertiary">
+              <span>Risk Level</span>
+              <span className="text-risk-high font-semibold">HIGH</span>
+            </div>
+            <div className="h-1 rounded-full bg-border overflow-hidden">
+              <div className="h-full w-full bg-gradient-to-r from-risk-medium via-risk-high to-risk-high rounded-full animate-pulse" />
+            </div>
+          </div>
+
           <p className="text-xs text-text-secondary leading-relaxed">
             Your prompt was <span className="text-risk-high font-medium">blocked</span> because it
             contains data patterns that may include personal or sensitive information:
@@ -228,41 +360,22 @@ export default function RedressPage() {
             To proceed, remove or redact the flagged information and resubmit. If you believe this was
             a false positive, contact your administrator.
           </p>
-          <div className="pt-2 border-t border-border text-[10px] text-text-tertiary font-mono">
-            method: regex · ref: log_a1b2c3d4
+          <div className="pt-2 border-t border-border flex items-center justify-between">
+            <span className="text-[10px] text-text-tertiary font-mono">method: regex · ref: log_a1b2c3d4</span>
+            <button
+              onClick={copyRef}
+              title="Copy audit reference"
+              className="flex items-center gap-1 text-[9px] text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+            >
+              {copiedRef ? <Check size={9} className="text-risk-low" /> : <Copy size={9} />}
+              {copiedRef ? 'Copied' : 'Copy ref'}
+            </button>
           </div>
         </div>
 
-        {/* Access request status banner */}
+        {/* Access request status card */}
         {accessRequest && (
-          <div
-            className={`rounded-lg border px-3 py-2.5 text-xs animate-slide-in ${
-              accessRequest.status === 'pending'
-                ? 'border-border bg-surface-hover/30 text-text-secondary'
-                : accessRequest.status === 'approved'
-                ? 'border-risk-low/30 bg-risk-low/5 text-risk-low'
-                : 'border-risk-high/30 bg-risk-high/5 text-risk-high'
-            }`}
-          >
-            {accessRequest.status === 'pending' && (
-              <span className="flex items-center gap-2 font-mono text-[11px]">
-                <Clock size={11} className="animate-pulse shrink-0" />
-                Request submitted · Pending admin review · est. 5 min · ref:{' '}
-                {accessRequest.id.slice(0, 8)}
-              </span>
-            )}
-            {accessRequest.status === 'approved' && (
-              <span className="font-medium">
-                Access Granted — Your request was approved. You may proceed.
-              </span>
-            )}
-            {accessRequest.status === 'rejected' && (
-              <span>
-                <span className="font-medium">Request Denied</span>
-                {accessRequest.adminComment ? ` — ${accessRequest.adminComment}` : ''}
-              </span>
-            )}
-          </div>
+          <AccessStatusCard request={accessRequest} />
         )}
 
         {/* Action buttons */}
@@ -362,6 +475,46 @@ export default function RedressPage() {
         </div>
       </div>
 
+      {/* Request History */}
+      <div className="panel overflow-hidden">
+        <button
+          onClick={handleToggleHistory}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-hover/50 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <History size={12} className="text-text-tertiary" />
+            <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              Request History
+            </span>
+          </div>
+          <ChevronRight
+            size={12}
+            className={`text-text-tertiary transition-transform duration-200 ${historyOpen ? 'rotate-90' : ''}`}
+          />
+        </button>
+
+        {historyOpen && (
+          <div className="border-t border-border animate-slide-in">
+            {loadingHistory ? (
+              <div className="flex items-center gap-2 p-4">
+                <RadarIcon size={12} className="text-accent animate-radar-pulse" />
+                <span className="text-[11px] text-text-tertiary font-mono">Loading history...</span>
+              </div>
+            ) : history.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-[11px] text-text-tertiary">No prior requests found.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {history.map((req) => (
+                  <HistoryRow key={req.id} req={req} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="text-center pb-4">
         <Link
           href="/employee/prompt-guard"
@@ -429,18 +582,41 @@ export default function RedressPage() {
               </div>
             </div>
 
-            {/* Reason textarea */}
+            {/* Reason textarea with char counter */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">
-                Reason for Access
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">
+                  Reason for Access
+                </label>
+                <span
+                  className={`text-[9px] font-mono transition-colors ${
+                    reasonOverLimit
+                      ? 'text-risk-high'
+                      : reasonNearLimit
+                      ? 'text-risk-medium'
+                      : 'text-text-muted'
+                  }`}
+                >
+                  {reasonLength}/{REASON_SOFT_LIMIT}
+                </span>
+              </div>
               <textarea
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none leading-relaxed"
+                className={`w-full bg-background border rounded-lg px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none transition-colors resize-none leading-relaxed ${
+                  reasonOverLimit
+                    ? 'border-risk-high/50 focus:border-risk-high'
+                    : 'border-border focus:border-accent'
+                }`}
                 placeholder="Explain why you need to use this content with an AI tool..."
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
+              {reasonTooShort && (
+                <p className="text-[10px] text-risk-medium flex items-center gap-1 animate-slide-in">
+                  <AlertCircle size={10} />
+                  Please provide more detail (at least 20 characters)
+                </p>
+              )}
             </div>
 
             {/* Modal actions */}
@@ -453,10 +629,19 @@ export default function RedressPage() {
               </button>
               <button
                 onClick={handleSubmitRequest}
-                disabled={submitting || !reason.trim() || selectedSections.length === 0}
-                className="flex items-center gap-1.5 text-xs font-medium text-text-primary bg-surface-hover hover:bg-surface border border-border rounded px-4 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={submitting || submitSuccess || !reason.trim() || reason.trim().length < 20 || selectedSections.length === 0}
+                className={`flex items-center gap-1.5 text-xs font-medium border rounded px-4 py-1.5 transition-all cursor-pointer disabled:cursor-not-allowed ${
+                  submitSuccess
+                    ? 'text-risk-low bg-risk-low/10 border-risk-low/30'
+                    : 'text-text-primary bg-surface-hover hover:bg-surface border-border disabled:opacity-30'
+                }`}
               >
-                {submitting ? (
+                {submitSuccess ? (
+                  <>
+                    <Check size={12} className="text-risk-low" />
+                    Submitted
+                  </>
+                ) : submitting ? (
                   <>
                     <div className="size-3 border border-text-tertiary border-t-text-primary rounded-full animate-spin" />
                     Submitting
@@ -475,20 +660,207 @@ export default function RedressPage() {
 
 /* ── Sub-components ─────────────────────────────────────── */
 
+function HighlightedPrompt({
+  text,
+  spans,
+}: {
+  text: string;
+  spans: { text: string; type: string; label: string }[];
+}) {
+  // Build segments: split text around known sensitive spans
+  type Segment = { text: string; sensitive: boolean; type?: string };
+  const segments: Segment[] = [];
+  let remaining = text;
+  const sortedSpans = [...spans].sort((a, b) => text.indexOf(a.text) - text.indexOf(b.text));
+
+  for (const span of sortedSpans) {
+    const idx = remaining.indexOf(span.text);
+    if (idx === -1) continue;
+    if (idx > 0) segments.push({ text: remaining.slice(0, idx), sensitive: false });
+    segments.push({ text: span.text, sensitive: true, type: span.type });
+    remaining = remaining.slice(idx + span.text.length);
+  }
+  if (remaining) segments.push({ text: remaining, sensitive: false });
+
+  return (
+    <p className="text-[11px] font-mono text-text-secondary leading-relaxed break-all">
+      {segments.map((seg, i) =>
+        seg.sensitive ? (
+          <span
+            key={i}
+            className={`px-0.5 rounded-sm border-b-2 ${
+              seg.type === 'high'
+                ? 'bg-risk-high/15 border-risk-high text-risk-high'
+                : 'bg-risk-medium/15 border-risk-medium text-risk-medium'
+            }`}
+          >
+            {seg.text}
+          </span>
+        ) : (
+          <span key={i}>{seg.text}</span>
+        ),
+      )}
+    </p>
+  );
+}
+
+function AccessStatusCard({ request }: { request: AccessRequest }) {
+  const isPending = request.status === 'pending';
+  const isApproved = request.status === 'approved';
+
+  return (
+    <div
+      className={`rounded-lg border p-3.5 space-y-2 animate-slide-in ${
+        isPending
+          ? 'border-border bg-surface-hover/20'
+          : isApproved
+          ? 'border-risk-low/30 bg-risk-low/5'
+          : 'border-risk-high/30 bg-risk-high/5'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {isPending && <Clock size={12} className="text-text-tertiary animate-pulse shrink-0" />}
+        {isApproved && <CheckCircle2 size={12} className="text-risk-low shrink-0" />}
+        {!isPending && !isApproved && <XCircle size={12} className="text-risk-high shrink-0" />}
+
+        <span
+          className={`text-xs font-semibold ${
+            isPending ? 'text-text-secondary' : isApproved ? 'text-risk-low' : 'text-risk-high'
+          }`}
+        >
+          {isPending && 'Appeal Pending Review'}
+          {isApproved && 'Access Granted'}
+          {!isPending && !isApproved && 'Request Denied'}
+        </span>
+
+        <span className="ml-auto text-[9px] font-mono text-text-muted">
+          ref: {request.id.slice(0, 8)}
+        </span>
+      </div>
+
+      {/* Sections */}
+      <div className="flex flex-wrap gap-1">
+        {request.sections.map((s) => (
+          <span
+            key={s}
+            className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border text-text-tertiary bg-background"
+          >
+            {s}
+          </span>
+        ))}
+      </div>
+
+      {isPending && (
+        <p className="text-[10px] text-text-tertiary font-mono">
+          Submitted · Awaiting admin review · est. 5 min
+        </p>
+      )}
+
+      {isApproved && (
+        <p className="text-[10px] text-text-secondary leading-relaxed">
+          Your appeal was approved. You may proceed using the requested data categories with the approved AI tool.
+          {request.adminComment && (
+            <span className="block mt-1 text-text-tertiary italic">"{request.adminComment}"</span>
+          )}
+        </p>
+      )}
+
+      {!isPending && !isApproved && request.adminComment && (
+        <div className="bg-background rounded border border-risk-high/20 px-2.5 py-2">
+          <p className="text-[10px] text-text-tertiary uppercase font-semibold tracking-wider mb-0.5">
+            Admin Comment
+          </p>
+          <p className="text-[11px] text-text-secondary leading-relaxed">{request.adminComment}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HistoryRow({ req }: { req: AccessRequest }) {
+  const [expanded, setExpanded] = useState(false);
+  const isApproved = req.status === 'approved';
+  const isRejected = req.status === 'rejected';
+
+  return (
+    <div className={`border-l-2 ${isApproved ? 'border-risk-low/40' : isRejected ? 'border-risk-high/40' : 'border-border'}`}>
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover/40 transition-colors cursor-pointer text-left"
+      >
+        {isApproved && <CheckCircle2 size={11} className="text-risk-low shrink-0" />}
+        {isRejected && <XCircle size={11} className="text-risk-high shrink-0" />}
+        {!isApproved && !isRejected && <Clock size={11} className="text-text-tertiary shrink-0" />}
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] text-text-primary font-medium">
+              {req.sections.join(', ')}
+            </span>
+            <span
+              className={`text-[9px] font-bold uppercase font-mono ${
+                isApproved ? 'text-risk-low' : isRejected ? 'text-risk-high' : 'text-text-tertiary'
+              }`}
+            >
+              {req.status}
+            </span>
+          </div>
+          <p className="text-[10px] text-text-muted font-mono">
+            {new Date(req.requestedAt).toLocaleDateString('en-SG', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+            {req.decidedAt &&
+              ` · decided ${new Date(req.decidedAt).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}`}
+          </p>
+        </div>
+
+        <ChevronRight
+          size={11}
+          className={`text-text-muted transition-transform duration-200 shrink-0 ${expanded ? 'rotate-90' : ''}`}
+        />
+      </button>
+
+      {expanded && (
+        <div className="px-4 pb-3 space-y-2 animate-slide-in">
+          <div className="bg-background border border-border rounded-lg p-2.5 space-y-1.5">
+            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+              Your Reason
+            </p>
+            <p className="text-[11px] text-text-secondary leading-relaxed">{req.reason}</p>
+          </div>
+          {req.adminComment && (
+            <div className={`rounded-lg border px-2.5 py-2 space-y-1 ${isRejected ? 'border-risk-high/20 bg-risk-high/5' : 'border-risk-low/20 bg-risk-low/5'}`}>
+              <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+                Admin Comment
+              </p>
+              <p className="text-[11px] text-text-secondary leading-relaxed italic">{req.adminComment}</p>
+            </div>
+          )}
+          <p className="text-[9px] text-text-muted font-mono">ref: {req.logRef}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TimelineStep({
   time,
   title,
   description,
   badge,
+  isLast,
 }: {
   time: string;
   title: string;
   description: string;
-  badge?: { label: string; color: string };
+  badge?: { label: string; color: string } | null;
+  isLast?: boolean;
 }) {
   return (
     <div className="relative">
-      <div className="absolute -left-[25px] mt-1.5 size-3 rounded-full bg-accent border-2 border-background" />
+      <div className={`absolute -left-[25px] mt-1.5 size-3 rounded-full border-2 border-background ${isLast ? 'bg-accent' : 'bg-accent'}`} />
       <p className="text-[10px] text-text-tertiary font-mono">{time}</p>
       <div className="flex items-center gap-2 mt-0.5">
         <p className="text-xs font-medium text-text-primary">{title}</p>

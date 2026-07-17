@@ -7,11 +7,11 @@
       "Phone number"
     ],
     "reason": "This contact list is for an internal team offsite. The email and phone belong to our own staff, not external customers.",
-    "status": "pending",
+    "status": "approved",
     "adminComment": null,
     "logRef": "b0c1d2e3-f4a5-6789-bcde-789012345678",
     "requestedAt": "2026-07-16T14:45:00.000Z",
-    "decidedAt": null
+    "decidedAt": "2026-07-17T03:16:23.405Z"
   },
   {
     "id": "cc110002-ac00-0000-0000-000000000002",
