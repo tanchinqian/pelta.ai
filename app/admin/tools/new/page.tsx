@@ -157,25 +157,49 @@ export default function ClassifyToolPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Tool Name</label>
-            <input
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
-              placeholder="e.g. Grammarly, GitHub Copilot"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                className="w-full bg-background border border-border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                placeholder="e.g. Grammarly, GitHub Copilot"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={loading}
+              />
+              {name && !loading && (
+                <button
+                  type="button"
+                  onClick={() => setName('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
+                  title="Clear Tool Name"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">What is it used for?</label>
-            <input
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
-              placeholder="e.g. AI writing assistant for customer emails"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                className="w-full bg-background border border-border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                placeholder="e.g. AI writing assistant for customer emails"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                disabled={loading}
+              />
+              {description && !loading && (
+                <button
+                  type="button"
+                  onClick={() => setDescription('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
+                  title="Clear description"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
         

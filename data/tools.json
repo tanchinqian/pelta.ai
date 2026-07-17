@@ -344,5 +344,22 @@
     "justification": "Mock classification: \"faeawfa\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
     "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
     "createdAt": "2026-07-17T06:25:52.305Z"
+  },
+  {
+    "id": "af3d8ca3-24f8-4a38-89d5-5722b39fed6e",
+    "name": "Elson",
+    "description": "is gay",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Mock classification: \"Elson\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
+    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
+    "createdAt": "2026-07-17T06:28:26.097Z"
   }
 ]
