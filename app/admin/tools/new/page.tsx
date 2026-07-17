@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2 } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
@@ -105,6 +105,164 @@ export default function ClassifyToolPage() {
       console.error(err);
       fetchTools();
     }
+  };
+
+  const exportToJson = (record: ToolRecord) => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(record, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${record.name.toLowerCase().replace(/\s+/g, '_')}_risk_assessment.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handlePrintReport = (record: ToolRecord) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${record.name} - AI Risk Assessment Report</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              color: #1a1918;
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+              line-height: 1.6;
+            }
+            .header {
+              border-bottom: 2px solid #a07820;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+            .title {
+              margin: 0;
+              font-size: 28px;
+              font-weight: 800;
+              color: #1a1918;
+            }
+            .tagline {
+              font-size: 14px;
+              color: #5c5a55;
+              margin-top: 5px;
+            }
+            .badge {
+              font-family: monospace;
+              text-transform: uppercase;
+              font-size: 12px;
+              font-weight: bold;
+              padding: 6px 12px;
+              border-radius: 4px;
+              background: #f0efeb;
+            }
+            .risk-High { color: #dc2626; background: rgba(220,38,38,0.1); }
+            .risk-Medium { color: #d97706; background: rgba(217,119,6,0.1); }
+            .risk-Low { color: #16a34a; background: rgba(22,163,74,0.1); }
+            
+            .section {
+              margin-bottom: 25px;
+            }
+            .section-title {
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #5c5a55;
+              margin-bottom: 8px;
+              border-bottom: 1px solid #e2e0db;
+              padding-bottom: 4px;
+            }
+            .pill {
+              display: inline-block;
+              font-family: monospace;
+              font-size: 11px;
+              padding: 3px 8px;
+              background: #f0efeb;
+              border: 1px solid #e2e0db;
+              border-radius: 3px;
+              margin-right: 6px;
+              margin-bottom: 6px;
+              color: #5c5a55;
+            }
+            .meta-grid {
+              display: grid;
+              grid-template-cols: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+            .footer {
+              margin-top: 50px;
+              border-top: 1px solid #e2e0db;
+              padding-top: 15px;
+              font-size: 10px;
+              color: #8e8b84;
+              display: flex;
+              justify-content: space-between;
+            }
+            @media print {
+              body { padding: 0; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">${record.name}</h1>
+              <div class="tagline">${record.description}</div>
+            </div>
+            <span class="badge risk-${record.riskTier}">${record.riskTier} Risk</span>
+          </div>
+
+          <div class="meta-grid">
+            <div class="section">
+              <div class="section-title">NIST AI RMF Functions</div>
+              <div>
+                ${record.nistFunctions.map(f => `<span class="pill">${f}</span>`).join('')}
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">Data Categories Scope</div>
+              <div>
+                ${record.dataCategories.map(c => `<span class="pill">${c}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Governance Justification</div>
+            <p>${record.justification}</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Recommended Access Policy</div>
+            <p>${record.recommendedPolicy}</p>
+          </div>
+
+          <div class="footer">
+            <span>Generated by pelta.ai Compliance Portal</span>
+            <span>Assessment Date: ${new Date(record.createdAt).toLocaleDateString()}</span>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              };
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const toggleSort = (key: SortKey) => {
@@ -357,6 +515,25 @@ export default function ClassifyToolPage() {
               <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-0.5">Recommended Policy</p>
               <p className="text-text-secondary leading-relaxed">{result.recommendedPolicy}</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-3 border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => exportToJson(result)}
+              className="flex items-center gap-1 text-[10px] font-medium text-text-secondary hover:text-text-primary bg-background border border-border rounded px-2.5 py-1.5 transition-colors cursor-pointer"
+            >
+              <Download size={10} />
+              Export JSON
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePrintReport(result)}
+              className="flex items-center gap-1 text-[10px] font-medium text-text-secondary hover:text-text-primary bg-background border border-border rounded px-2.5 py-1.5 transition-colors cursor-pointer"
+            >
+              <Printer size={10} />
+              Print Report
+            </button>
           </div>
         </div>
       )}
