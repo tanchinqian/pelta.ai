@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readStore, updateItem } from '@/lib/fileStore';
+import { readStore, updateItem, deleteItem } from '@/lib/fileStore';
 
 interface ToolRecord {
   id: string;
@@ -38,4 +38,19 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: err.message ?? 'Failed to update' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'id parameter is required' }, { status: 400 });
+    }
+    const items = deleteItem<ToolRecord>('tools', id);
+    return NextResponse.json({ success: true, count: items.length });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Failed to delete' }, { status: 500 });
+  }
+}
+
 

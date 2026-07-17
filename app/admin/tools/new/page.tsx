@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
@@ -69,6 +69,27 @@ export default function ClassifyToolPage() {
       });
       if (!res.ok) {
         throw new Error('Failed to update status');
+      }
+      fetchTools();
+    } catch (err) {
+      console.error(err);
+      fetchTools();
+    }
+  };
+
+  const handleDeleteTool = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this tool?')) return;
+    
+    setTools((prev) => prev.filter((t) => t.id !== id));
+    if (result && result.id === id) {
+      setResult(null);
+    }
+    try {
+      const res = await fetch(`/api/tools?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        throw new Error('Failed to delete tool');
       }
       fetchTools();
     } catch (err) {
@@ -380,22 +401,35 @@ export default function ClassifyToolPage() {
                     <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden sm:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                     <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{t.dataCategories.join(', ') || '—'}</td>
                     <td className="py-2 px-4">
-                      <select
-                        value={t.status}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          handleStatusChange(t.id, e.target.value as any);
-                        }}
-                        className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
-                          t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
-                          t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
-                        }`}
-                      >
-                        <option value="approved" className="text-risk-low bg-background">Accept</option>
-                        <option value="pending" className="text-risk-medium bg-background">Pending</option>
-                        <option value="blocked" className="text-risk-high bg-background">Decline</option>
-                      </select>
+                      <div className="flex items-center gap-1.5 justify-end sm:justify-start">
+                        <select
+                          value={t.status}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(t.id, e.target.value as any);
+                          }}
+                          className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
+                            t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
+                            t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
+                          }`}
+                        >
+                          <option value="approved" className="text-risk-low bg-background">Accept</option>
+                          <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                          <option value="blocked" className="text-risk-high bg-background">Decline</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTool(t.id);
+                          }}
+                          className="text-text-secondary hover:text-risk-high p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
+                          title="Delete tool"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

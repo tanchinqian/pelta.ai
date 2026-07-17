@@ -193,23 +193,6 @@
     "createdAt": "2026-07-17T05:32:37.181Z"
   },
   {
-    "id": "49f07703-23a5-4211-bbd8-306a1a9bc360",
-    "name": "DeepSeek Coder",
-    "description": "Open-source code completion model used in local IDEs for software development",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:18:18.148Z"
-  },
-  {
     "id": "84b24555-a9dc-4f96-90f8-ecb4c0d037e2",
     "name": "v0 by Vercel",
     "description": "Generative UI system to build frontends from natural language prompts",
@@ -276,40 +259,6 @@
     "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
     "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
     "createdAt": "2026-07-17T06:20:14.912Z"
-  },
-  {
-    "id": "032863f4-8b41-42cd-9234-6af933ef058e",
-    "name": "DeepSeek Coder",
-    "description": "Open-source code completion model used in local IDEs for software development",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:20:37.776Z"
-  },
-  {
-    "id": "1daa9bd2-f3e5-4053-bece-22b6e55c5b4e",
-    "name": "DeepSeek Coder",
-    "description": "Open-source code completion model used in local IDEs for software development",
-    "status": "pending",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"DeepSeek Coder\" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.",
-    "recommendedPolicy": "Allow for non-sensitive tasks. Review quarterly for policy changes.",
-    "createdAt": "2026-07-17T06:21:12.859Z"
   },
   {
     "id": "c4bd3bd3-dd87-4ea8-bdc8-9280ce3f61b7",
