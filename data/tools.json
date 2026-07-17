@@ -194,21 +194,5 @@
     "recommendedPolicy": "Allow only for open-source repositories or non-proprietary modules. Require scanning for secrets or credentials before usage.",
     "status": "pending",
     "createdAt": "2026-07-17T07:01:19.618Z"
-  },
-  {
-    "id": "58d7772e-effd-487b-ac63-3e8686af3ae7",
-    "name": "elson",
-    "description": "not gay",
-    "riskTier": "Low",
-    "nistFunctions": [
-      "Govern"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Mock classification: \"elson\" was classified as Low Risk since it appears to be a general utility, design, or formatting tool that does not process source code, corporate financials, or personal customer data.",
-    "recommendedPolicy": "Allow for general organization use. Restrict clipboard integration for any internal document containing trade secrets.",
-    "status": "pending",
-    "createdAt": "2026-07-17T07:08:05.864Z"
   }
 ]
