@@ -64,6 +64,11 @@ export default function PromptGuardPage() {
       /\b(sk-|pk-|api[-_]?key|token|secret)[-_]?[A-Za-z0-9]{16,}\b/gi,
       /\b\d{3}[- ]?\d{2}[- ]?\d{4}\b/g,
       /\b(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
+      /\b[A-Z]{1,2}\d{6,9}\b/g,
+      /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g,
+      /\b\d{8,17}\b/g,
+      /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g,
+      /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g,
     ];
     let result = text;
     for (const pattern of patterns) {

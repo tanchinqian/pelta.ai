@@ -50,6 +50,7 @@ export default function RootLayout({
 
           <nav className="hidden sm:flex items-center gap-1 text-xs font-medium text-text-secondary">
             <NavLink href="/employee/prompt-guard">Prompt Guard</NavLink>
+            <NavLink href="/employee/requests/new">Request Tool</NavLink>
             <NavLink href="/employee/redress">Redress</NavLink>
             <span className="text-text-muted">/</span>
             <NavLink href="/admin/dashboard">Dashboard</NavLink>

@@ -70,5 +70,16 @@
     "status": "denied",
     "requestedAt": "2026-07-16T08:00:00.000Z",
     "decidedAt": "2026-07-16T08:22:35.099Z"
+  },
+  {
+    "id": "1ebbbe3f-3472-488f-842f-acad46274c75",
+    "employeeName": "Stuff",
+    "department": "Sales",
+    "toolRequested": "dfdfd",
+    "description": "dfdfd",
+    "status": "approved",
+    "requestedAt": "2026-07-16T10:22:36.998Z",
+    "decidedAt": "2026-07-16T10:24:54.291Z",
+    "denialReason": null
   }
 ]

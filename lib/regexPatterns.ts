@@ -62,8 +62,9 @@ export function scanWithRegex(text: string): RegexResult {
 
   const inconclusiveButSuspicious =
     !hasHighSeverity &&
+    !hasMediumSeverity &&
     suspiciousKeywords.length > 0 &&
-    text.length > 80;
+    text.length > 60;
 
   return {
     hits,

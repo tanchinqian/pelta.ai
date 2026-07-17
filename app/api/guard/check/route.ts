@@ -91,13 +91,15 @@ export async function POST(req: NextRequest) {
       }
 
       // Mock LLM fallback
-      const mockRisk = 'medium' as const;
+      const keywords = regexResult.suspiciousKeywords.slice(0, 4).join(', ');
       const log: GuardLog = {
         id: uuid(),
         promptSnippet: truncated,
         verdict: 'flag',
-        riskLevel: mockRisk,
-        reason: 'Mock LLM assessment: text contains business-sensitive keywords (confidential, salary, internal). Recommend admin review.',
+        riskLevel: 'medium',
+        reason: keywords
+          ? `Suspicious keywords detected: ${keywords}. Recommend admin review.`
+          : 'Text appears to contain business-sensitive context. Recommend admin review.',
         detectionMethod: 'llm',
         dataCategory,
         timestamp: new Date().toISOString(),
