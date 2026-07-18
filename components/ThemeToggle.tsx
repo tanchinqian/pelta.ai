@@ -12,11 +12,13 @@ export default function ThemeToggle() {
     if (stored) {
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
+      document.documentElement.classList.toggle('dark', stored === 'dark');
     } else {
       const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
       const initial = prefersLight ? 'light' : 'dark';
       setTheme(initial);
       document.documentElement.setAttribute('data-theme', initial);
+      document.documentElement.classList.toggle('dark', initial === 'dark');
     }
   }, []);
 
@@ -25,6 +27,7 @@ export default function ThemeToggle() {
     setTheme(next);
     localStorage.setItem('pelta-theme', next);
     document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
   };
 
   if (!mounted) return <div className="w-7 h-7" />;

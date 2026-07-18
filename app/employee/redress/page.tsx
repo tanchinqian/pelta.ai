@@ -45,7 +45,7 @@ const VERDICT_COLOR: Record<string, string> = {
 };
 
 const NIST_COLORS: Record<string, string> = {
-  Govern: '#3b82f6', Map: '#06b6d4', Measure: '#22c55e', Manage: '#a855f7',
+  Govern: 'var(--color-accent)', Map: '#7d9b9a', Measure: 'var(--color-risk-low)', Manage: '#c48b6c',
 };
 
 const REASON_SOFT_LIMIT = 500;
@@ -260,7 +260,7 @@ export default function RedressPage() {
                   key={log.id}
                   onClick={() => setSelectedLog(log)}
                   className={`w-full text-left px-3 py-2.5 hover:bg-surface-hover/50 transition-colors cursor-pointer ${
-                    selectedLog?.id === log.id ? 'bg-accent/5 border-l-2 border-accent' : 'border-l-2 border-transparent'
+                    selectedLog?.id === log.id ? 'bg-accent-dim/40 border-l border-accent font-medium' : 'border-l border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">

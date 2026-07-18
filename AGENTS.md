@@ -178,3 +178,15 @@ This project has the Playwright MCP server configured (see `opencode.json`). For
 - Every mocked feature should still be **visually complete** — judges score Design/UI-UX regardless of whether the logic behind it is real.
 - Reference NIST AI RMF (Govern/Map/Measure/Manage) and EU AI Act explicitly in on-screen copy — this signals to judges that the framework research (mentioned in the case study) was actually applied, not just the tech.
 - If time is very short, cut in this order: redress page → mocked approval workflow → dashboard chart polish. Never cut the two real features — they're what makes the demo credible.
+
+## Design Decision: NIST AI RMF Retrieval Grounding
+
+Tool Risk Classification does not rely on the LLM's general knowledge of the NIST AI RMF. Instead, it uses a lightweight, static retrieval layer:
+
+- `data/nist_ai_rmf_playbook.json` is the single source of truth (curated NIST AI RMF playbook content).
+- `scripts/build-nist-functions.js` derives `data/nist_ai_rmf_functions.json` into a queryable shape: `{ function, definition, concerns, keywords }`.
+- `lib/nistRetrieval.ts` performs case-insensitive keyword matching against the tool name + description, returns the top 1–3 most relevant functions, and falls back to all four short definitions if no strong match is found.
+- The retrieved context is injected into the live Gemini classification prompt, so the model's NIST function selection is grounded in the actual reference file rather than its training data.
+- The Classify result card exposes an expandable "Grounded in NIST AI RMF" section with a citation, making the retrieval step visible to judges.
+
+This is a deliberate hackathon-scoped tradeoff: keyword retrieval is fast, fully offline, and easy to inspect and demo. A natural next step is replacing it with a vector-embedding retriever over the same curated playbook.
