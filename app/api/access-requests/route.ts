@@ -100,7 +100,7 @@ export async function PATCH(req: NextRequest) {
         adminComment: typeof adminComment === 'string' ? adminComment : null,
         sections: updated.sections,
         riskLevel: updated.riskLevel ?? null,
-        timestamp: decidedAt,
+        timestamp: decidedAt ?? new Date().toISOString(),
       };
       addItem('audit-log', auditEntry);
     }
