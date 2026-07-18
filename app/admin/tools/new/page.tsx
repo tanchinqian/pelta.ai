@@ -56,10 +56,10 @@ export default function ClassifyToolPage() {
 
   const autocompleteSuggestions = name.trim()
     ? tools.filter(
-        (t) =>
-          t.name.toLowerCase().startsWith(name.toLowerCase()) &&
-          t.name.toLowerCase() !== name.toLowerCase()
-      )
+      (t) =>
+        t.name.toLowerCase().startsWith(name.toLowerCase()) &&
+        t.name.toLowerCase() !== name.toLowerCase()
+    )
     : [];
 
   const fetchTools = async () => {
@@ -92,7 +92,7 @@ export default function ClassifyToolPage() {
 
   const handleDeleteTool = async (id: string) => {
     if (!confirm('Are you sure you want to delete this tool?')) return;
-    
+
     setTools((prev) => prev.filter((t) => t.id !== id));
     if (result && result.id === id) {
       setResult(null);
@@ -283,7 +283,7 @@ export default function ClassifyToolPage() {
         fetchTools();
         if (flyoutTool?.id === tool.id) setFlyoutTool(data);
       }
-    } catch {}
+    } catch { }
     finally { setReclassifyingId(null); }
   };
 
@@ -310,10 +310,10 @@ export default function ClassifyToolPage() {
 
   const displayedTools = [...filteredTools].sort((a, b) => {
     if (!sortKey || !sortDir) return 0;
-    
+
     let av: string | number;
     let bv: string | number;
-    
+
     if (sortKey === 'riskTier') {
       av = RISK_ORDER[a.riskTier ?? ''] ?? 0;
       bv = RISK_ORDER[b.riskTier ?? ''] ?? 0;
@@ -321,7 +321,7 @@ export default function ClassifyToolPage() {
       av = (a[sortKey] ?? '').toLowerCase();
       bv = (b[sortKey] ?? '').toLowerCase();
     }
-    
+
     if (av < bv) return sortDir === 'asc' ? -1 : 1;
     if (av > bv) return sortDir === 'asc' ? 1 : -1;
     return 0;
@@ -460,7 +460,7 @@ export default function ClassifyToolPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Preset suggestions */}
               <div className="space-y-2">
                 <span className="block text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-semibold">Quick Suggestions</span>
@@ -513,11 +513,10 @@ export default function ClassifyToolPage() {
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">{result.description}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
-                    result.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
-                    result.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
-                    'bg-risk-low-bg text-risk-low border border-risk-low/15'
-                  }`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${result.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                      result.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
+                        'bg-risk-low-bg text-risk-low border border-risk-low/15'
+                    }`}>
                     {result.riskTier ?? 'Unclassified'}
                   </span>
                   <button
@@ -661,9 +660,8 @@ export default function ClassifyToolPage() {
                     return (
                       <tr
                         key={t.id}
-                        className={`transition-colors hover:bg-surface-hover/50 dark:hover:bg-white/[0.03] ${
-                          isSelected ? 'bg-accent-dim/20 dark:bg-accent-dim/10 border-l-2 border-l-accent font-medium' : ''
-                        }`}
+                        className={`transition-colors hover:bg-surface-hover/50 dark:hover:bg-white/[0.03] ${isSelected ? 'bg-accent-dim/20 dark:bg-accent-dim/10 border-l-2 border-l-accent font-medium' : ''
+                          }`}
                       >
                         {/* Name column */}
                         <td className="py-3 px-4">
@@ -684,11 +682,10 @@ export default function ClassifyToolPage() {
                         {/* Risk Tier column */}
                         <td className="py-3 px-4">
                           {t.riskTier ? (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
-                              t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
-                              t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
-                              'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
-                            }`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
+                                t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
+                                  'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
+                              }`}>
                               {t.riskTier}
                             </span>
                           ) : (
@@ -711,25 +708,29 @@ export default function ClassifyToolPage() {
                         {/* Policy actions */}
                         <td className="py-3 px-4 text-center">
                           <div className="flex items-center gap-2 justify-center">
-                            <select
-                              value={t.status}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
-                              }}
-                              className={`border rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-accent transition-colors cursor-pointer
-                                ${t.status === 'approved'
-                                  ? 'bg-risk-low-bg dark:bg-emerald-950/25 text-risk-low dark:text-emerald-400 border-risk-low/30 dark:border-emerald-500/30'
-                                  : t.status === 'blocked'
-                                  ? 'bg-risk-high-bg dark:bg-rose-950/25 text-risk-high dark:text-rose-400 border-risk-high/30 dark:border-rose-500/30'
-                                  : 'bg-zinc-50 dark:bg-zinc-950 text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30 border-zinc-200 dark:border-zinc-800'
-                                }`}
-                            >
-                              <option value="pending" className="text-risk-medium bg-background">Pending</option>
-                              <option value="approved" className="text-risk-low bg-background">Approved</option>
-                              <option value="blocked" className="text-risk-high bg-background">Blocked</option>
-                            </select>
+                            {t.status === 'approved' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-risk-low/15 dark:border-emerald-500/25 bg-risk-low-bg dark:bg-emerald-950/25 text-risk-low dark:text-emerald-400 text-[9px] font-mono font-bold uppercase tracking-wider">
+                                <span className="size-1 rounded-full bg-risk-low" /> Approved
+                              </span>
+                            ) : t.status === 'blocked' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-risk-high/15 dark:border-rose-500/25 bg-risk-high-bg dark:bg-rose-950/25 text-risk-high dark:text-rose-400 text-[9px] font-mono font-bold uppercase tracking-wider">
+                                <span className="size-1 rounded-full bg-risk-high" /> Blocked
+                              </span>
+                            ) : (
+                              <select
+                                value={t.status}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
+                                }}
+                                className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30"
+                              >
+                                <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                                <option value="approved" className="text-risk-low bg-background">Accept</option>
+                                <option value="blocked" className="text-risk-high bg-background">Decline</option>
+                              </select>
+                            )}
 
                             {/* Additional paired actions */}
                             <div className="flex items-center gap-1 ml-auto">
@@ -780,8 +781,8 @@ export default function ClassifyToolPage() {
                 <h3 className="text-base font-serif font-semibold text-text-primary truncate">{flyoutTool.name}</h3>
                 <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {flyoutTool.id}</p>
               </div>
-              <button 
-                onClick={() => setFlyoutTool(null)} 
+              <button
+                onClick={() => setFlyoutTool(null)}
                 className="text-zinc-750 dark:text-zinc-100 hover:text-accent transition-colors cursor-pointer mt-0.5 px-2 py-1 rounded hover:bg-surface-hover text-xs font-mono"
               >
                 CLOSE
@@ -799,11 +800,10 @@ export default function ClassifyToolPage() {
                 <div>
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Assessment</h4>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
-                      flyoutTool.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
-                      flyoutTool.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
-                      'bg-risk-low-bg text-risk-low border border-risk-low/15'
-                    }`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                        flyoutTool.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
+                          'bg-risk-low-bg text-risk-low border border-risk-low/15'
+                      }`}>
                       {flyoutTool.riskTier}
                     </span>
                   </div>
@@ -811,25 +811,12 @@ export default function ClassifyToolPage() {
                 <div>
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Governance Status</h4>
                   <div className="mt-1">
-                    <select
-                      value={flyoutTool.status}
-                      onChange={(e) => {
-                        const newStatus = e.target.value as 'approved' | 'pending' | 'blocked';
-                        handleStatusChange(flyoutTool.id, newStatus);
-                        setFlyoutTool((prev) => prev ? { ...prev, status: newStatus } : null);
-                      }}
-                      className={`border rounded-lg px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-accent transition-colors cursor-pointer
-                        ${flyoutTool.status === 'approved'
-                          ? 'bg-risk-low-bg text-risk-low border-risk-low/30'
-                          : flyoutTool.status === 'blocked'
-                          ? 'bg-risk-high-bg text-risk-high border-risk-high/30'
-                          : 'bg-risk-medium-bg text-risk-medium border-risk-medium/30'
-                        }`}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="approved">Approved</option>
-                      <option value="blocked">Blocked</option>
-                    </select>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.status === 'approved' ? 'border-risk-low/15 bg-risk-low-bg text-risk-low' :
+                        flyoutTool.status === 'blocked' ? 'border-risk-high/15 bg-risk-high-bg text-risk-high' :
+                          'border-risk-medium/15 bg-risk-medium-bg text-risk-medium'
+                      }`}>
+                      {flyoutTool.status}
+                    </span>
                   </div>
                 </div>
               </div>
