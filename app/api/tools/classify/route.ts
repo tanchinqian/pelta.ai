@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { classifyToolRisk } from '@/lib/gemini';
-import { addItem } from '@/lib/fileStore';
+import { addItem, readStore, updateItem } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
 interface ToolRecord {
@@ -26,24 +26,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Always returns a result — falls back to heuristic mock on quota/API errors
-    const classification = await classifyToolRisk(name, description);
+    const tools = readStore<ToolRecord>('tools');
+    const existing = tools.find((t) => t.name.toLowerCase() === name.trim().toLowerCase());
 
-    const tool: ToolRecord = {
-      id: uuid(),
-      name,
-      description,
-      status: 'pending',
-      riskTier: classification.riskTier,
-      nistFunctions: classification.nistFunctions,
-      dataCategories: classification.dataCategories,
-      justification: classification.justification,
-      recommendedPolicy: classification.recommendedPolicy,
-      createdAt: new Date().toISOString(),
+    // classifyToolRisk handles its own fallback (mock on no-key/quota errors)
+    const geminiResult = await classifyToolRisk(name.trim(), description.trim());
+    const classification = {
+      name: name.trim(),
+      description: description.trim(),
+      riskTier: geminiResult.riskTier,
+      nistFunctions: geminiResult.nistFunctions,
+      dataCategories: geminiResult.dataCategories,
+      justification: geminiResult.justification,
+      recommendedPolicy: geminiResult.recommendedPolicy,
     };
 
-    addItem('tools', tool);
-    return NextResponse.json(tool);
+    let finalTool: ToolRecord;
+
+    if (existing) {
+      const updates: Partial<ToolRecord> = {
+        description: classification.description,
+        riskTier: classification.riskTier,
+        nistFunctions: classification.nistFunctions,
+        dataCategories: classification.dataCategories,
+        justification: classification.justification,
+        recommendedPolicy: classification.recommendedPolicy,
+      };
+      updateItem<ToolRecord>('tools', existing.id, updates);
+      finalTool = { ...existing, ...updates } as ToolRecord;
+    } else {
+      finalTool = {
+        id: uuid(),
+        ...classification,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      } as ToolRecord;
+      addItem('tools', finalTool);
+    }
+
+    return NextResponse.json(finalTool);
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message ?? 'Classification failed' },

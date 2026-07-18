@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import ThemeToggle from "@/components/ThemeToggle";
 import SeedButton from "@/components/SeedButton";
+import ApprovalsNavLink from "@/components/ApprovalsNavLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,7 +56,7 @@ export default function RootLayout({
             <span className="text-text-muted">/</span>
             <NavLink href="/admin/dashboard">Dashboard</NavLink>
             <NavLink href="/admin/tools/new">Classify</NavLink>
-            <NavLink href="/admin/requests">Requests</NavLink>
+            <ApprovalsNavLink />
           </nav>
 
           <div className="ml-auto flex items-center gap-2">

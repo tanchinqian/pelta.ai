@@ -43,3 +43,13 @@ export function updateItem<T extends { id: string }>(
   writeStore(filename, items);
   return items;
 }
+
+export function deleteItem<T extends { id: string }>(
+  filename: string,
+  id: string,
+): T[] {
+  const items = readStore<T>(filename);
+  const filtered = items.filter((i) => i.id !== id);
+  writeStore(filename, filtered);
+  return filtered;
+}
