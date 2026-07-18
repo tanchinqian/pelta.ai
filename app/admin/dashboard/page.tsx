@@ -26,6 +26,12 @@ interface RequestRecord {
   toolRequested: string; status: string;
   requestedAt: string; decidedAt: string | null;
 }
+interface AccessRequest {
+  id: string; employeeName: string; sections: string[];
+  reason: string; status: 'pending' | 'approved' | 'rejected';
+  adminComment: string | null; logRef: string;
+  requestedAt: string; decidedAt: string | null;
+}
 
 /* ── Color palette (semantic — same in both themes) ────── */
 
@@ -91,14 +97,18 @@ export default function DashboardPage() {
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [showAllLogs, setShowAllLogs] = useState(false);
   const [tipStyle, setTipStyle] = useState<React.CSSProperties>({});
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectionDraft, setRejectionDraft] = useState('');
 
   const fetchData = useCallback(async () => {
-    const [t, l, r] = await Promise.all([
+    const [t, l, r, ar] = await Promise.all([
       fetch('/api/tools').then((r) => r.json()),
       fetch('/api/logs').then((r) => r.json()),
       fetch('/api/requests').then((r) => r.json()),
+      fetch('/api/access-requests').then((r) => r.json()),
     ]);
-    setTools(t); setLogs(l); setRequests(r);
+    setTools(t); setLogs(l); setRequests(r); setAccessRequests(ar);
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
@@ -124,6 +134,27 @@ export default function DashboardPage() {
       if (sortDir === 'asc') setSortDir('desc');
       else if (sortDir === 'desc') { setSortKey(null); setSortDir(null); }
     } else { setSortKey(key); setSortDir('asc'); }
+  };
+
+  const updateAccessRequest = async (
+    id: string,
+    status: 'approved' | 'rejected',
+    adminComment?: string,
+  ) => {
+    setAccessRequests((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? { ...r, status, adminComment: adminComment ?? null, decidedAt: new Date().toISOString() }
+          : r,
+      ),
+    );
+    await fetch('/api/access-requests', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status, adminComment }),
+    });
+    setRejectingId(null);
+    setRejectionDraft('');
   };
 
   const sortedTools = [...tools].sort((a, b) => {
@@ -462,6 +493,84 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+
+      {/* ── Access Requests ─────────────────────────────── */}
+      <div className="panel p-3">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+            Access Requests
+            <span className="text-text-tertiary font-normal ml-1">
+              ({accessRequests.filter((r) => r.status === 'pending').length} pending)
+            </span>
+          </span>
+        </div>
+
+        {accessRequests.length === 0 && (
+          <p className="text-[11px] text-text-tertiary text-center py-4">No access requests.</p>
+        )}
+
+        {/* Pending cards */}
+        {accessRequests.filter((r) => r.status === 'pending').length > 0 && (
+          <div className="mb-3 space-y-2">
+            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider block mb-1.5">Pending</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {accessRequests
+                .filter((r) => r.status === 'pending')
+                .map((req) => (
+                  <AccessRequestCard
+                    key={req.id}
+                    req={req}
+                    rejectingId={rejectingId}
+                    rejectionDraft={rejectionDraft}
+                    onApprove={(id) => updateAccessRequest(id, 'approved')}
+                    onStartReject={(id) => { setRejectingId(id); setRejectionDraft(''); }}
+                    onRejectionChange={setRejectionDraft}
+                    onSendRejection={(id) => updateAccessRequest(id, 'rejected', rejectionDraft)}
+                    onCancelReject={() => { setRejectingId(null); setRejectionDraft(''); }}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Decided rows */}
+        {accessRequests.filter((r) => r.status !== 'pending').length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider block">Decided</span>
+            {accessRequests
+              .filter((r) => r.status !== 'pending')
+              .map((req, i) => (
+                <div
+                  key={req.id}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg border border-border/60 text-xs ${
+                    i % 2 === 1 ? 'bg-surface-hover/20' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-text-primary">{req.employeeName}</span>
+                    <span className="text-[10px] font-mono text-text-tertiary">
+                      {req.sections.join(', ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {req.adminComment && (
+                      <span className="text-[10px] text-text-tertiary max-w-[220px] truncate hidden md:block">
+                        {req.adminComment}
+                      </span>
+                    )}
+                    <span
+                      className={`text-[10px] font-bold font-mono uppercase ${
+                        req.status === 'approved' ? 'text-risk-low' : 'text-risk-high'
+                      }`}
+                    >
+                      {req.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -519,5 +628,92 @@ function SortTh({ label, sortKey: key, active, dir, onToggle }: {
         {isActive ? (dir === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />) : <ArrowUpDown size={10} className="text-text-muted" />}
       </span>
     </th>
+  );
+}
+
+function AccessRequestCard({
+  req, rejectingId, rejectionDraft,
+  onApprove, onStartReject, onRejectionChange, onSendRejection, onCancelReject,
+}: {
+  req: AccessRequest;
+  rejectingId: string | null;
+  rejectionDraft: string;
+  onApprove: (id: string) => void;
+  onStartReject: (id: string) => void;
+  onRejectionChange: (v: string) => void;
+  onSendRejection: (id: string) => void;
+  onCancelReject: () => void;
+}) {
+  const isRejecting = rejectingId === req.id;
+  return (
+    <div className="panel p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-medium text-text-primary">{req.employeeName}</p>
+          <p className="text-[10px] font-mono text-text-tertiary">
+            {new Date(req.requestedAt).toLocaleString()}
+          </p>
+        </div>
+        <span className="text-[10px] font-mono text-text-muted shrink-0">
+          ref: {req.logRef.slice(0, 8)}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {req.sections.map((s) => (
+          <span
+            key={s}
+            className="text-[9px] font-medium font-mono px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary"
+          >
+            {s}
+          </span>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-text-tertiary leading-relaxed">{req.reason}</p>
+
+      {!isRejecting ? (
+        <div className="flex items-center gap-1.5 pt-1">
+          <button
+            onClick={() => onApprove(req.id)}
+            className="text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2.5 py-1 transition-colors cursor-pointer"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => onStartReject(req.id)}
+            className="text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2.5 py-1 transition-colors cursor-pointer"
+          >
+            Reject
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1.5 pt-1">
+          <textarea
+            className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
+            placeholder="Reason for rejection..."
+            rows={2}
+            value={rejectionDraft}
+            onChange={(e) => onRejectionChange(e.target.value)}
+            autoFocus
+          />
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => onSendRejection(req.id)}
+              disabled={!rejectionDraft.trim()}
+              className="text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2.5 py-1 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Send Rejection
+            </button>
+            <button
+              onClick={onCancelReject}
+              className="text-[10px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

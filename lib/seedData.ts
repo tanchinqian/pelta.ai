@@ -358,3 +358,39 @@ export const SEED_REQUESTS = [
     decidedAt: "2026-07-16T08:22:35.099Z",
   },
 ];
+
+export const SEED_ACCESS_REQUESTS = [
+  {
+    id: "cc110001-ac00-0000-0000-000000000001",
+    employeeName: "Demo Employee",
+    sections: ["Email address", "Phone number"],
+    reason: "This contact list is for an internal team offsite. The email and phone belong to our own staff, not external customers.",
+    status: "pending",
+    adminComment: null,
+    logRef: "b0c1d2e3-f4a5-6789-bcde-789012345678",
+    requestedAt: "2026-07-16T14:45:00.000Z",
+    decidedAt: null,
+  },
+  {
+    id: "cc110002-ac00-0000-0000-000000000002",
+    employeeName: "Demo Employee",
+    sections: ["Financial data"],
+    reason: "Preparing an internal Q3 summary for the leadership team only. Not for external sharing.",
+    status: "approved",
+    adminComment: null,
+    logRef: "f2a3b4c5-d6e7-8901-fabc-901234567890",
+    requestedAt: "2026-07-15T09:30:00.000Z",
+    decidedAt: "2026-07-15T10:15:00.000Z",
+  },
+  {
+    id: "cc110003-ac00-0000-0000-000000000003",
+    employeeName: "Demo Employee",
+    sections: ["PII", "Email address"],
+    reason: "Need to send onboarding instructions to new hires joining next week.",
+    status: "rejected",
+    adminComment: "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",
+    logRef: "a7b8c9d0-e1f2-3456-abcd-456789012345",
+    requestedAt: "2026-07-14T11:30:00.000Z",
+    decidedAt: "2026-07-14T14:00:00.000Z",
+  },
+];

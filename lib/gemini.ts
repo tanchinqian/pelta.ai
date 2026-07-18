@@ -55,6 +55,43 @@ Return ONLY valid JSON (no markdown, no fences, no preamble) with:
 "medium" = contains business-sensitive context (financial figures, internal project names, etc.) but no hard PII.
 "high" = contains definite PII, financial secrets, credentials, or legally protected data.`;
 
+const SUGGEST_SYSTEM_PROMPT = `You are a data-loss prevention assistant helping an employee rephrase a prompt that was blocked for containing sensitive data.
+
+Rewrite the prompt into exactly 3 safe alternatives that:
+1. Preserve the user's original intent and request
+2. Remove or generalise all sensitive data (no real emails, phone numbers, names, or identifiers)
+3. Are ready to use as-is without further editing
+
+Return ONLY a JSON array of exactly 3 strings. No markdown fences, no preamble, no explanation.`;
+
+const SUGGEST_FALLBACK: string[] = [
+  'Please help me draft a professional message to our internal contact about the project handover. I will add recipient details separately before sending.',
+  'Write a concise handover update that I can personalise with the relevant contact information for the team member.',
+  'Draft a project transition summary in a neutral tone that I can adapt and send to the appropriate stakeholder.',
+];
+
+export async function suggestSafePrompts(
+  blockedPrompt: string,
+  detectedPatterns: string[],
+): Promise<string[]> {
+  const genAI = getClient();
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+  const patternList = detectedPatterns.length > 0 ? detectedPatterns.join(', ') : 'sensitive data';
+  const prompt = `${SUGGEST_SYSTEM_PROMPT}\n\nDetected sensitive patterns: ${patternList}\n\nOriginal blocked prompt:\n"""\n${blockedPrompt.slice(0, 1000)}\n"""\n\nReturn ONLY a JSON array of exactly 3 strings.`;
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  try {
+    const parsed = parseJson(text);
+    if (Array.isArray(parsed) && parsed.length >= 3) return parsed.slice(0, 3) as string[];
+    throw new Error('Response was not an array of 3');
+  } catch {
+    return SUGGEST_FALLBACK;
+  }
+}
+
 export async function classifyPromptRisk(text: string): Promise<PromptRiskResponse> {
   const genAI = getClient();
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
