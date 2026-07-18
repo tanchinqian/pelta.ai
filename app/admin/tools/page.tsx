@@ -156,6 +156,16 @@ export default function ToolsRegistryPage() {
     }
   };
 
+  const updateToolStatus = async (id: string, status: 'approved' | 'blocked' | 'pending') => {
+    setTools((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
+    setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status } : prev);
+    await fetch('/api/tools', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+  };
+
   useEffect(() => { fetchTools(); }, []);
 
   const toggleSort = (key: SortKey) => {
@@ -404,6 +414,34 @@ export default function ToolsRegistryPage() {
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
                   <div className="mt-1"><StatusBadge status={selectedTool.status} /></div>
                 </div>
+              </div>
+
+              {/* Status Actions */}
+              <div className="flex flex-wrap gap-2">
+                {selectedTool.status !== 'approved' && (
+                  <button
+                    onClick={() => updateToolStatus(selectedTool.id, 'approved')}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                  >
+                    <CheckCircle2 size={12} /> Approve
+                  </button>
+                )}
+                {selectedTool.status !== 'blocked' && (
+                  <button
+                    onClick={() => updateToolStatus(selectedTool.id, 'blocked')}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                  >
+                    <XCircle size={12} /> Block
+                  </button>
+                )}
+                {selectedTool.status !== 'pending' && (
+                  <button
+                    onClick={() => updateToolStatus(selectedTool.id, 'pending')}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer"
+                  >
+                    <Clock size={12} /> Reset to Pending
+                  </button>
+                )}
               </div>
 
               <div>

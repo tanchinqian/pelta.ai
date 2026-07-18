@@ -108,11 +108,12 @@ function SectionTag({ label }: { label: string }) {
 /* ── Redress Appeal Detail Modal ────────────────────────── */
 
 function AppealDetailModal({
-  req, onClose, onApprove, onStartReject,
+  req, onClose, onApprove, onStartReject, onResetPending,
   rejectingId, rejectionDraft, onRejectionChange, onSendRejection, onCancelReject,
 }: {
   req: AccessRequest; onClose: () => void;
   onApprove: (id: string) => void; onStartReject: (id: string) => void;
+  onResetPending: (id: string) => void;
   rejectingId: string | null; rejectionDraft: string;
   onRejectionChange: (v: string) => void;
   onSendRejection: (id: string) => void; onCancelReject: () => void;
@@ -178,38 +179,46 @@ function AppealDetailModal({
             <Shield size={10} />
             <span>NIST AI RMF — Govern · Manage &nbsp;|&nbsp; Audit trail logged</span>
           </div>
-          {isPending && (
-            <div>
-              {!isRejecting ? (
-                <div className="flex items-center gap-2">
+          <div>
+            {!isRejecting ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                {req.status !== 'approved' && (
                   <button id={`approve-modal-${req.id}`} onClick={() => onApprove(req.id)}
                     className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <CheckCircle size={12} /> Approve
                   </button>
+                )}
+                {req.status !== 'rejected' && (
                   <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
                     className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <XCircle size={12} /> Decline
                   </button>
+                )}
+                {!isPending && (
+                  <button onClick={() => onResetPending(req.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    Reset to Pending
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <textarea
+                  className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
+                  placeholder="Reason for declining (required)..."
+                  rows={3} value={rejectionDraft}
+                  onChange={(e) => onRejectionChange(e.target.value)} autoFocus
+                />
+                <div className="flex items-center gap-2">
+                  <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
+                    className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                    Confirm Decline
+                  </button>
+                  <button onClick={onCancelReject} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <textarea
-                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
-                    placeholder="Reason for declining (required)..."
-                    rows={3} value={rejectionDraft}
-                    onChange={(e) => onRejectionChange(e.target.value)} autoFocus
-                  />
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
-                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
-                      Confirm Decline
-                    </button>
-                    <button onClick={onCancelReject} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -219,10 +228,11 @@ function AppealDetailModal({
 /* ── Tool Request Detail Modal ──────────────────────────── */
 
 function ToolDetailModal({
-  req, onClose, onApprove, onDeny,
+  req, onClose, onApprove, onDeny, onResetPending,
 }: {
   req: ToolRequest; onClose: () => void;
   onApprove: (id: string) => void; onDeny: (id: string) => void;
+  onResetPending: (id: string) => void;
 }) {
   const isPending = req.status === 'pending';
   return (
@@ -265,18 +275,26 @@ function ToolDetailModal({
             <Shield size={10} />
             <span>NIST AI RMF — Govern · Map</span>
           </div>
-          {isPending && (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {req.status !== 'approved' && (
               <button onClick={() => onApprove(req.id)}
                 className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                 <CheckCircle size={12} /> Approve
               </button>
+            )}
+            {req.status !== 'denied' && (
               <button onClick={() => onDeny(req.id)}
                 className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                 <XCircle size={12} /> Deny
               </button>
-            </div>
-          )}
+            )}
+            {!isPending && (
+              <button onClick={() => onResetPending(req.id)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer">
+                Reset to Pending
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -342,9 +360,9 @@ export default function RequestsPage() {
   }, []);
 
   // ── Appeal actions ──
-  const updateAppeal = async (id: string, status: 'approved' | 'rejected', adminComment?: string) => {
-    const now = new Date().toISOString();
-    const patch = { status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now };
+  const updateAppeal = async (id: string, status: 'approved' | 'rejected' | 'pending', adminComment?: string) => {
+    const now = status !== 'pending' ? new Date().toISOString() : null;
+    const patch = { status, adminComment: adminComment ?? null, reviewerName: status !== 'pending' ? 'Admin' : null, decidedAt: now };
     setAppeals((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
     setSelectedAppeal((prev) => prev && prev.id === id ? { ...prev, ...patch } : prev);
     await fetch('/api/access-requests', {
@@ -358,9 +376,10 @@ export default function RequestsPage() {
   };
 
   // ── Tool request actions ──
-  const updateToolReq = async (id: string, status: 'approved' | 'denied') => {
-    setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt: new Date().toISOString() } : r));
-    setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt: new Date().toISOString() } : prev);
+  const updateToolReq = async (id: string, status: 'approved' | 'denied' | 'pending') => {
+    const decidedAt = status !== 'pending' ? new Date().toISOString() : null;
+    setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt } : r));
+    setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt } : prev);
     await fetch('/api/requests', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -671,6 +690,7 @@ export default function RequestsPage() {
           onClose={() => { setSelectedAppeal(null); setRejectingId(null); setRejectionDraft(''); }}
           onApprove={(id) => updateAppeal(id, 'approved')}
           onStartReject={(id) => setRejectingId(id)}
+          onResetPending={(id) => updateAppeal(id, 'pending')}
           rejectingId={rejectingId}
           rejectionDraft={rejectionDraft}
           onRejectionChange={setRejectionDraft}
@@ -684,8 +704,9 @@ export default function RequestsPage() {
         <ToolDetailModal
           req={selectedTool}
           onClose={() => setSelectedTool(null)}
-          onApprove={(id) => { updateToolReq(id, 'approved'); setSelectedTool(null); }}
-          onDeny={(id) => { updateToolReq(id, 'denied'); setSelectedTool(null); }}
+          onApprove={(id) => updateToolReq(id, 'approved')}
+          onDeny={(id) => updateToolReq(id, 'denied')}
+          onResetPending={(id) => updateToolReq(id, 'pending')}
         />
       )}
     </>

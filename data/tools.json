@@ -3,7 +3,7 @@
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Grammarly",
     "description": "AI writing assistant for drafting customer support emails and internal documentation",
-    "status": "pending",
+    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
@@ -95,17 +95,18 @@
     "id": "f6a7b8c9-d0e1-2345-fabc-345678901234",
     "name": "Midjourney",
     "description": "AI image generation for marketing materials and social media content",
-    "status": "pending",
+    "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
+      "Map",
       "Manage"
     ],
     "dataCategories": [
-      "None"
+      "PII"
     ],
-    "justification": "Image prompts sent to external servers. Potential for brand/IP exposure through prompt leakage.",
-    "recommendedPolicy": "Allow for marketing use. Require prompt review for client-facing content.",
+    "justification": "Midjourney is classified as Medium risk primarily due to intellectual property (IP) exposure, third-party data ingestion, and potential privacy violations if users upload images containing PII (such as human faces) for image-to-image generation. Under standard subscription tiers, prompts and generated assets are public by default. Furthermore, the EU AI Act mandates transparency and labeling for generative AI outputs to prevent deception, while the NIST AI RMF emphasizes managing the risks of copyright infringement, brand-inconsistent outputs, and bias in generated media.",
+    "recommendedPolicy": "Restrict usage to approved marketing personnel. Mandate the use of 'Stealth Mode' (available on Pro/Mega plans) to ensure prompts and outputs remain private. Strictly prohibit uploading real personal images (PII) or pre-release proprietary brand collateral. Require all published outputs to be vetted for copyright infringement and labeled as AI-generated in compliance with EU AI Act transparency rules.",
     "createdAt": "2026-07-15T10:00:00.000Z"
   },
   {
