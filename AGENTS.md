@@ -161,6 +161,17 @@ This is your second real feature — genuinely functional, not mocked, but simpl
 
 ---
 
+## Visual Verification (Playwright MCP)
+This project has the Playwright MCP server configured (see `opencode.json`). For ANY task that changes layout, styling, colors, spacing, animations, or visual structure of a page:
+- After making the change, use Playwright to navigate to every affected page on `localhost:3000` (assume the dev server is already running unless told otherwise) and take a screenshot to visually verify the result.
+- Check specifically for: dead/empty space, overlapping or clipped elements, broken responsive behavior, leftover debug artifacts (stray characters, unstyled defaults), and whether the change actually matches what was asked for.
+- If something looks wrong in your own screenshot, fix it and re-check before reporting the task as done.
+- Always show the screenshot alongside your summary of what changed — don't just describe the result in text.
+- This applies by default without needing to be asked each time. Skip it only for changes with no visual impact (e.g. pure backend/API logic, data model changes with no UI change).
+
+
+---
+
 ## Notes for the Coding Agent
 - Keep API responses to Claude **strictly JSON** — instruct the model explicitly to return only JSON, no markdown fences, no preamble. Parse defensively (strip fences if present) since models occasionally add them anyway.
 - Don't build real auth, real DB, or real notification/email systems — time is better spent on visual polish and demo reliability than infrastructure that isn't being judged.

@@ -5,8 +5,13 @@
     "description": "AI writing assistant for drafting customer support emails and internal documentation",
     "status": "approved",
     "riskTier": "Low",
-    "nistFunctions": ["Govern", "Measure"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Govern",
+      "Measure"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
     "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
     "createdAt": "2026-07-14T10:00:00.000Z"
@@ -17,8 +22,14 @@
     "description": "AI pair programmer integrated into VS Code for code completion",
     "status": "approved",
     "riskTier": "Medium",
-    "nistFunctions": ["Govern", "Map", "Manage"],
-    "dataCategories": ["Source Code"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
     "justification": "Copilot sends code snippets to GitHub servers. Exposes internal code patterns to a third party.",
     "recommendedPolicy": "Allow for open-source repos. Block for proprietary repositories containing trade secrets.",
     "createdAt": "2026-07-14T11:00:00.000Z"
@@ -29,8 +40,16 @@
     "description": "General-purpose LLM used by engineering for code review, brainstorming, and debugging",
     "status": "approved",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
-    "dataCategories": ["PII", "Source Code"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "PII",
+      "Source Code"
+    ],
     "justification": "General-purpose LLM with broad data handling. Can process PII, source code, and confidential prompts. Data retention policies vary.",
     "recommendedPolicy": "Allow for non-sensitive tasks. Block file uploads. Require quarterly compliance review.",
     "createdAt": "2026-07-14T14:00:00.000Z"
@@ -41,8 +60,12 @@
     "description": "AI-powered note-taking assistant for meeting summaries and action items",
     "status": "approved",
     "riskTier": "Low",
-    "nistFunctions": ["Govern"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Govern"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Lightweight AI features within Notion workspace. Limited data exposure scope.",
     "recommendedPolicy": "Allow for internal note-taking. Restrict from financial or HR documents.",
     "createdAt": "2026-07-14T15:00:00.000Z"
@@ -53,8 +76,13 @@
     "description": "AI research assistant with real-time web search for technical research",
     "status": "pending",
     "riskTier": "Medium",
-    "nistFunctions": ["Map", "Measure"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Map",
+      "Measure"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Search queries are sent to external servers. May expose internal project names and research direction.",
     "recommendedPolicy": "Allow for general research. Block queries containing project codenames or internal URLs.",
     "createdAt": "2026-07-15T09:00:00.000Z"
@@ -65,8 +93,13 @@
     "description": "AI image generation for marketing materials and social media content",
     "status": "pending",
     "riskTier": "Medium",
-    "nistFunctions": ["Govern", "Manage"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Govern",
+      "Manage"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Image prompts sent to external servers. Potential for brand/IP exposure through prompt leakage.",
     "recommendedPolicy": "Allow for marketing use. Require prompt review for client-facing content.",
     "createdAt": "2026-07-15T10:00:00.000Z"
@@ -77,8 +110,16 @@
     "description": "Anthropic's CLI coding assistant for development workflows",
     "status": "pending",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
-    "dataCategories": ["Source Code", "PII"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code",
+      "PII"
+    ],
     "justification": "Full codebase access with file system operations. Can read source code, configs, and environment variables containing secrets.",
     "recommendedPolicy": "Evaluate for engineering use only. Require IP audit before approval.",
     "createdAt": "2026-07-15T11:00:00.000Z"
@@ -89,8 +130,14 @@
     "description": "Enterprise marketing content generation platform",
     "status": "blocked",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Manage"],
-    "dataCategories": ["PII", "Financial"],
+    "nistFunctions": [
+      "Govern",
+      "Manage"
+    ],
+    "dataCategories": [
+      "PII",
+      "Financial"
+    ],
     "justification": "Handles marketing copy with potential customer PII and campaign financial data. Third-party data processing.",
     "recommendedPolicy": "Blocked pending legal review of data processing agreement.",
     "createdAt": "2026-07-14T09:00:00.000Z"
@@ -101,8 +148,13 @@
     "description": "AI-first code editor with multi-model support",
     "status": "approved",
     "riskTier": "Medium",
-    "nistFunctions": ["Govern", "Map"],
-    "dataCategories": ["Source Code"],
+    "nistFunctions": [
+      "Govern",
+      "Map"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
     "justification": "Code editor that sends snippets to multiple LLM providers. Supports local models for sensitive repos.",
     "recommendedPolicy": "Allow with local model for proprietary code. Cloud model only for open-source.",
     "createdAt": "2026-07-15T08:00:00.000Z"
@@ -113,8 +165,12 @@
     "description": "AI translation service for international communications",
     "status": "approved",
     "riskTier": "Low",
-    "nistFunctions": ["Measure"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Measure"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Translation service with GDPR compliance. Text sent to servers but processed ephemerally.",
     "recommendedPolicy": "Allow for general translation. Block for legal/contract documents.",
     "createdAt": "2026-07-14T16:00:00.000Z"
@@ -125,8 +181,14 @@
     "description": "Generative UI system to build frontends from natural language prompts",
     "status": "approved",
     "riskTier": "Medium",
-    "nistFunctions": ["Govern", "Map", "Manage"],
-    "dataCategories": ["Source Code"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
     "justification": "Generative UI tool that processes layouts and output code. Exposes front-end styling and structure to Vercel/OpenAI systems.",
     "recommendedPolicy": "Allow for standard UI mocking. Restrict from uploading sensitive branding or trade secrets.",
     "createdAt": "2026-07-15T12:00:00.000Z"
@@ -137,8 +199,14 @@
     "description": "Open-source code completion model used in local IDEs for software development",
     "status": "pending",
     "riskTier": "Medium",
-    "nistFunctions": ["Govern", "Map", "Manage"],
-    "dataCategories": ["Source Code"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
     "justification": "Open-source model processing code logic. Self-hosted options exist, but cloud version transfers IP to external servers.",
     "recommendedPolicy": "Self-host where possible. Restrict third-party API keys from proprietary workspaces.",
     "createdAt": "2026-07-15T13:00:00.000Z"
@@ -149,8 +217,16 @@
     "description": "Advanced reasoning model optimized for complex STEM problems and coding tasks",
     "status": "pending",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
-    "dataCategories": ["Source Code", "PII"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code",
+      "PII"
+    ],
     "justification": "High-capability reasoning model with broad scope. Can store and review advanced engineering, math, and internal corporate data.",
     "recommendedPolicy": "Allow only for authorized STEM/development teams. Keep files with proprietary algorithms blocked.",
     "createdAt": "2026-07-15T14:00:00.000Z"
@@ -161,8 +237,12 @@
     "description": "Developer search engine optimized for quick coding answers and troubleshooting",
     "status": "approved",
     "riskTier": "Low",
-    "nistFunctions": ["Map"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "General developer search. Queries are public/search queries but don't typically expose proprietary data structure.",
     "recommendedPolicy": "Allow for technical references. Block pasting large chunks of proprietary code in queries.",
     "createdAt": "2026-07-15T15:00:00.000Z"
@@ -173,8 +253,12 @@
     "description": "Text-to-video AI model for generating highly realistic video scenes",
     "status": "pending",
     "riskTier": "Medium",
-    "nistFunctions": ["Manage"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Manage"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Generates videos from text. Risk is primarily related to copyright leakage, brand misrepresentation, or data egress of scripts.",
     "recommendedPolicy": "Allow for marketing brainstorms. Restrict from uploading pre-release scripts or product designs.",
     "createdAt": "2026-07-15T16:00:00.000Z"
@@ -185,8 +269,12 @@
     "description": "AI video generation platform that creates videos with AI avatars from text",
     "status": "approved",
     "riskTier": "Medium",
-    "nistFunctions": ["Manage"],
-    "dataCategories": ["None"],
+    "nistFunctions": [
+      "Manage"
+    ],
+    "dataCategories": [
+      "None"
+    ],
     "justification": "Generates custom video assets with digital presenters. Potential risk is associated with synthetic content verification and data handling.",
     "recommendedPolicy": "Allow for training and onboarding videos. Require approval for client-facing content.",
     "createdAt": "2026-07-15T17:00:00.000Z"
@@ -197,8 +285,16 @@
     "description": "Generative AI tool built specifically for legal research, document analysis, and contract drafting",
     "status": "pending",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Map", "Measure", "Manage"],
-    "dataCategories": ["PII", "Financial"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "PII",
+      "Financial"
+    ],
     "justification": "Processes highly confidential NDAs, client records, and legal briefs. Heavy exposure of sensitive customer agreements.",
     "recommendedPolicy": "Blocked pending final risk team legal validation and dedicated tenant contract approval.",
     "createdAt": "2026-07-16T11:00:00.000Z"
@@ -209,8 +305,14 @@
     "description": "AI meeting assistant that transcribes, summarizes, and analyzes voice conversations",
     "status": "blocked",
     "riskTier": "High",
-    "nistFunctions": ["Govern", "Map", "Measure"],
-    "dataCategories": ["PII"],
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure"
+    ],
+    "dataCategories": [
+      "PII"
+    ],
     "justification": "Attends video conferences and records voices, transcriptions, and meeting notes. Broad exposure of internal board decisions.",
     "recommendedPolicy": "Blocked from client-facing meetings and confidential internal corporate reviews.",
     "createdAt": "2026-07-16T12:00:00.000Z"

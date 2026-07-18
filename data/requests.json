@@ -5,6 +5,7 @@
     "department": "Engineering",
     "toolRequested": "Claude Code",
     "status": "denied",
+    "denialReason": "Insufficient business justification. Claude Code requires IP audit before approval — please resubmit with a specific project use case.",
     "requestedAt": "2026-07-15T08:30:00.000Z",
     "decidedAt": "2026-07-16T08:22:36.208Z"
   },
@@ -14,6 +15,7 @@
     "department": "Marketing",
     "toolRequested": "Midjourney",
     "status": "denied",
+    "denialReason": "Midjourney is pending brand/IP legal review. Marketing team should use the approved Synthesia platform for video content in the interim.",
     "requestedAt": "2026-07-15T09:15:00.000Z",
     "decidedAt": "2026-07-16T08:22:35.683Z"
   },
@@ -41,6 +43,7 @@
     "department": "Finance",
     "toolRequested": "Jasper AI",
     "status": "denied",
+    "denialReason": "Jasper AI handles customer PII and campaign financial data. Blocked pending legal review of data processing agreement.",
     "requestedAt": "2026-07-13T11:00:00.000Z",
     "decidedAt": "2026-07-14T15:00:00.000Z"
   },
@@ -68,18 +71,26 @@
     "department": "Sales",
     "toolRequested": "ChatGPT Enterprise",
     "status": "denied",
+    "denialReason": "ChatGPT Enterprise is approved for Engineering only. Sales team should use the approved Perplexity Pro for research tasks.",
     "requestedAt": "2026-07-16T08:00:00.000Z",
     "decidedAt": "2026-07-16T08:22:35.099Z"
   },
   {
-    "id": "1ebbbe3f-3472-488f-842f-acad46274c75",
-    "employeeName": "Stuff",
-    "department": "Sales",
-    "toolRequested": "dfdfd",
-    "description": "dfdfd",
+    "id": "f8a9b0c1-d2e3-4567-fabc-567890123456",
+    "employeeName": "Alice Chen",
+    "department": "Engineering",
+    "toolRequested": "GitHub Copilot",
     "status": "approved",
-    "requestedAt": "2026-07-16T10:22:36.998Z",
-    "decidedAt": "2026-07-16T10:24:54.291Z",
-    "denialReason": null
+    "requestedAt": "2026-07-12T14:00:00.000Z",
+    "decidedAt": "2026-07-12T18:00:00.000Z"
+  },
+  {
+    "id": "a9b0c1d2-e3f4-5678-abcd-678901234599",
+    "employeeName": "Alice Chen",
+    "department": "Engineering",
+    "toolRequested": "Notion AI",
+    "status": "pending",
+    "requestedAt": "2026-07-17T10:00:00.000Z",
+    "decidedAt": null
   }
 ]

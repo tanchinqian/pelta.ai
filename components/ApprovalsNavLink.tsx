@@ -6,8 +6,12 @@ import { usePathname } from 'next/navigation';
 
 export default function RequestsNavLink() {
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [isActive, setIsActive] = useState(false);
   const pathname = usePathname();
-  const isActive = pathname.startsWith('/admin/approvals') || pathname.startsWith('/admin/requests');
+
+  useEffect(() => {
+    setIsActive(pathname.startsWith('/admin/approvals') || pathname.startsWith('/admin/requests'));
+  }, [pathname]);
 
   useEffect(() => {
     const fetchCount = async () => {

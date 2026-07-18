@@ -7,6 +7,8 @@
     "reason": "Contains executive compensation details and internal financial figures.",
     "detectionMethod": "regex",
     "dataCategory": "Financial",
+    "source": "manual",
+    "tool": null,
     "timestamp": "2026-07-14T09:15:00.000Z"
   },
   {
@@ -27,6 +29,8 @@
     "reason": "Contains email address, NDA reference, and deal-sensitive information.",
     "detectionMethod": "regex",
     "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
     "timestamp": "2026-07-14T11:00:00.000Z"
   },
   {
@@ -47,6 +51,8 @@
     "reason": "Contains personal phone number and email address.",
     "detectionMethod": "regex",
     "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
     "timestamp": "2026-07-14T13:00:00.000Z"
   },
   {
@@ -97,6 +103,8 @@
     "reason": "Contains PII: full name, date of birth, and Social Security Number.",
     "detectionMethod": "regex",
     "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
     "timestamp": "2026-07-15T11:30:00.000Z"
   },
   {
@@ -117,6 +125,8 @@
     "reason": "Detected what appears to be an API key pattern in the prompt.",
     "detectionMethod": "regex",
     "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
     "timestamp": "2026-07-15T14:00:00.000Z"
   },
   {
@@ -157,6 +167,116 @@
     "reason": "Contains two email addresses and a deal reference number — external communication with legal context.",
     "detectionMethod": "regex",
     "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
     "timestamp": "2026-07-16T10:30:00.000Z"
+  },
+  {
+    "id": "c0d1e2f3-a4b5-6789-cdef-890123456789",
+    "promptSnippet": "Please help me draft a follow-up message to alice.chen@pelta.ai regarding the internal project handover. CC bob.martinez@pelta.ai for sign-off.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-17T09:45:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7890-defa-901234567890",
+    "promptSnippet": "Summarise our Q3 revenue projections by region: NA $5.2M, EMEA $3.8M, APAC $2.4M. Total pipeline: $22.5M.",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "LLM assessment: contains internal financial projections and pipeline figures.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-17T11:20:00.000Z"
+  },
+  {
+    "id": "e2f3a4b5-c6d7-8901-efab-012345678901",
+    "promptSnippet": "Translate this customer feedback: 'The product is great but sarah.park@gmail.com had issues with the billing page.'",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-17T14:10:00.000Z"
+  },
+  {
+    "id": "e459d18b-23de-4319-a21e-a14909a639b1",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:31.237Z"
+  },
+  {
+    "id": "80d8d7a0-8167-4a6e-8f95-69b4e9c82b27",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:35.949Z"
+  },
+  {
+    "id": "d0b5e382-9bde-4063-9b74-9729928d9bec",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:36.131Z"
+  },
+  {
+    "id": "ccf278df-e350-4a23-af81-e4f9ebf9e23c",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:36.294Z"
+  },
+  {
+    "id": "2dec4406-ecd6-49c1-9a72-327f52cf612d",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:36.600Z"
+  },
+  {
+    "id": "d1ddd0fe-67cf-4645-9f43-0bc2b9286ade",
+    "promptSnippet": "please help me email my coworker e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T06:59:36.788Z"
   }
 ]

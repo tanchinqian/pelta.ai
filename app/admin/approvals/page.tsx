@@ -420,29 +420,13 @@ export default function RequestsPage() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Appeals stats */}
-          <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider font-mono flex items-center gap-1">
-              <ShieldAlert size={10} /> Redress Appeals
-            </p>
-            <div className="grid grid-cols-3 gap-1.5">
-              <StatMini label="Pending" value={pendingAppeals.length} color={STATUS_COLOR.pending} />
-              <StatMini label="Approved" value={appeals.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
-              <StatMini label="Rejected" value={appeals.filter(r => r.status === 'rejected').length} color={STATUS_COLOR.rejected} />
-            </div>
-          </div>
-          {/* Tool request stats */}
-          <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider font-mono flex items-center gap-1">
-              <Briefcase size={10} /> Tool Requests
-            </p>
-            <div className="grid grid-cols-3 gap-1.5">
-              <StatMini label="Pending" value={pendingTools.length} color={STATUS_COLOR.pending} />
-              <StatMini label="Approved" value={toolReqs.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
-              <StatMini label="Denied" value={toolReqs.filter(r => r.status === 'denied').length} color={STATUS_COLOR.rejected} />
-            </div>
-          </div>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <StatMini label="Pending Appeals" value={pendingAppeals.length} color={STATUS_COLOR.pending} />
+          <StatMini label="Approved Appeals" value={appeals.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
+          <StatMini label="Rejected Appeals" value={appeals.filter(r => r.status === 'rejected').length} color={STATUS_COLOR.rejected} />
+          <StatMini label="Pending Tools" value={pendingTools.length} color={STATUS_COLOR.pending} />
+          <StatMini label="Approved Tools" value={toolReqs.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
+          <StatMini label="Denied Tools" value={toolReqs.filter(r => r.status === 'denied').length} color={STATUS_COLOR.rejected} />
         </div>
 
         {/* Tabs */}
@@ -464,14 +448,20 @@ export default function RequestsPage() {
           <div className="space-y-3 animate-slide-in">
             {/* Filter tabs */}
             <div className="flex items-center gap-1 text-[11px] font-medium">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
-                <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
-                  className={`px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                    appealFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
-                  }`}>
-                  {f}
-                </button>
-              ))}
+              {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
+                const count = f === 'all' ? appeals.length : appeals.filter((r) => r.status === f).length;
+                return (
+                  <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                      appealFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
+                    }`}>
+                    {f}
+                    <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Table */}
@@ -599,14 +589,20 @@ export default function RequestsPage() {
           <div className="space-y-3 animate-slide-in">
             {/* Filter tabs */}
             <div className="flex items-center gap-1 text-[11px] font-medium">
-              {(['all', 'pending', 'approved', 'denied'] as const).map((f) => (
-                <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
-                  className={`px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                    toolFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
-                  }`}>
-                  {f}
-                </button>
-              ))}
+              {(['all', 'pending', 'approved', 'denied'] as const).map((f) => {
+                const count = f === 'all' ? toolReqs.length : toolReqs.filter((r) => r.status === f).length;
+                return (
+                  <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                      toolFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
+                    }`}>
+                    {f}
+                    <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Table */}

@@ -1,8 +1,10 @@
 export interface RegexMatch {
   pattern: string;
   label: string;
-  match: string;
-  index: number;
+  match: string;       // masked, for display
+  text: string;        // unmasked, for highlight spans
+  index: number;       // start position
+  end: number;         // end position (exclusive)
   severity: 'high' | 'medium' | 'low';
 }
 
@@ -43,11 +45,15 @@ export function scanWithRegex(text: string): RegexResult {
   for (const { label, pattern, severity } of PATTERNS) {
     const matches = text.matchAll(pattern);
     for (const m of matches) {
+      const start = m.index ?? 0;
+      const raw = m[0];
       hits.push({
         pattern: pattern.source,
         label,
-        match: maskMatch(m[0]),
-        index: m.index ?? 0,
+        match: maskMatch(raw),
+        text: raw,
+        index: start,
+        end: start + raw.length,
         severity,
       });
     }

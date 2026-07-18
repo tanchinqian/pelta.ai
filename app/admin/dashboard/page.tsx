@@ -7,6 +7,7 @@ import {
   LineChart, Line, CartesianGrid, Legend,
 } from 'recharts';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
+import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
 
 /* ── Types ──────────────────────────────────────────────── */
@@ -19,7 +20,7 @@ interface ToolRecord {
 interface GuardLog {
   id: string; promptSnippet: string; verdict: string;
   riskLevel: string; reason: string; detectionMethod: string;
-  dataCategory: string; timestamp: string;
+  dataCategory: string; source?: string; tool?: string; timestamp: string;
 }
 interface RequestRecord {
   id: string; employeeName: string; department: string;
@@ -90,7 +91,6 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
-  const [showAllLogs, setShowAllLogs] = useState(false);
   const [tipStyle, setTipStyle] = useState<React.CSSProperties>({});
 
 
@@ -196,7 +196,7 @@ export default function DashboardPage() {
       }, 0) / decided.length)
     : 0;
 
-  const visibleLogs = showAllLogs ? [...logs].reverse() : [...logs].reverse().slice(0, 8);
+  const visibleLogs = [...logs].reverse().slice(0, 5);
 
   if (loading) {
     return (
@@ -416,30 +416,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Log Table — capped at 8 rows */}
+      {/* Log Table — slim summary (5 rows) with link to full logs */}
       <div className="panel p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-            Prompt Guard Log <span className="text-text-tertiary font-normal">({logs.length})</span>
+            Recent Detections <span className="text-text-tertiary font-normal">({logs.length})</span>
           </span>
-          {logs.length > 8 && (
-            <button
-              onClick={() => setShowAllLogs(!showAllLogs)}
-              className="text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
-            >
-              {showAllLogs ? 'show less' : `view all (${logs.length})`}
-            </button>
-          )}
+          <Link
+            href="/admin/logs"
+            className="text-[10px] font-mono text-accent hover:text-accent-hover transition-colors"
+          >
+            View all logs →
+          </Link>
         </div>
-        <div className="overflow-x-auto" style={{ maxHeight: showAllLogs ? 'none' : 280 }}>
+        <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-surface">
+            <thead>
               <tr className="text-left text-text-secondary border-b border-border">
                 <th className="pb-1.5 pr-3 font-medium">Time</th>
                 <th className="pb-1.5 pr-3 font-medium">Verdict</th>
                 <th className="pb-1.5 pr-3 font-medium hidden sm:table-cell">Risk</th>
-                <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Category</th>
-                <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Method</th>
+                <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Source</th>
+                <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Tool</th>
                 <th className="pb-1.5 font-medium">Snippet</th>
               </tr>
             </thead>
@@ -456,9 +454,9 @@ export default function DashboardPage() {
                     <span style={{ color: riskColor(l.riskLevel === 'none' ? 'Low' : l.riskLevel) }} className="text-[10px] font-mono uppercase">{l.riskLevel}</span>
                   </td>
                   <td className="py-1.5 pr-3 hidden md:table-cell">
-                    <span style={{ color: DATA_CAT[l.dataCategory] ?? '#64748b' }} className="text-[10px] font-mono">{l.dataCategory}</span>
+                    <span className={`text-[10px] font-mono ${l.source === 'extension' ? 'text-accent' : 'text-text-tertiary'}`}>{l.source ?? 'manual'}</span>
                   </td>
-                  <td className="py-1.5 pr-3 hidden md:table-cell text-[10px] font-mono text-text-tertiary">{l.detectionMethod}</td>
+                  <td className="py-1.5 pr-3 hidden md:table-cell text-[10px] font-mono text-text-tertiary">{(l as any).tool ?? '—'}</td>
                   <td className="py-1.5 text-[10px] font-mono text-text-tertiary truncate max-w-[180px]">{l.promptSnippet}</td>
                 </tr>
               ))}

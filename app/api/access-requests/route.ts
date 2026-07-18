@@ -12,6 +12,7 @@ interface AccessRequest {
   adminComment: string | null;
   reviewerName: string | null;
   logRef: string;
+  type?: 'appeal' | 'access';
   requestedAt: string;
   decidedAt: string | null;
 }
@@ -35,7 +36,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { employeeName, sections, reason, logRef, riskLevel } = await req.json();
+    const { employeeName, sections, reason, logRef, riskLevel, type } = await req.json();
     if (!employeeName || !sections || !reason) {
       return NextResponse.json(
         { error: 'employeeName, sections, and reason are required' },
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
       adminComment: null,
       reviewerName: null,
       logRef: typeof logRef === 'string' ? logRef : '',
+      type: type === 'appeal' ? 'appeal' : 'access',
       requestedAt: new Date().toISOString(),
       decidedAt: null,
     };
