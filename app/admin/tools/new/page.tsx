@@ -36,6 +36,10 @@ function SortTh({ label, sortKey: key, active, dir, onToggle }: {
   );
 }
 
+const isHeuristic = (justification: string) => {
+  return /heuristic|llm unavailable/i.test(justification || '');
+};
+
 export default function ClassifyToolPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -492,6 +496,13 @@ export default function ClassifyToolPage() {
               <p className="text-xs text-text-secondary mt-0.5">{result.description}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {result.justification && (
+                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
+                  isHeuristic(result.justification) ? 'bg-background border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
+                }`}>
+                  {isHeuristic(result.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
+                </span>
+              )}
               <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
                 style={{ color: RISK[result.riskTier ?? 'Low'], background: `color-mix(in srgb, ${RISK[result.riskTier ?? 'Low']} 10%, transparent)` }}
               >
@@ -629,10 +640,17 @@ export default function ClassifyToolPage() {
                         onClick={(e) => { e.stopPropagation(); setFlyoutTool(t); }}
                         className="text-left hover:underline decoration-border"
                       >
-                        <p className="font-medium text-text-primary flex items-center gap-1">
-                          {t.name}
+                        <div className="font-medium text-text-primary flex items-center gap-1.5 flex-wrap">
+                          <span>{t.name}</span>
+                          {t.justification && (
+                            <span className={`text-[8px] font-semibold font-mono px-1 rounded-sm border leading-none py-0.5 ${
+                              isHeuristic(t.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/10 border-accent/20 text-accent'
+                            }`}>
+                              {isHeuristic(t.justification) ? 'Heuristic' : 'Gemini'}
+                            </span>
+                          )}
                           <ChevronRight size={10} className="text-text-muted" />
-                        </p>
+                        </div>
                         <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
                       </button>
                     </td>
@@ -725,6 +743,13 @@ export default function ClassifyToolPage() {
               }`}>
                 {flyoutTool.status}
               </span>
+              {flyoutTool.justification && (
+                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
+                  isHeuristic(flyoutTool.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
+                }`}>
+                  {isHeuristic(flyoutTool.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
+                </span>
+              )}
             </div>
 
             {/* NIST + Data */}

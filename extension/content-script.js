@@ -17,12 +17,65 @@ let reconnectObserver = null;
 /* ── Re-entrancy guard ────────────────────────────────── */
 let replaying = false;
 
+/* ── Visual Active Badge ─────────────────────────────────── */
+function showActiveBadge() {
+  let badge = document.getElementById('pelta-active-badge');
+  if (badge) return;
+  badge = document.createElement('div');
+  badge.id = 'pelta-active-badge';
+  badge.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:6px;height:6px;background-color:#22c55e;border-radius:50%;display:inline-block;box-shadow:0 0 8px #22c55e;animation:pelta-pulse 2s infinite;"></span>
+      <span>pelta.ai active</span>
+    </div>
+  `;
+  badge.style.cssText = `
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    z-index: 99999;
+    background: #18181b;
+    border: 1px solid #27272a;
+    color: #e4e4e7;
+    font-size: 10px;
+    font-family: monospace;
+    padding: 6px 10px;
+    border-radius: 6px;
+    opacity: 0.8;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  `;
+  
+  let style = document.getElementById('pelta-badge-style');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'pelta-badge-style';
+    style.innerHTML = `
+      @keyframes pelta-pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 1; }
+        100% { opacity: 0.4; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  document.body.appendChild(badge);
+}
+
+function removeActiveBadge() {
+  const badge = document.getElementById('pelta-active-badge');
+  if (badge) badge.remove();
+  const style = document.getElementById('pelta-badge-style');
+  if (style) style.remove();
+}
+
 /* ── Bootstrap ─────────────────────────────────────────── */
 function acquire() {
   inputEl = document.querySelector(SELECTORS.input);
   sendEl = document.querySelector(SELECTORS.sendButton);
   if (inputEl && sendEl) {
     attachListeners();
+    showActiveBadge();
     return true;
   }
   return false;
@@ -82,6 +135,7 @@ function detachListeners() {
   clickHandler = null;
   inputEl = null;
   sendEl = null;
+  removeActiveBadge();
 }
 
 /* ── Read prompt from ProseMirror contenteditable ───────── */
