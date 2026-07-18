@@ -208,8 +208,8 @@
     "dataCategories": [
       "Source Code"
     ],
-    "justification": "Open-source model processing code logic. Self-hosted options exist, but cloud version transfers IP to external servers.",
-    "recommendedPolicy": "Self-host where possible. Restrict third-party API keys from proprietary workspaces.",
+    "justification": "While DeepSeek Coder is an open-source model run locally, which significantly reduces the risk of third-party data exfiltration, it still poses a Medium risk due to its direct interaction with proprietary Source Code. AI-assisted code generation can introduce critical security vulnerabilities (CWEs), licensing conflicts, or intellectual property risks into the codebase. Therefore, governance must focus on validating the security of the generated output and verifying that the model operates in a strictly local or firewalled environment without unauthorized outbound telemetry.",
+    "recommendedPolicy": "Allow deployment only on enterprise-managed local machines with outbound network connections disabled for the model service to prevent data leakage. Mandate that all model-generated code undergoes peer review and Static Application Security Testing (SAST) prior to integration into any production codebase.",
     "createdAt": "2026-07-15T13:00:00.000Z"
   },
   {

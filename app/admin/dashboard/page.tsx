@@ -31,20 +31,20 @@ interface RequestRecord {
 
 /* ── Color palette (semantic — same in both themes) ────── */
 
-const VERDICT = { allow: '#22c55e', flag: '#f59e0b', block: '#ef4444' };
-const RISK    = { low: '#22c55e', medium: '#f59e0b', high: '#ef4444' };
+const VERDICT = { allow: 'var(--color-risk-low)', flag: 'var(--color-risk-medium)', block: 'var(--color-risk-high)' };
+const RISK    = { low: 'var(--color-risk-low)', medium: 'var(--color-risk-medium)', high: 'var(--color-risk-high)' };
 
 const DATA_CAT: Record<string, string> = {
-  PII: '#818cf8', Financial: '#c084fc', 'Source Code': '#22d3ee', None: '#64748b',
+  PII: '#a39171', Financial: '#c48b6c', 'Source Code': '#7d9b9a', None: '#8c8980',
 };
 
-const DETECTION = { regex: '#22d3ee', llm: '#c084fc' };
+const DETECTION = { regex: '#7d9b9a', llm: '#c48b6c' };
 
 const NIST_COLORS: Record<string, string> = {
-  Govern: '#3b82f6', Map: '#06b6d4', Measure: '#22c55e', Manage: '#a855f7',
+  Govern: 'var(--color-accent)', Map: '#7d9b9a', Measure: 'var(--color-risk-low)', Manage: '#c48b6c',
 };
 
-const DEPT_PALETTE = ['#3b82f6', '#06b6d4', '#a855f7', '#f472b6', '#facc15', '#fb923c'];
+const DEPT_PALETTE = ['var(--color-accent)', '#7d9b9a', '#c48b6c', '#8c8980', '#a39171', '#8f9e7b'];
 
 /* ── Helpers ────────────────────────────────────────────── */
 
@@ -220,7 +220,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <span className="text-sm font-semibold text-text-primary">Dashboard</span>
+          <h2 className="text-base font-serif font-semibold text-text-primary">Dashboard</h2>
           <span className="text-[10px] font-mono text-text-tertiary">/ overview</span>
         </div>
         <div className="flex items-center gap-3">

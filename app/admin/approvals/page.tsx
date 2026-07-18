@@ -404,7 +404,7 @@ export default function RequestsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <RadarIcon size={14} className="text-accent" />
-            <span className="text-sm font-semibold text-text-primary">Requests</span>
+            <h2 className="text-base font-serif font-semibold text-text-primary">Requests</h2>
             <span className="text-[10px] font-mono text-text-tertiary">/ admin only</span>
             {totalPending > 0 && (
               <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"

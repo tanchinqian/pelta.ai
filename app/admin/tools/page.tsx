@@ -28,6 +28,13 @@ interface ToolRecord {
 const NIST_FUNCTIONS = ['Govern', 'Map', 'Measure', 'Manage'];
 const DATA_CATS = ['PII', 'Financial', 'Source Code', 'None'];
 
+const NIST_COLORS: Record<string, string> = {
+  Govern: 'var(--color-accent)',
+  Map: '#7d9b9a',
+  Measure: 'var(--color-risk-low)',
+  Manage: '#c48b6c',
+};
+
 const RISK_STYLE: Record<string, { color: string; bg: string }> = {
   Low:    { color: 'var(--risk-low)',    bg: 'var(--risk-low-bg)' },
   Medium: { color: 'var(--risk-medium)', bg: 'var(--risk-medium-bg)' },
@@ -38,19 +45,19 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; border: string; 
   approved: {
     color: 'var(--risk-low)',
     bg: 'var(--risk-low-bg)',
-    border: 'rgba(34,197,94,0.25)',
+    border: 'var(--border)',
     icon: <CheckCircle2 size={10} />,
   },
   pending: {
     color: 'var(--risk-medium)',
     bg: 'var(--risk-medium-bg)',
-    border: 'rgba(245,158,11,0.25)',
+    border: 'var(--border)',
     icon: <Clock size={10} className="animate-pulse" />,
   },
   blocked: {
     color: 'var(--risk-high)',
     bg: 'var(--risk-high-bg)',
-    border: 'rgba(239,68,68,0.25)',
+    border: 'var(--border)',
     icon: <XCircle size={10} />,
   },
 };
@@ -92,9 +99,9 @@ function NistTag({ label }: { label: string }) {
 }
 
 function DataTag({ label }: { label: string }) {
-  const color = label === 'PII' ? '#818cf8' : label === 'Financial' ? '#c084fc' : label === 'Source Code' ? '#22d3ee' : '#64748b';
+  const color = label === 'PII' ? '#a39171' : label === 'Financial' ? '#c48b6c' : label === 'Source Code' ? '#7d9b9a' : '#8c8980';
   return (
-    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ color, background: `${color}15` }}>
+    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border/40" style={{ color, background: `${color}12` }}>
       {label}
     </span>
   );
@@ -137,6 +144,7 @@ export default function ToolsRegistryPage() {
   const [nistFilter, setNistFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [selectedTool, setSelectedTool] = useState<ToolRecord | null>(null);
 
   const fetchTools = async () => {
     setLoading(true);
@@ -207,7 +215,7 @@ export default function ToolsRegistryPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <span className="text-sm font-semibold text-text-primary">Tool Registry</span>
+          <h2 className="text-base font-serif font-semibold text-text-primary">Tool Registry</h2>
           <span className="text-[10px] font-mono text-text-tertiary">/ {counts.total} tools</span>
         </div>
         <div className="flex items-center gap-2">
@@ -306,7 +314,10 @@ export default function ToolsRegistryPage() {
                 {filtered.map((t, i) => (
                   <tr
                     key={t.id}
-                    className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}
+                    onClick={() => setSelectedTool(t)}
+                    className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors cursor-pointer ${
+                      selectedTool?.id === t.id ? 'bg-accent-dim/40 border-l border-accent font-medium' : 'border-l border-transparent'
+                    } ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}
                   >
                     <td className="px-3 py-2 align-top">
                       <p className="font-medium text-text-primary whitespace-nowrap">{t.name}</p>
@@ -352,6 +363,94 @@ export default function ToolsRegistryPage() {
         <Shield size={10} />
         <span>NIST AI RMF — Govern · Map · Manage</span>
       </div>
+
+      {/* Slide-over Detail Inspector Drawer */}
+      {selectedTool && (
+        <>
+          {/* Backdrop with fade-in blur */}
+          <div 
+            className="fixed inset-0 bg-black/35 backdrop-blur-[1px] z-30 transition-opacity animate-slide-in" 
+            onClick={() => setSelectedTool(null)}
+          />
+          
+          {/* Side Drawer Panel */}
+          <div className="fixed top-0 right-0 h-screen w-[420px] bg-surface border-l border-border z-40 p-6 shadow-2xl flex flex-col space-y-6 animate-slide-in">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <RadarIcon size={14} className="text-accent" />
+                <h3 className="text-sm font-serif font-semibold text-text-primary">Tool Details</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedTool(null)}
+                className="text-text-secondary hover:text-text-primary text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover cursor-pointer"
+              >
+                CLOSE
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Tool Name</h4>
+                <p className="text-base font-serif font-semibold text-text-primary mt-1">{selectedTool.name}</p>
+                <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {selectedTool.id}</p>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Tier</h4>
+                  <div className="mt-1"><RiskBadge tier={selectedTool.riskTier} /></div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
+                  <div className="mt-1"><StatusBadge status={selectedTool.status} /></div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Description</h4>
+                <p className="text-xs text-text-secondary leading-relaxed mt-1">{selectedTool.description}</p>
+              </div>
+
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">NIST AI RMF Functions</h4>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {selectedTool.nistFunctions.map(fn => (
+                    <span key={fn} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-background text-text-secondary flex items-center gap-1.5">
+                      <span className="size-1 rounded-full" style={{ background: NIST_COLORS[fn] ?? 'var(--accent)' }} />
+                      {fn}
+                    </span>
+                  ))}
+                  {selectedTool.nistFunctions.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Data Categories Allowed</h4>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {selectedTool.dataCategories.map(cat => (
+                    <DataTag key={cat} label={cat} />
+                  ))}
+                  {selectedTool.dataCategories.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                </div>
+              </div>
+
+              <div className="p-3 bg-background border border-border rounded space-y-1.5">
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy</h4>
+                <p className="text-xs text-text-secondary leading-relaxed font-serif italic">&ldquo;{selectedTool.recommendedPolicy}&rdquo;</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Justification</h4>
+                <p className="text-xs text-text-secondary leading-relaxed font-serif">{selectedTool.justification}</p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border flex items-center justify-between text-[9px] font-mono text-text-tertiary">
+              <span>Registered {new Date(selectedTool.createdAt).toLocaleString()}</span>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

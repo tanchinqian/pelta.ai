@@ -350,5 +350,29 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-18T08:33:36.783Z"
+  },
+  {
+    "id": "ddd53813-ab43-4b6a-90c2-4c6e59e58f97",
+    "promptSnippet": "Send a email to abc@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T12:30:06.063Z"
+  },
+  {
+    "id": "0f32ae41-f07b-4ac2-97c6-2939cc0228c8",
+    "promptSnippet": "Send a email to abc",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T12:30:23.578Z"
   }
 ]
