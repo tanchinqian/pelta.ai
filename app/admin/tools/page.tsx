@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Search, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown, Shield,
-  RefreshCw, Clock, CheckCircle2, XCircle, Layers,
+  RefreshCw, Clock, CheckCircle2, XCircle, Layers, Edit3, Save, Trash2, RotateCw, Download
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
@@ -146,6 +146,16 @@ export default function ToolsRegistryPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selectedTool, setSelectedTool] = useState<ToolRecord | null>(null);
 
+  // New Override & Edit states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editJustification, setEditJustification] = useState('');
+  const [editPolicy, setEditPolicy] = useState('');
+  const [editRiskTier, setEditRiskTier] = useState<ToolRecord['riskTier']>('Low');
+  const [editNist, setEditNist] = useState<string[]>([]);
+  const [editDataCats, setEditDataCats] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
+
   const fetchTools = async () => {
     setLoading(true);
     try {
@@ -165,6 +175,102 @@ export default function ToolsRegistryPage() {
       body: JSON.stringify({ id, status }),
     });
   };
+
+  const handleDeleteTool = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this tool from the registry?')) return;
+    try {
+      const res = await fetch(`/api/tools?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setTools((prev) => prev.filter((t) => t.id !== id));
+        if (selectedTool?.id === id) {
+          setSelectedTool(null);
+        }
+      } else {
+        alert('Failed to delete tool');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleReclassifyTool = async (tool: ToolRecord) => {
+    setReclassifyingId(tool.id);
+    try {
+      const res = await fetch('/api/tools/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tool.name, description: tool.description, existingId: tool.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTools((prev) => prev.map((t) => t.id === tool.id ? data : t));
+        if (selectedTool?.id === tool.id) {
+          setSelectedTool(data);
+        }
+      } else {
+        alert('Failed to reclassify tool');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReclassifyingId(null);
+    }
+  };
+
+  const handleSaveOverride = async () => {
+    if (!selectedTool) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedTool.id,
+          justification: editJustification,
+          recommendedPolicy: editPolicy,
+          riskTier: editRiskTier,
+          nistFunctions: editNist,
+          dataCategories: editDataCats,
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTools((prev) => prev.map((t) => t.id === selectedTool.id ? updated : t));
+        setSelectedTool(updated);
+        setIsEditing(false);
+      } else {
+        alert('Failed to save override');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportRegistry = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tools, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `pelta_ai_tools_registry.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // Sync edits state when selectedTool changes
+  useEffect(() => {
+    if (selectedTool) {
+      setEditJustification(selectedTool.justification || '');
+      setEditPolicy(selectedTool.recommendedPolicy || '');
+      setEditRiskTier(selectedTool.riskTier || 'Low');
+      setEditNist(selectedTool.nistFunctions || []);
+      setEditDataCats(selectedTool.dataCategories || []);
+      setIsEditing(false);
+    }
+  }, [selectedTool]);
 
   useEffect(() => { fetchTools(); }, []);
 
@@ -210,6 +316,21 @@ export default function ToolsRegistryPage() {
     high: tools.filter((t) => t.riskTier === 'High').length,
   }), [tools]);
 
+  const riskDistribution = useMemo(() => {
+    const total = tools.length || 1;
+    const high = tools.filter((t) => t.riskTier === 'High').length;
+    const medium = tools.filter((t) => t.riskTier === 'Medium').length;
+    const low = tools.filter((t) => t.riskTier === 'Low').length;
+    return {
+      high: Math.round((high / total) * 100),
+      medium: Math.round((medium / total) * 100),
+      low: Math.round((low / total) * 100),
+      highCount: high,
+      mediumCount: medium,
+      lowCount: low,
+    };
+  }, [tools]);
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -236,6 +357,13 @@ export default function ToolsRegistryPage() {
             <Plus size={11} /> Classify New Tool
           </Link>
           <button
+            onClick={handleExportRegistry}
+            className="flex items-center gap-1 text-[10px] font-semibold text-text-secondary bg-surface border border-border hover:bg-surface-hover rounded px-2.5 py-1.5 transition-colors cursor-pointer"
+            title="Download full audited tools registry as JSON"
+          >
+            <Download size={11} /> Export Registry
+          </button>
+          <button
             onClick={fetchTools}
             className="p-1.5 rounded border border-border hover:bg-surface-hover transition-colors cursor-pointer"
           >
@@ -251,6 +379,30 @@ export default function ToolsRegistryPage() {
         <StatCard label="Pending" value={counts.pending} color="var(--risk-medium)" />
         <StatCard label="Blocked" value={counts.blocked} color="var(--risk-high)" />
         <StatCard label="High Risk" value={counts.high} color="var(--risk-high)" />
+      </div>
+
+      {/* Risk Distribution Bar Widget */}
+      <div className="panel p-3.5 space-y-2">
+        <div className="flex items-center justify-between text-[10px] font-mono text-text-secondary">
+          <span className="font-semibold uppercase tracking-wider">Audit Risk Spectrum</span>
+          <span className="text-text-muted">High: {riskDistribution.highCount} · Med: {riskDistribution.mediumCount} · Low: {riskDistribution.lowCount}</span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-surface-hover overflow-hidden flex">
+          {riskDistribution.highCount > 0 && (
+            <div style={{ width: `${riskDistribution.high}%`, backgroundColor: 'var(--risk-high)' }} className="h-full transition-all duration-500" title={`High Risk: ${riskDistribution.high}%`} />
+          )}
+          {riskDistribution.mediumCount > 0 && (
+            <div style={{ width: `${riskDistribution.medium}%`, backgroundColor: 'var(--risk-medium)' }} className="h-full transition-all duration-500" title={`Medium Risk: ${riskDistribution.medium}%`} />
+          )}
+          {riskDistribution.lowCount > 0 && (
+            <div style={{ width: `${riskDistribution.low}%`, backgroundColor: 'var(--risk-low)' }} className="h-full transition-all duration-500" title={`Low Risk: ${riskDistribution.low}%`} />
+          )}
+        </div>
+        <div className="flex items-center gap-4 text-[9px] font-mono text-text-tertiary">
+          <div className="flex items-center gap-1"><span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--risk-high)' }} /> High Risk ({riskDistribution.high}%)</div>
+          <div className="flex items-center gap-1"><span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--risk-medium)' }} /> Medium Risk ({riskDistribution.medium}%)</div>
+          <div className="flex items-center gap-1"><span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--risk-low)' }} /> Low Risk ({riskDistribution.low}%)</div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -390,12 +542,26 @@ export default function ToolsRegistryPage() {
                 <RadarIcon size={14} className="text-accent" />
                 <h3 className="text-sm font-serif font-semibold text-text-primary">Tool Details</h3>
               </div>
-              <button 
-                onClick={() => setSelectedTool(null)}
-                className="text-text-secondary hover:text-text-primary text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover cursor-pointer"
-              >
-                CLOSE
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="text-[11px] font-mono font-medium hover:text-accent border border-border rounded px-2.5 py-1 transition-colors hover:bg-surface-hover cursor-pointer"
+                >
+                  {isEditing ? 'CANCEL' : 'EDIT'}
+                </button>
+                <button
+                  onClick={() => handleDeleteTool(selectedTool.id)}
+                  className="text-[11px] font-mono font-medium text-risk-high hover:bg-risk-high/10 border border-risk-high/20 hover:border-risk-high/40 rounded px-2.5 py-1 transition-colors cursor-pointer"
+                >
+                  DELETE
+                </button>
+                <button 
+                  onClick={() => setSelectedTool(null)}
+                  className="text-text-secondary hover:text-text-primary text-xs font-mono px-2 py-1 rounded hover:bg-surface-hover cursor-pointer"
+                >
+                  CLOSE
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-5 pr-1">
@@ -405,86 +571,200 @@ export default function ToolsRegistryPage() {
                 <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {selectedTool.id}</p>
               </div>
 
-              <div className="flex items-center gap-6">
-                <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Tier</h4>
-                  <div className="mt-1"><RiskBadge tier={selectedTool.riskTier} /></div>
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
-                  <div className="mt-1"><StatusBadge status={selectedTool.status} /></div>
-                </div>
-              </div>
+              {isEditing ? (
+                /* Edit Mode */
+                <div className="space-y-4 pt-1">
+                  {/* Risk Tier Edit */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Override Risk Tier</label>
+                    <select
+                      value={editRiskTier || 'Low'}
+                      onChange={(e) => setEditRiskTier(e.target.value as ToolRecord['riskTier'])}
+                      className="w-full text-xs bg-background border border-border rounded px-2.5 py-2 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
 
-              {/* Status Actions */}
-              <div className="flex flex-wrap gap-2">
-                {selectedTool.status !== 'approved' && (
+                  {/* NIST Edit */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">NIST AI RMF Functions</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {NIST_FUNCTIONS.map((fn) => {
+                        const checked = editNist.includes(fn);
+                        return (
+                          <label key={fn} className="flex items-center gap-2 text-xs text-text-secondary cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setEditNist(prev => prev.includes(fn) ? prev.filter(f => f !== fn) : [...prev, fn]);
+                              }}
+                              className="rounded border-border text-accent focus:ring-accent"
+                            />
+                            {fn}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Data Categories Edit */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Data Categories Scope</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {DATA_CATS.map((cat) => {
+                        const checked = editDataCats.includes(cat);
+                        return (
+                          <label key={cat} className="flex items-center gap-2 text-xs text-text-secondary cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setEditDataCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+                              }}
+                              className="rounded border-border text-accent focus:ring-accent"
+                            />
+                            {cat}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Justification Edit */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Risk Justification Override</label>
+                    <textarea
+                      value={editJustification}
+                      onChange={(e) => setEditJustification(e.target.value)}
+                      className="w-full text-xs bg-background border border-border rounded p-2.5 text-text-primary focus:outline-none focus:border-accent font-serif h-24 resize-none leading-relaxed"
+                      placeholder="Explain the AI model's data handling and compliance risks..."
+                    />
+                  </div>
+
+                  {/* Policy Edit */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy Override</label>
+                    <textarea
+                      value={editPolicy}
+                      onChange={(e) => setEditPolicy(e.target.value)}
+                      className="w-full text-xs bg-background border border-border rounded p-2.5 text-text-primary focus:outline-none focus:border-accent font-serif h-20 resize-none leading-relaxed"
+                      placeholder="e.g. Allow only for non-sensitive tasks, block file uploads..."
+                    />
+                  </div>
+
+                  {/* Save Overrides Button */}
                   <button
-                    onClick={() => updateToolStatus(selectedTool.id, 'approved')}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                    onClick={handleSaveOverride}
+                    disabled={saving}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg px-4 py-2.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed animate-pulse"
                   >
-                    <CheckCircle2 size={12} /> Approve
+                    {saving ? (
+                      <><div className="size-3 border border-white border-t-transparent rounded-full animate-spin" /> Saving Overrides...</>
+                    ) : (
+                      <><Save size={12} /> Save Overrides</>
+                    )}
                   </button>
-                )}
-                {selectedTool.status !== 'blocked' && (
-                  <button
-                    onClick={() => updateToolStatus(selectedTool.id, 'blocked')}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
-                  >
-                    <XCircle size={12} /> Block
-                  </button>
-                )}
-                {selectedTool.status !== 'pending' && (
-                  <button
-                    onClick={() => updateToolStatus(selectedTool.id, 'pending')}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer"
-                  >
-                    <Clock size={12} /> Reset to Pending
-                  </button>
-                )}
-              </div>
-
-              <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Description</h4>
-                <p className="text-xs text-text-secondary leading-relaxed mt-1">{selectedTool.description}</p>
-              </div>
-
-              <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">NIST AI RMF Functions</h4>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {selectedTool.nistFunctions.map(fn => (
-                    <span key={fn} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-background text-text-secondary flex items-center gap-1.5">
-                      <span className="size-1 rounded-full" style={{ background: NIST_COLORS[fn] ?? 'var(--accent)' }} />
-                      {fn}
-                    </span>
-                  ))}
-                  {selectedTool.nistFunctions.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
                 </div>
-              </div>
+              ) : (
+                /* View Mode */
+                <div className="space-y-5">
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Tier</h4>
+                      <div className="mt-1"><RiskBadge tier={selectedTool.riskTier} /></div>
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
+                      <div className="mt-1"><StatusBadge status={selectedTool.status} /></div>
+                    </div>
+                  </div>
 
-              <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Data Categories Allowed</h4>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {selectedTool.dataCategories.map(cat => (
-                    <DataTag key={cat} label={cat} />
-                  ))}
-                  {selectedTool.dataCategories.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                  {/* Status Actions */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTool.status !== 'approved' && (
+                      <button
+                        onClick={() => updateToolStatus(selectedTool.id, 'approved')}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                      >
+                        <CheckCircle2 size={12} /> Approve
+                      </button>
+                    )}
+                    {selectedTool.status !== 'blocked' && (
+                      <button
+                        onClick={() => updateToolStatus(selectedTool.id, 'blocked')}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                      >
+                        <XCircle size={12} /> Block
+                      </button>
+                    )}
+                    {selectedTool.status !== 'pending' && (
+                      <button
+                        onClick={() => updateToolStatus(selectedTool.id, 'pending')}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer"
+                      >
+                        <Clock size={12} /> Reset to Pending
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Description</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed mt-1">{selectedTool.description}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">NIST AI RMF Functions</h4>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {selectedTool.nistFunctions.map(fn => (
+                        <span key={fn} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-background text-text-secondary flex items-center gap-1.5">
+                          <span className="size-1 rounded-full" style={{ background: NIST_COLORS[fn] ?? 'var(--accent)' }} />
+                          {fn}
+                        </span>
+                      ))}
+                      {selectedTool.nistFunctions.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Data Categories Allowed</h4>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {selectedTool.dataCategories.map(cat => (
+                        <DataTag key={cat} label={cat} />
+                      ))}
+                      {selectedTool.dataCategories.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-background border border-border rounded space-y-1.5">
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed font-serif italic">&ldquo;{selectedTool.recommendedPolicy}&rdquo;</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Justification</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed font-serif">{selectedTool.justification}</p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="p-3 bg-background border border-border rounded space-y-1.5">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy</h4>
-                <p className="text-xs text-text-secondary leading-relaxed font-serif italic">&ldquo;{selectedTool.recommendedPolicy}&rdquo;</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Justification</h4>
-                <p className="text-xs text-text-secondary leading-relaxed font-serif">{selectedTool.justification}</p>
-              </div>
+              )}
             </div>
 
             <div className="pt-3 border-t border-border flex items-center justify-between text-[9px] font-mono text-text-tertiary">
               <span>Registered {new Date(selectedTool.createdAt).toLocaleString()}</span>
+              {!isEditing && (
+                <button
+                  onClick={() => handleReclassifyTool(selectedTool)}
+                  disabled={reclassifyingId === selectedTool.id}
+                  className="flex items-center gap-1 text-[10px] text-text-secondary hover:text-accent transition-colors disabled:opacity-40"
+                  title="Re-run Gemini AI risk model"
+                >
+                  <RotateCw size={10} className={reclassifyingId === selectedTool.id ? 'animate-spin' : ''} />
+                  Reclassify AI
+                </button>
+              )}
             </div>
           </div>
         </>
