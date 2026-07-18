@@ -3,7 +3,7 @@
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Grammarly",
     "description": "AI writing assistant for drafting customer support emails and internal documentation",
-    "status": "approved",
+    "status": "pending",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
@@ -191,11 +191,10 @@
       "Manage"
     ],
     "dataCategories": [
-      "Source Code",
-      "PII"
+      "Source Code"
     ],
-    "justification": "v0 by Vercel is classified as Medium risk primarily due to data privacy and intellectual property concerns. As a generative AI tool hosted by a third party, user prompts, design mockups, and generated UI code are processed externally, raising the risk of proprietary source code or PII exposure if sensitive data is pasted into prompts. While not classified as High Risk under the EU AI Act, the potential for code quality issues, security vulnerabilities in generated outputs, and IP leakage requires active organizational governance.",
-    "recommendedPolicy": "Permit usage only for non-proprietary UI prototyping. Users must not input company-confidential designs, proprietary source code, or PII. All generated code must be reviewed and scanned for vulnerabilities before integration into production systems.",
+    "justification": "v0 by Vercel processes natural language prompts and code inputs on third-party infrastructure to generate frontend components. While not a high-risk use case under the EU AI Act, it poses a medium organizational risk due to potential intellectual property (IP) leakage of proprietary UI/UX designs and the risk of introducing security vulnerabilities or licensing conflicts into production codebases via unvetted generative code.",
+    "recommendedPolicy": "Permitted for authorized developers under conditional use: users must not input proprietary source code, internal system architectures, or real customer data into prompts. All generated code must undergo standard code-quality reviews, static application security testing (SAST), and manual engineering approval before being merged into production.",
     "createdAt": "2026-07-15T12:00:00.000Z"
   },
   {

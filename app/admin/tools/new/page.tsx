@@ -711,29 +711,25 @@ export default function ClassifyToolPage() {
                         {/* Policy actions */}
                         <td className="py-3 px-4 text-center">
                           <div className="flex items-center gap-2 justify-center">
-                            {t.status === 'approved' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-risk-low/15 dark:border-emerald-500/25 bg-risk-low-bg dark:bg-emerald-950/25 text-risk-low dark:text-emerald-400 text-[9px] font-mono font-bold uppercase tracking-wider">
-                                <span className="size-1 rounded-full bg-risk-low" /> Approved
-                              </span>
-                            ) : t.status === 'blocked' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-risk-high/15 dark:border-rose-500/25 bg-risk-high-bg dark:bg-rose-950/25 text-risk-high dark:text-rose-400 text-[9px] font-mono font-bold uppercase tracking-wider">
-                                <span className="size-1 rounded-full bg-risk-high" /> Blocked
-                              </span>
-                            ) : (
-                              <select
-                                value={t.status}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
-                                }}
-                                className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30"
-                              >
-                                <option value="pending" className="text-risk-medium bg-background">Pending</option>
-                                <option value="approved" className="text-risk-low bg-background">Accept</option>
-                                <option value="blocked" className="text-risk-high bg-background">Decline</option>
-                              </select>
-                            )}
+                            <select
+                              value={t.status}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
+                              }}
+                              className={`border rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-accent transition-colors cursor-pointer
+                                ${t.status === 'approved'
+                                  ? 'bg-risk-low-bg dark:bg-emerald-950/25 text-risk-low dark:text-emerald-400 border-risk-low/30 dark:border-emerald-500/30'
+                                  : t.status === 'blocked'
+                                  ? 'bg-risk-high-bg dark:bg-rose-950/25 text-risk-high dark:text-rose-400 border-risk-high/30 dark:border-rose-500/30'
+                                  : 'bg-zinc-50 dark:bg-zinc-950 text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30 border-zinc-200 dark:border-zinc-800'
+                                }`}
+                            >
+                              <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                              <option value="approved" className="text-risk-low bg-background">Approved</option>
+                              <option value="blocked" className="text-risk-high bg-background">Blocked</option>
+                            </select>
 
                             {/* Additional paired actions */}
                             <div className="flex items-center gap-1 ml-auto">
@@ -815,13 +811,25 @@ export default function ClassifyToolPage() {
                 <div>
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Governance Status</h4>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9px] font-mono font-bold uppercase tracking-wider ${
-                      flyoutTool.status === 'approved' ? 'border-risk-low/15 bg-risk-low-bg text-risk-low' :
-                      flyoutTool.status === 'blocked' ? 'border-risk-high/15 bg-risk-high-bg text-risk-high' :
-                      'border-risk-medium/15 bg-risk-medium-bg text-risk-medium'
-                    }`}>
-                      {flyoutTool.status}
-                    </span>
+                    <select
+                      value={flyoutTool.status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value as 'approved' | 'pending' | 'blocked';
+                        handleStatusChange(flyoutTool.id, newStatus);
+                        setFlyoutTool((prev) => prev ? { ...prev, status: newStatus } : null);
+                      }}
+                      className={`border rounded-lg px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-accent transition-colors cursor-pointer
+                        ${flyoutTool.status === 'approved'
+                          ? 'bg-risk-low-bg text-risk-low border-risk-low/30'
+                          : flyoutTool.status === 'blocked'
+                          ? 'bg-risk-high-bg text-risk-high border-risk-high/30'
+                          : 'bg-risk-medium-bg text-risk-medium border-risk-medium/30'
+                        }`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
                   </div>
                 </div>
               </div>
