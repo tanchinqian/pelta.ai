@@ -64,11 +64,13 @@ function ThemeToggleMini() {
     if (stored) {
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
+      document.documentElement.classList.toggle('dark', stored === 'dark');
     } else {
       const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
       const initial = prefersLight ? 'light' : 'dark';
       setTheme(initial);
       document.documentElement.setAttribute('data-theme', initial);
+      document.documentElement.classList.toggle('dark', initial === 'dark');
     }
   }, []);
 
@@ -77,6 +79,7 @@ function ThemeToggleMini() {
     setTheme(next);
     localStorage.setItem('pelta-theme', next);
     document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
   };
 
   if (!mounted) return <div className="h-8" />;
@@ -159,7 +162,7 @@ function RequestBadge() {
 
 function NavGroup({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-1">
       <p className="px-3 py-1 text-[9px] font-semibold uppercase tracking-widest text-text-muted">{label}</p>
       {items.map((item) => {
         const active = item.exact
@@ -170,10 +173,10 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-[12px] transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-l-none rounded-r text-[12px] transition-all border-l ${
               active
-                ? 'text-text-primary bg-accent/10 border-l-2 border-accent'
-                : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary border-l-2 border-transparent'
+                ? 'text-text-primary font-medium border-accent bg-accent-dim/60'
+                : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary border-transparent'
             }`}
           >
             <span className={`shrink-0 ${active ? 'text-accent' : 'text-text-tertiary'}`}>{item.icon}</span>
@@ -192,7 +195,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[220px] shrink-0 h-screen flex flex-col border-r border-border bg-surface/40 sticky top-0">
+    <aside className="w-[210px] shrink-0 h-screen flex flex-col border-r border-border bg-surface/30 sticky top-0">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 px-4 h-12 border-b border-border shrink-0 hover:bg-surface-hover/50 transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent shrink-0">
@@ -201,15 +204,15 @@ export default function Sidebar() {
           <path d="M12 11a1 1 0 0 1 1 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
           <circle cx="12" cy="12" r="1.5" fill="currentColor" />
         </svg>
-        <span className="text-sm tracking-tight">
-          <span className="font-bold text-text-primary">pelta</span>
-          <span className="text-accent">.</span>
+        <span className="text-sm tracking-tight font-serif">
+          <span className="font-semibold text-text-primary">pelta</span>
+          <span className="text-accent font-bold">.</span>
           <span className="font-light text-text-secondary">ai</span>
         </span>
       </Link>
 
       {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto py-2 space-y-3">
+      <nav className="flex-1 overflow-y-auto py-3 space-y-4">
         <NavGroup label="Employee" items={EMPLOYEE_ITEMS} pathname={pathname} />
         <NavGroup label="Admin" items={ADMIN_ITEMS} pathname={pathname} />
       </nav>

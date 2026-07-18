@@ -76,11 +76,11 @@ export async function PATCH(req: NextRequest) {
     if (!id || !status) {
       return NextResponse.json({ error: 'id and status are required' }, { status: 400 });
     }
-    if (!['approved', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'status must be approved or rejected' }, { status: 400 });
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return NextResponse.json({ error: 'status must be approved, rejected, or pending' }, { status: 400 });
     }
 
-    const decidedAt = new Date().toISOString();
+    const decidedAt = status === 'pending' ? null : new Date().toISOString();
     const items = updateItem<AccessRequest>('access-requests', id, {
       status,
       adminComment: typeof adminComment === 'string' ? adminComment : null,

@@ -278,5 +278,101 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-18T06:59:36.788Z"
+  },
+  {
+    "id": "23086ce9-c6ca-42d6-b667-39d53eb53cce",
+    "promptSnippet": "please check my empolyee email e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:14:49.558Z"
+  },
+  {
+    "id": "897229a0-003e-4445-b8df-32223766a001",
+    "promptSnippet": "please check my empolyee email e@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:14:56.008Z"
+  },
+  {
+    "id": "0ddc5039-65f9-4aeb-9e42-6eb2f22cdd63",
+    "promptSnippet": "here is my api key srgsrughgish",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:17:00.298Z"
+  },
+  {
+    "id": "2b33d04c-7633-482b-91dc-c49fa03e053f",
+    "promptSnippet": "here is my api key srgsrughgish",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:17:02.520Z"
+  },
+  {
+    "id": "326a345c-fcb6-417f-ba60-fc28be7ad5a3",
+    "promptSnippet": "here is my email cg@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:33:09.406Z"
+  },
+  {
+    "id": "edd1a57d-0300-40ad-9481-998244ea0433",
+    "promptSnippet": "This is an internal document about our financial projections for Q3. It contains proprietary information about our revenue targets.",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "LLM assessment: The text references internal Q3 financial projections and proprietary revenue targets, representing business-sensitive context.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T08:33:36.783Z"
+  },
+  {
+    "id": "ddd53813-ab43-4b6a-90c2-4c6e59e58f97",
+    "promptSnippet": "Send a email to abc@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T12:30:06.063Z"
+  },
+  {
+    "id": "0f32ae41-f07b-4ac2-97c6-2939cc0228c8",
+    "promptSnippet": "Send a email to abc",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T12:30:23.578Z"
   }
 ]

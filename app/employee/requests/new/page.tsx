@@ -154,7 +154,7 @@ export default function NewRequestPage() {
           <div className="panel p-4 space-y-3">
             <div className="flex items-center gap-2">
               <RadarIcon size={14} className="text-accent" />
-              <span className="text-sm font-semibold text-text-primary">Request a New AI Tool</span>
+              <h2 className="text-base font-serif font-semibold text-text-primary">Request a New AI Tool</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-2.5">
