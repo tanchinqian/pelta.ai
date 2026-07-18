@@ -6,14 +6,16 @@
 function getToolName() {
   const host = window.location.hostname;
   if (host.includes('gemini')) return 'Gemini';
+  if (host.includes('claude')) return 'Claude';
   if (host.includes('deepseek')) return 'DeepSeek';
+  if (host.includes('copilot')) return 'Copilot';
   return 'ChatGPT';
 }
 
-/* ── Selectors (supports ChatGPT, Gemini, etc.) ──────────── */
+/* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
-  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"]',
-  sendButton: '#composer-submit-button, button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], button[aria-label*="submit"]',
+  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
+  sendButton: '#composer-submit-button, button.send-button, button[data-testid="send-button"], button[aria-label*="Send message"], button[aria-label*="Send"], button[aria-label*="submit"], button[class*="send"]',
 };
 
 /* ── State ───────────────────────────────────────────────── */
@@ -147,23 +149,31 @@ function detachListeners() {
   removeActiveBadge();
 }
 
-/* ── Read prompt from ProseMirror contenteditable ───────── */
+/* ── Read prompt from ProseMirror/Quill/Textarea ────────── */
 function getPromptText() {
   if (!inputEl) return '';
+  if (inputEl.tagName === 'TEXTAREA') {
+    return inputEl.value || '';
+  }
   return inputEl.textContent || '';
 }
 
-/* ── Clear ProseMirror/Quill content ────────────────────── */
+/* ── Clear ProseMirror/Quill/Textarea content ───────────── */
 function clearPrompt() {
   if (!inputEl) return;
-  const tool = getToolName();
-  if (tool === 'Gemini') {
-    inputEl.innerHTML = '';
+  if (inputEl.tagName === 'TEXTAREA') {
+    inputEl.value = '';
   } else {
-    inputEl.innerHTML = '<p><br></p>';
+    const tool = getToolName();
+    if (tool === 'Gemini') {
+      inputEl.innerHTML = '';
+    } else {
+      inputEl.innerHTML = '<p><br></p>';
+    }
   }
-  // Dispatch an InputEvent so React/ProseMirror/Quill syncs its state
+  // Dispatch events so React/ProseMirror/Quill/Textarea sync state
   inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+  inputEl.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
 }
 
 /* ── Re-dispatch the send action ────────────────────────── */
