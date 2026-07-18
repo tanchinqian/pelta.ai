@@ -12,7 +12,20 @@ interface GuardLog {
   reason: string;
   detectionMethod: 'regex' | 'llm';
   dataCategory: string;
+  source?: string;
+  tool?: string;
   timestamp: string;
+}
+
+interface HighlightSpan {
+  start: number;
+  end: number;
+  pattern: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+interface GuardResponse extends GuardLog {
+  highlights: HighlightSpan[];
 }
 
 function inferDataCategory(prompt: string): string {
@@ -26,7 +39,7 @@ function inferDataCategory(prompt: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const { prompt, source, tool } = await req.json();
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json({ error: 'prompt is required' }, { status: 400 });
     }
@@ -38,6 +51,16 @@ export async function POST(req: NextRequest) {
 
     const dataCategory = inferDataCategory(prompt);
 
+    // Build highlights from regex hits (positions in original prompt text)
+    const highlights: HighlightSpan[] = regexResult.hits
+      .map((h) => ({ start: h.index, end: h.end, pattern: h.label, severity: h.severity }))
+      .sort((a, b) => a.start - b.start);
+
+    const respond = (log: GuardLog): NextResponse => {
+      const body: GuardResponse = { ...log, highlights };
+      return NextResponse.json(body);
+    };
+
     if (regexResult.hasHighSeverity) {
       const detail = regexResult.hits.filter((h) => h.severity === 'high').map((h) => h.label).join(', ');
       const log: GuardLog = {
@@ -48,10 +71,11 @@ export async function POST(req: NextRequest) {
         reason: `Regex detected high-severity patterns: ${detail}.`,
         detectionMethod: 'regex',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
-      return NextResponse.json(log);
+      return respond(log);
     }
 
     if (regexResult.hasMediumSeverity) {
@@ -64,10 +88,11 @@ export async function POST(req: NextRequest) {
         reason: `Regex detected medium-severity patterns: ${detail}.`,
         detectionMethod: 'regex',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
-      return NextResponse.json(log);
+      return respond(log);
     }
 
     // Step 2: If inconclusive but suspicious, escalate to LLM
@@ -84,26 +109,30 @@ export async function POST(req: NextRequest) {
           reason: `LLM assessment: ${llmResult.reason}`,
           detectionMethod: 'llm',
           dataCategory,
+          source, tool,
           timestamp: new Date().toISOString(),
         };
         addItem('logs', log);
-        return NextResponse.json(log);
+        return respond(log);
       }
 
       // Mock LLM fallback
-      const mockRisk = 'medium' as const;
+      const keywords = regexResult.suspiciousKeywords.slice(0, 4).join(', ');
       const log: GuardLog = {
         id: uuid(),
         promptSnippet: truncated,
         verdict: 'flag',
-        riskLevel: mockRisk,
-        reason: 'Mock LLM assessment: text contains business-sensitive keywords (confidential, salary, internal). Recommend admin review.',
+        riskLevel: 'medium',
+        reason: keywords
+          ? `Suspicious keywords detected: ${keywords}. Recommend admin review.`
+          : 'Text appears to contain business-sensitive context. Recommend admin review.',
         detectionMethod: 'llm',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
-      return NextResponse.json(log);
+      return respond(log);
     }
 
     // Step 3: Nothing suspicious
@@ -115,10 +144,11 @@ export async function POST(req: NextRequest) {
       reason: 'No sensitive data detected by regex scan.',
       detectionMethod: 'regex',
       dataCategory,
+      source, tool,
       timestamp: new Date().toISOString(),
     };
     addItem('logs', log);
-    return NextResponse.json(log);
+    return respond(log);
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message ?? 'Guard check failed' },

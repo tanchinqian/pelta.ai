@@ -2,6 +2,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 
+/** Try these in order — free-tier availability varies by project */
+const MODEL_CANDIDATES = [
+  'gemini-3.5-flash',
+  'gemini-3.1-pro-preview',
+  'gemini-3-flash-preview',
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
+];
+
 function getClient(): GoogleGenerativeAI {
   return new GoogleGenerativeAI(apiKey);
 }
@@ -70,42 +79,119 @@ const SUGGEST_FALLBACK: string[] = [
   'Draft a project transition summary in a neutral tone that I can adapt and send to the appropriate stakeholder.',
 ];
 
+async function generateWithFallback(prompt: string): Promise<string> {
+  if (!apiKey) throw new Error('No GEMINI_API_KEY');
+  const genAI = getClient();
+  let lastErr: Error | null = null;
+
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (err: any) {
+      lastErr = err;
+      const msg = String(err?.message ?? err);
+      // Try next model on quota / not found / rate limit
+      if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED/i.test(msg)) {
+        console.warn(`[gemini] ${modelName} failed, trying next:`, msg.slice(0, 120));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr ?? new Error('All Gemini models failed');
+}
+
+function mockToolRisk(toolName: string, description: string): ToolRiskResponse {
+  const lower = `${toolName} ${description}`.toLowerCase();
+  let riskTier: ToolRiskResponse['riskTier'] = 'Medium';
+  let dataCategories: ToolRiskResponse['dataCategories'] = ['None'];
+  let nistFunctions: ToolRiskResponse['nistFunctions'] = ['Govern', 'Map'];
+
+  if (/code|copilot|cursor|replit|source|dev|sdk|api/.test(lower)) {
+    riskTier = 'High';
+    dataCategories = ['Source Code'];
+    nistFunctions = ['Govern', 'Map', 'Measure', 'Manage'];
+  } else if (/email|chat|customer|pii|hr|recruit|resume|legal/.test(lower)) {
+    riskTier = 'Medium';
+    dataCategories = ['PII'];
+    nistFunctions = ['Govern', 'Map', 'Manage'];
+  } else if (/finance|payroll|invoice|budget|banking/.test(lower)) {
+    riskTier = 'High';
+    dataCategories = ['Financial', 'PII'];
+    nistFunctions = ['Govern', 'Map', 'Measure', 'Manage'];
+  } else if (/grammar|translate|note|summar|writing|image|design/.test(lower)) {
+    riskTier = 'Low';
+    dataCategories = ['None'];
+    nistFunctions = ['Govern', 'Measure'];
+  }
+
+  return {
+    riskTier,
+    nistFunctions,
+    dataCategories,
+    justification: `Heuristic assessment (LLM unavailable): "${toolName}" — ${description}. Classified ${riskTier} based on description keywords. Re-run when Gemini quota is available for a full NIST-aligned analysis.`,
+    recommendedPolicy:
+      riskTier === 'High'
+        ? 'Restrict to approved teams. Block file upload and sensitive data categories. Quarterly review required.'
+        : riskTier === 'Medium'
+          ? 'Allow for non-sensitive tasks only. Review data retention policy before full rollout.'
+          : 'Allow for general productivity use. Review annually.',
+  };
+}
+
+function mockPromptRisk(text: string): PromptRiskResponse {
+  const lower = text.toLowerCase();
+  if (/confidential|salary|internal|budget|financial|secret|nda|proprietary/.test(lower) || text.length > 200) {
+    return {
+      riskLevel: 'medium',
+      reason: 'LLM unavailable — heuristic: business-sensitive keywords or long text detected.',
+    };
+  }
+  return {
+    riskLevel: 'none',
+    reason: 'LLM unavailable — heuristic: no sensitive patterns detected.',
+  };
+}
+
 export async function suggestSafePrompts(
   blockedPrompt: string,
   detectedPatterns: string[],
 ): Promise<string[]> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const patternList = detectedPatterns.length > 0 ? detectedPatterns.join(', ') : 'sensitive data';
-  const prompt = `${SUGGEST_SYSTEM_PROMPT}\n\nDetected sensitive patterns: ${patternList}\n\nOriginal blocked prompt:\n"""\n${blockedPrompt.slice(0, 1000)}\n"""\n\nReturn ONLY a JSON array of exactly 3 strings.`;
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
+  if (!apiKey) return SUGGEST_FALLBACK;
   try {
-    const parsed = parseJson(text);
-    if (Array.isArray(parsed) && parsed.length >= 3) return parsed.slice(0, 3) as string[];
-    throw new Error('Response was not an array of 3');
-  } catch {
+    const patternList = detectedPatterns.length > 0 ? detectedPatterns.join(', ') : 'sensitive data';
+    const prompt = `${SUGGEST_SYSTEM_PROMPT}\n\nDetected sensitive patterns: ${patternList}\n\nOriginal blocked prompt:\n"""\n${blockedPrompt.slice(0, 1000)}\n"""\n\nReturn ONLY a JSON array of exactly 3 strings.`;
+
+    const text = await generateWithFallback(prompt);
+
+    try {
+      const parsed = parseJson(text);
+      if (Array.isArray(parsed) && parsed.length >= 3) return parsed.slice(0, 3) as string[];
+      throw new Error('Response was not an array of 3');
+    } catch {
+      return SUGGEST_FALLBACK;
+    }
+  } catch (err: any) {
+    console.warn('[gemini] suggestSafePrompts fallback:', err?.message);
     return SUGGEST_FALLBACK;
   }
 }
 
 export async function classifyPromptRisk(text: string): Promise<PromptRiskResponse> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const prompt = `${PROMPT_CHECK_SYSTEM_PROMPT}\n\nText:\n"""\n${text.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON with riskLevel and reason.`;
-
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text_ = response.text();
-
+  if (!apiKey) return mockPromptRisk(text);
   try {
-    return parseJson(text_) as PromptRiskResponse;
-  } catch {
-    return { riskLevel: 'medium', reason: 'Failed to parse LLM response; defaulting to medium risk.' };
+    const prompt = `${PROMPT_CHECK_SYSTEM_PROMPT}\n\nText:\n"""\n${text.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON with riskLevel and reason.`;
+    const text_ = await generateWithFallback(prompt);
+    try {
+      return parseJson(text_) as PromptRiskResponse;
+    } catch {
+      return { riskLevel: 'medium', reason: 'Failed to parse LLM response; defaulting to medium risk.' };
+    }
+  } catch (err: any) {
+    console.warn('[gemini] classifyPromptRisk fallback:', err?.message);
+    return mockPromptRisk(text);
   }
 }
 
@@ -113,18 +199,18 @@ export async function classifyToolRisk(
   toolName: string,
   description: string,
 ): Promise<ToolRiskResponse> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const prompt = `${SYSTEM_PROMPT}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
-
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text = response.text();
-
+  if (!apiKey) return mockToolRisk(toolName, description);
   try {
-    return parseJson(text) as ToolRiskResponse;
-  } catch {
-    throw new Error(`Failed to parse Gemini response as JSON:\n${text}`);
+    const prompt = `${SYSTEM_PROMPT}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
+    const text = await generateWithFallback(prompt);
+    try {
+      return parseJson(text) as ToolRiskResponse;
+    } catch {
+      console.warn('[gemini] parse failed, using heuristic mock');
+      return mockToolRisk(toolName, description);
+    }
+  } catch (err: any) {
+    console.warn('[gemini] classifyToolRisk fallback:', err?.message);
+    return mockToolRisk(toolName, description);
   }
 }

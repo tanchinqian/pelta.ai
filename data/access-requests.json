@@ -10,6 +10,7 @@
     "status": "pending",
     "adminComment": null,
     "logRef": "b0c1d2e3-f4a5-6789-bcde-789012345678",
+    "type": "appeal",
     "requestedAt": "2026-07-16T14:45:00.000Z",
     "decidedAt": null
   },
@@ -23,6 +24,7 @@
     "status": "approved",
     "adminComment": null,
     "logRef": "f2a3b4c5-d6e7-8901-fabc-901234567890",
+    "type": "appeal",
     "requestedAt": "2026-07-15T09:30:00.000Z",
     "decidedAt": "2026-07-15T10:15:00.000Z"
   },
@@ -37,34 +39,22 @@
     "status": "rejected",
     "adminComment": "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",
     "logRef": "a7b8c9d0-e1f2-3456-abcd-456789012345",
+    "type": "appeal",
     "requestedAt": "2026-07-14T11:30:00.000Z",
     "decidedAt": "2026-07-14T14:00:00.000Z"
   },
   {
-    "id": "54ec6f07-c0be-4ff8-aeda-ab484a1648aa",
-    "employeeName": "Demo Employee",
+    "id": "cc110004-ac00-0000-0000-000000000004",
+    "employeeName": "Alice Chen",
     "sections": [
       "Email address"
     ],
-    "reason": "hi",
-    "status": "rejected",
-    "adminComment": "Noob",
-    "logRef": "log_a1b2c3d4",
-    "requestedAt": "2026-07-16T15:24:37.272Z",
-    "decidedAt": "2026-07-16T15:25:08.895Z"
-  },
-  {
-    "id": "a650ebeb-7d29-4bcc-afd0-e780f8e06ac6",
-    "employeeName": "Demo Employee",
-    "sections": [
-      "Email address",
-      "Phone number"
-    ],
-    "reason": "hi",
-    "status": "approved",
+    "reason": "The email addresses in this prompt belong to internal team members (alice.chen@pelta.ai and bob.martinez@pelta.ai), not external customers. This is a legitimate internal handover communication.",
+    "status": "pending",
     "adminComment": null,
-    "logRef": "log_a1b2c3d4",
-    "requestedAt": "2026-07-16T15:25:31.490Z",
-    "decidedAt": "2026-07-16T15:25:38.117Z"
+    "logRef": "c0d1e2f3-a4b5-6789-cdef-890123456789",
+    "type": "appeal",
+    "requestedAt": "2026-07-17T10:00:00.000Z",
+    "decidedAt": null
   }
 ]

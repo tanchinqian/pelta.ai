@@ -167,10 +167,19 @@ body {
   animation: radar-pulse 2s ease-in-out infinite;
 }
 
-/* Sensitive span highlight */
+/* Sensitive span highlight — high severity (PII, secrets) */
 .sensitive-highlight {
   background: var(--risk-high-bg);
   border-bottom: 1.5px solid var(--risk-high);
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+/* Sensitive span highlight — medium severity (IP, dates) */
+.sensitive-highlight-medium {
+  background: var(--risk-medium-bg);
+  border-bottom: 1.5px solid var(--risk-medium);
   padding: 0 2px;
   border-radius: 2px;
   transition: background 0.3s ease;

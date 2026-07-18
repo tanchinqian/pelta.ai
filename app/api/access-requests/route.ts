@@ -6,12 +6,27 @@ interface AccessRequest {
   id: string;
   employeeName: string;
   sections: string[];
+  riskLevel: 'low' | 'medium' | 'high' | null;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
   adminComment: string | null;
+  reviewerName: string | null;
   logRef: string;
+  type?: 'appeal' | 'access';
   requestedAt: string;
   decidedAt: string | null;
+}
+
+interface AuditEntry {
+  id: string;
+  requestId: string;
+  employeeName: string;
+  action: 'approved' | 'rejected';
+  reviewerName: string;
+  adminComment: string | null;
+  sections: string[];
+  riskLevel: string | null;
+  timestamp: string;
 }
 
 export async function GET() {
@@ -21,7 +36,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { employeeName, sections, reason, logRef } = await req.json();
+    const { employeeName, sections, reason, logRef, riskLevel, type } = await req.json();
     if (!employeeName || !sections || !reason) {
       return NextResponse.json(
         { error: 'employeeName, sections, and reason are required' },
@@ -35,10 +50,13 @@ export async function POST(req: NextRequest) {
       id: uuid(),
       employeeName,
       sections: Array.isArray(sections) ? sections : [sections],
+      riskLevel: riskLevel ?? null,
       reason,
       status: 'pending',
       adminComment: null,
+      reviewerName: null,
       logRef: typeof logRef === 'string' ? logRef : '',
+      type: type === 'appeal' ? 'appeal' : 'access',
       requestedAt: new Date().toISOString(),
       decidedAt: null,
     };
@@ -54,19 +72,39 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, status, adminComment } = await req.json();
+    const { id, status, adminComment, reviewerName } = await req.json();
     if (!id || !status) {
       return NextResponse.json({ error: 'id and status are required' }, { status: 400 });
     }
     if (!['approved', 'rejected'].includes(status)) {
       return NextResponse.json({ error: 'status must be approved or rejected' }, { status: 400 });
     }
+
+    const decidedAt = new Date().toISOString();
     const items = updateItem<AccessRequest>('access-requests', id, {
       status,
       adminComment: typeof adminComment === 'string' ? adminComment : null,
-      decidedAt: new Date().toISOString(),
+      reviewerName: typeof reviewerName === 'string' ? reviewerName : 'Admin',
+      decidedAt,
     });
     const updated = items.find((i) => i.id === id);
+
+    // Write an audit log entry
+    if (updated) {
+      const auditEntry: AuditEntry = {
+        id: uuid(),
+        requestId: id,
+        employeeName: updated.employeeName,
+        action: status,
+        reviewerName: typeof reviewerName === 'string' ? reviewerName : 'Admin',
+        adminComment: typeof adminComment === 'string' ? adminComment : null,
+        sections: updated.sections,
+        riskLevel: updated.riskLevel ?? null,
+        timestamp: decidedAt,
+      };
+      addItem('audit-log', auditEntry);
+    }
+
     return NextResponse.json(updated ?? { error: 'Not found' });
   } catch (err: any) {
     return NextResponse.json(

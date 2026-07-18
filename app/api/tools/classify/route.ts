@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { classifyToolRisk } from '@/lib/gemini';
-import { addItem, readStore } from '@/lib/fileStore';
+import { addItem, readStore, updateItem } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
 interface ToolRecord {
@@ -26,41 +26,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If no API key, return a mock result
-    if (!process.env.GEMINI_API_KEY) {
-      const mock: ToolRecord = {
-        id: uuid(),
-        name,
-        description,
-        status: 'pending',
-        riskTier: 'Medium',
-        nistFunctions: ['Govern', 'Map'],
-        dataCategories: ['None'],
-        justification: `Mock classification: "${name}" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.`,
-        recommendedPolicy: 'Allow for non-sensitive tasks. Review quarterly for policy changes.',
-        createdAt: new Date().toISOString(),
-      };
-      addItem('tools', mock);
-      return NextResponse.json(mock);
-    }
+    const tools = readStore<ToolRecord>('tools');
+    const existing = tools.find((t) => t.name.toLowerCase() === name.trim().toLowerCase());
 
-    const classification = await classifyToolRisk(name, description);
-
-    const tool: ToolRecord = {
-      id: uuid(),
-      name,
-      description,
-      status: 'pending',
-      riskTier: classification.riskTier,
-      nistFunctions: classification.nistFunctions,
-      dataCategories: classification.dataCategories,
-      justification: classification.justification,
-      recommendedPolicy: classification.recommendedPolicy,
-      createdAt: new Date().toISOString(),
+    // classifyToolRisk handles its own fallback (mock on no-key/quota errors)
+    const geminiResult = await classifyToolRisk(name.trim(), description.trim());
+    const classification = {
+      name: name.trim(),
+      description: description.trim(),
+      riskTier: geminiResult.riskTier,
+      nistFunctions: geminiResult.nistFunctions,
+      dataCategories: geminiResult.dataCategories,
+      justification: geminiResult.justification,
+      recommendedPolicy: geminiResult.recommendedPolicy,
     };
 
-    addItem('tools', tool);
-    return NextResponse.json(tool);
+    let finalTool: ToolRecord;
+
+    if (existing) {
+      const updates: Partial<ToolRecord> = {
+        description: classification.description,
+        riskTier: classification.riskTier,
+        nistFunctions: classification.nistFunctions,
+        dataCategories: classification.dataCategories,
+        justification: classification.justification,
+        recommendedPolicy: classification.recommendedPolicy,
+      };
+      updateItem<ToolRecord>('tools', existing.id, updates);
+      finalTool = { ...existing, ...updates } as ToolRecord;
+    } else {
+      finalTool = {
+        id: uuid(),
+        ...classification,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      } as ToolRecord;
+      addItem('tools', finalTool);
+    }
+
+    return NextResponse.json(finalTool);
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message ?? 'Classification failed' },

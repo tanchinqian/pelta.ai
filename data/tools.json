@@ -174,5 +174,147 @@
     "justification": "Translation service with GDPR compliance. Text sent to servers but processed ephemerally.",
     "recommendedPolicy": "Allow for general translation. Block for legal/contract documents.",
     "createdAt": "2026-07-14T16:00:00.000Z"
+  },
+  {
+    "id": "e1f2a3b4-c5d6-7890-efab-901234567890",
+    "name": "v0 by Vercel",
+    "description": "Generative UI system to build frontends from natural language prompts",
+    "status": "approved",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
+    "justification": "Generative UI tool that processes layouts and output code. Exposes front-end styling and structure to Vercel/OpenAI systems.",
+    "recommendedPolicy": "Allow for standard UI mocking. Restrict from uploading sensitive branding or trade secrets.",
+    "createdAt": "2026-07-15T12:00:00.000Z"
+  },
+  {
+    "id": "f2a3b4c5-d6e7-8901-fabc-012345678901",
+    "name": "DeepSeek Coder",
+    "description": "Open-source code completion model used in local IDEs for software development",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code"
+    ],
+    "justification": "Open-source model processing code logic. Self-hosted options exist, but cloud version transfers IP to external servers.",
+    "recommendedPolicy": "Self-host where possible. Restrict third-party API keys from proprietary workspaces.",
+    "createdAt": "2026-07-15T13:00:00.000Z"
+  },
+  {
+    "id": "a3b4c5d6-e7f8-9012-abcd-123456789012",
+    "name": "OpenAI o1",
+    "description": "Advanced reasoning model optimized for complex STEM problems and coding tasks",
+    "status": "pending",
+    "riskTier": "High",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "Source Code",
+      "PII"
+    ],
+    "justification": "High-capability reasoning model with broad scope. Can store and review advanced engineering, math, and internal corporate data.",
+    "recommendedPolicy": "Allow only for authorized STEM/development teams. Keep files with proprietary algorithms blocked.",
+    "createdAt": "2026-07-15T14:00:00.000Z"
+  },
+  {
+    "id": "b4c5d6e7-f8a9-0123-bcde-234567890123",
+    "name": "Phind",
+    "description": "Developer search engine optimized for quick coding answers and troubleshooting",
+    "status": "approved",
+    "riskTier": "Low",
+    "nistFunctions": [
+      "Map"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "General developer search. Queries are public/search queries but don't typically expose proprietary data structure.",
+    "recommendedPolicy": "Allow for technical references. Block pasting large chunks of proprietary code in queries.",
+    "createdAt": "2026-07-15T15:00:00.000Z"
+  },
+  {
+    "id": "c5d6e7f8-a9b0-1234-cdef-345678901234",
+    "name": "Sora by OpenAI",
+    "description": "Text-to-video AI model for generating highly realistic video scenes",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Manage"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Generates videos from text. Risk is primarily related to copyright leakage, brand misrepresentation, or data egress of scripts.",
+    "recommendedPolicy": "Allow for marketing brainstorms. Restrict from uploading pre-release scripts or product designs.",
+    "createdAt": "2026-07-15T16:00:00.000Z"
+  },
+  {
+    "id": "d6e7f8a9-b0c1-2345-defa-456789012345",
+    "name": "Synthesia",
+    "description": "AI video generation platform that creates videos with AI avatars from text",
+    "status": "approved",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Manage"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Generates custom video assets with digital presenters. Potential risk is associated with synthetic content verification and data handling.",
+    "recommendedPolicy": "Allow for training and onboarding videos. Require approval for client-facing content.",
+    "createdAt": "2026-07-15T17:00:00.000Z"
+  },
+  {
+    "id": "e7f8a9b0-c1d2-3456-efab-567890123456",
+    "name": "Harvey AI",
+    "description": "Generative AI tool built specifically for legal research, document analysis, and contract drafting",
+    "status": "pending",
+    "riskTier": "High",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "PII",
+      "Financial"
+    ],
+    "justification": "Processes highly confidential NDAs, client records, and legal briefs. Heavy exposure of sensitive customer agreements.",
+    "recommendedPolicy": "Blocked pending final risk team legal validation and dedicated tenant contract approval.",
+    "createdAt": "2026-07-16T11:00:00.000Z"
+  },
+  {
+    "id": "f8a9b0c1-d2e3-4567-fabc-678901234567",
+    "name": "Fireflies.ai",
+    "description": "AI meeting assistant that transcribes, summarizes, and analyzes voice conversations",
+    "status": "blocked",
+    "riskTier": "High",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure"
+    ],
+    "dataCategories": [
+      "PII"
+    ],
+    "justification": "Attends video conferences and records voices, transcriptions, and meeting notes. Broad exposure of internal board decisions.",
+    "recommendedPolicy": "Blocked from client-facing meetings and confidential internal corporate reviews.",
+    "createdAt": "2026-07-16T12:00:00.000Z"
   }
 ]
