@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  CheckCircle, XCircle, ChevronDown, ChevronUp, FileText, Shield,
+  CheckCircle, XCircle, ChevronDown, ChevronUp, FileText,
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
@@ -174,10 +174,6 @@ function AppealDetailModal({
               <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{req.adminComment}</p>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-tertiary border-t border-border pt-3">
-            <Shield size={10} />
-            <span>NIST AI RMF — Govern · Manage &nbsp;|&nbsp; Audit trail logged</span>
-          </div>
           {isPending && (
             <div>
               {!isRejecting ? (
@@ -260,10 +256,6 @@ function ToolDetailModal({
               <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
               <p className="text-[11px] font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-tertiary border-t border-border pt-3">
-            <Shield size={10} />
-            <span>NIST AI RMF — Govern · Map</span>
           </div>
           {isPending && (
             <div className="flex items-center gap-2">
@@ -412,10 +404,6 @@ export default function RequestsPage() {
                 {totalPending} pending
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-tertiary">
-            <Shield size={10} />
-            <span>NIST AI RMF — Govern · Manage</span>
           </div>
         </div>
 

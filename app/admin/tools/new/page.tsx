@@ -1,13 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 interface ToolRecord {
   id: string; name: string; description: string; status: string;
   riskTier: string | null; nistFunctions: string[]; dataCategories: string[];
   justification: string; recommendedPolicy: string; createdAt: string;
+  retrievedNistContext?: {
+    function: string;
+    definition: string;
+    concerns: string[];
+    score: number;
+    matchedKeywords: string[];
+  }[];
 }
 
 const RISK: Record<string, string> = { Low: 'var(--risk-low)', Medium: 'var(--risk-medium)', High: 'var(--risk-high)' };
@@ -51,6 +58,7 @@ export default function ClassifyToolPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [flyoutTool, setFlyoutTool] = useState<ToolRecord | null>(null);
   const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
+  const [showGrounded, setShowGrounded] = useState(false);
 
   const autocompleteSuggestions = name.trim()
     ? tools.filter(
@@ -537,6 +545,62 @@ export default function ClassifyToolPage() {
               <p className="text-text-secondary leading-relaxed">{result.recommendedPolicy}</p>
             </div>
           </div>
+
+          {/* Grounded in NIST AI RMF */}
+          {result.retrievedNistContext && result.retrievedNistContext.length > 0 && (
+            <div className="border-t border-border pt-2">
+              <button
+                type="button"
+                onClick={() => setShowGrounded((v) => !v)}
+                className="w-full flex items-center justify-between text-left hover:bg-surface-hover/50 rounded px-2 py-1.5 -mx-2 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <BookOpen size={12} className="text-accent" />
+                  <span className="text-[11px] font-semibold text-text-secondary">Grounded in NIST AI RMF</span>
+                  <span className="text-[10px] font-mono text-text-tertiary">
+                    ({result.retrievedNistContext.length} retrieved)
+                  </span>
+                </div>
+                {showGrounded ? <ChevronUp size={12} className="text-text-tertiary" /> : <ChevronDown size={12} className="text-text-tertiary" />}
+              </button>
+
+              {showGrounded && (
+                <div className="space-y-2 mt-2 animate-slide-in">
+                  {result.retrievedNistContext.map((ctx) => (
+                    <div key={ctx.function} className="bg-background border border-border rounded p-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold font-mono text-text-primary">{ctx.function}</span>
+                        {ctx.score > 0 && (
+                          <span className="text-[9px] font-mono text-text-tertiary">
+                            score {ctx.score} · {ctx.matchedKeywords.slice(0, 3).join(', ')}
+                            {ctx.matchedKeywords.length > 3 && ` +${ctx.matchedKeywords.length - 3}`}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-text-secondary leading-relaxed mt-1">{ctx.definition}</p>
+                      {ctx.concerns.length > 0 && (
+                        <p className="text-[10px] text-text-tertiary italic mt-1 line-clamp-2">
+                          {ctx.concerns[0]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  <p className="text-[9px] text-text-tertiary font-mono">
+                    Source: NIST AI RMF Playbook (via keyword retrieval over derived function reference).
+                    {' '}
+                    <a
+                      href="https://www.nist.gov/itl/ai-risk-management-framework"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-accent hover:text-accent-hover"
+                    >
+                      NIST AI RMF ↗
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 pt-3 border-t border-border/60">
             <button

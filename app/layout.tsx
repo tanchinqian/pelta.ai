@@ -60,9 +60,6 @@ export default function RootLayout({
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-[10px] font-mono text-text-tertiary tracking-wider uppercase hidden sm:block">
-              NIST AI RMF
-            </span>
             <SeedButton />
             <ThemeToggle />
           </div>
