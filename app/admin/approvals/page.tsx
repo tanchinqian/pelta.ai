@@ -29,6 +29,7 @@ interface ToolRequest {
   employeeName: string;
   department: string;
   toolRequested: string;
+  description?: string;
   status: 'pending' | 'approved' | 'denied';
   requestedAt: string;
   decidedAt: string | null;
@@ -366,6 +367,37 @@ export default function RequestsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
+
+      // If approved, trigger classification so the tool enters the registry
+      if (status === 'approved') {
+        const req = toolReqs.find((r) => r.id === id);
+        if (req) {
+          try {
+            const classifyRes = await fetch('/api/tools/classify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: req.toolRequested,
+                description: req.description || `Requested by ${req.employeeName} from ${req.department}`,
+              }),
+            });
+            if (classifyRes.ok) {
+              const classified = await classifyRes.json();
+              // Approve the classified tool in the registry
+              await fetch('/api/tools', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: classified.id, status: 'approved' }),
+              });
+              toast.success(`"${req.toolRequested}" classified and approved`);
+              return;
+            }
+          } catch {
+            // classification failed; request is still marked approved
+          }
+        }
+      }
+
       toast.success(`Tool request ${status} successfully`);
     } catch (err) {
       toast.error('Failed to update tool request');

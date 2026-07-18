@@ -237,7 +237,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-7 gap-2">
         <StatCard label="Tools" value={tools.length} accent />
         <StatCard label="Scans" value={logs.length} />
-        <StatCard label="Pending" value={requests.filter((r) => r.status === 'pending').length} color={RISK.medium} />
+        <StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} />
         <StatCard label="Avg Decision" value={`${avgHours}h`} icon={<Clock size={10} />} />
         <StatCard label="Low" value={tools.filter((t) => t.riskTier === 'Low').length} color={RISK.low} />
         <StatCard label="Med" value={tools.filter((t) => t.riskTier === 'Medium').length} color={RISK.medium} />

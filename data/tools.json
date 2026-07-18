@@ -4,17 +4,16 @@
     "name": "Grammarly",
     "description": "AI writing assistant for drafting customer support emails and internal documentation",
     "status": "approved",
-    "riskTier": "Medium",
+    "riskTier": "Low",
     "nistFunctions": [
       "Govern",
-      "Map",
-      "Manage"
+      "Measure"
     ],
     "dataCategories": [
-      "PII"
+      "None"
     ],
-    "justification": "Grammarly operates as a cloud-based AI writing assistant that ingests real-time text inputs. When used for customer support and internal documentation, it inevitably processes customer Personally Identifiable Information (PII) and proprietary corporate data. While it does not fall under the EU AI Act's high-risk categories, the transfer of potentially sensitive text to third-party servers presents data privacy and leakage risks, warranting a Medium risk classification. NIST RMF principles require mapping these data flows and managing vendor compliance to ensure data is not used for model training.",
-    "recommendedPolicy": "Mandate the use of Grammarly Enterprise licenses only, ensuring that data sharing and model training options are explicitly disabled in the admin console. Prohibit the use of personal or free Grammarly accounts, and configure corporate identity providers (IdP) to block non-enterprise access.",
+    "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
+    "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
     "createdAt": "2026-07-14T10:00:00.000Z"
   },
   {
@@ -58,23 +57,7 @@
   {
     "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
     "name": "Notion AI",
-    "description": "AI-powered note-taking assistant for meeting summaries and action items",
-    "status": "approved",
-    "riskTier": "Low",
-    "nistFunctions": [
-      "Govern"
-    ],
-    "dataCategories": [
-      "None"
-    ],
-    "justification": "Lightweight AI features within Notion workspace. Limited data exposure scope.",
-    "recommendedPolicy": "Allow for internal note-taking. Restrict from financial or HR documents.",
-    "createdAt": "2026-07-14T15:00:00.000Z"
-  },
-  {
-    "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
-    "name": "Perplexity Pro",
-    "description": "AI research assistant with real-time web search for technical research",
+    "description": "Requested by Alice Chen from Engineering",
     "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
@@ -84,29 +67,74 @@
     ],
     "dataCategories": [
       "PII",
-      "Financial",
       "Source Code"
     ],
-    "justification": "Perplexity Pro is classified as Medium risk because it functions as a third-party generative AI tool that processes user-submitted queries on external servers, presenting data egress and intellectual property leakage risks. During technical research, users are highly likely to input proprietary source code, sensitive financial metrics, or PII to summarize or debug. Furthermore, while the tool provides real-time web citations, its underlying LLMs can still hallucinate or return copyrighted materials, necessitating human oversight and verification.",
-    "recommendedPolicy": "Permit access only via corporate-provisioned enterprise accounts with data-sharing and model-training opt-outs strictly enabled. Establish a policy prohibiting the input of customer PII, proprietary source code, or unannounced financial data, and mandate manual verification of all technical information retrieved before deployment in production.",
+    "justification": "Notion AI is integrated directly into the organization's collaborative workspace, which often contains sensitive company documents, product roadmaps, and meeting notes. Since the tool is requested by an Engineering team member, there is a high likelihood of the AI interacting with proprietary source code and internal PII. Because Notion AI processes user inputs via third-party LLM providers, there is a risk of intellectual property exposure and data leakage if proper enterprise data privacy controls and model-training opt-outs are not active.",
+    "recommendedPolicy": "Restrict access to users on an Enterprise plan with an active Data Processing Addendum (DPA) that guarantees organizational data is not used for model training. Implement automated data loss prevention (DLP) controls to prevent the input of secrets, API keys, or raw customer PII into Notion AI prompts.",
+    "createdAt": "2026-07-14T15:00:00.000Z",
+    "retrievedNistContext": [
+      {
+        "function": "Govern",
+        "definition": "Govern cultivates and implements a culture of risk management within organizations designing, developing, deploying, evaluating, or acquiring AI systems. It establishes processes to identify, understand, and communicate risk tolerance, and ensures risk management is integrated into organizational policies and procedures.",
+        "concerns": [],
+        "score": 0,
+        "matchedKeywords": []
+      },
+      {
+        "function": "Map",
+        "definition": "Map establishes the context to frame AI risks. It identifies intended use, deployment setting, stakeholders, and the potential positive and negative impacts of the AI system on people, groups, communities, organizations, and society.",
+        "concerns": [],
+        "score": 0,
+        "matchedKeywords": []
+      },
+      {
+        "function": "Measure",
+        "definition": "Measure employs tools, techniques, and methodologies to analyze, assess, benchmark, and monitor AI risk and related impacts. It uses knowledge gathered from Map and prior Measure activities to evaluate risks for trustworthy characteristics.",
+        "concerns": [],
+        "score": 0,
+        "matchedKeywords": []
+      },
+      {
+        "function": "Manage",
+        "definition": "Manage allocates risk resources to mapped and measured risks on an ongoing basis. It includes responding to, recovering from, and communicating about incidents or events, and plans for regular monitoring and improvement.",
+        "concerns": [],
+        "score": 0,
+        "matchedKeywords": []
+      }
+    ]
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-234567890123",
+    "name": "Perplexity Pro",
+    "description": "AI research assistant with real-time web search for technical research",
+    "status": "pending",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Map",
+      "Measure"
+    ],
+    "dataCategories": [
+      "None"
+    ],
+    "justification": "Search queries are sent to external servers. May expose internal project names and research direction.",
+    "recommendedPolicy": "Allow for general research. Block queries containing project codenames or internal URLs.",
     "createdAt": "2026-07-15T09:00:00.000Z"
   },
   {
     "id": "f6a7b8c9-d0e1-2345-fabc-345678901234",
     "name": "Midjourney",
     "description": "AI image generation for marketing materials and social media content",
-    "status": "approved",
+    "status": "pending",
     "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
-      "Map",
       "Manage"
     ],
     "dataCategories": [
-      "PII"
+      "None"
     ],
-    "justification": "Midjourney is classified as Medium risk primarily due to intellectual property (IP) exposure, third-party data ingestion, and potential privacy violations if users upload images containing PII (such as human faces) for image-to-image generation. Under standard subscription tiers, prompts and generated assets are public by default. Furthermore, the EU AI Act mandates transparency and labeling for generative AI outputs to prevent deception, while the NIST AI RMF emphasizes managing the risks of copyright infringement, brand-inconsistent outputs, and bias in generated media.",
-    "recommendedPolicy": "Restrict usage to approved marketing personnel. Mandate the use of 'Stealth Mode' (available on Pro/Mega plans) to ensure prompts and outputs remain private. Strictly prohibit uploading real personal images (PII) or pre-release proprietary brand collateral. Require all published outputs to be vetted for copyright infringement and labeled as AI-generated in compliance with EU AI Act transparency rules.",
+    "justification": "Image prompts sent to external servers. Potential for brand/IP exposure through prompt leakage.",
+    "recommendedPolicy": "Allow for marketing use. Require prompt review for client-facing content.",
     "createdAt": "2026-07-15T10:00:00.000Z"
   },
   {
@@ -194,8 +222,8 @@
     "dataCategories": [
       "Source Code"
     ],
-    "justification": "v0 by Vercel processes natural language prompts and code inputs on third-party infrastructure to generate frontend components. While not a high-risk use case under the EU AI Act, it poses a medium organizational risk due to potential intellectual property (IP) leakage of proprietary UI/UX designs and the risk of introducing security vulnerabilities or licensing conflicts into production codebases via unvetted generative code.",
-    "recommendedPolicy": "Permitted for authorized developers under conditional use: users must not input proprietary source code, internal system architectures, or real customer data into prompts. All generated code must undergo standard code-quality reviews, static application security testing (SAST), and manual engineering approval before being merged into production.",
+    "justification": "Generative UI tool that processes layouts and output code. Exposes front-end styling and structure to Vercel/OpenAI systems.",
+    "recommendedPolicy": "Allow for standard UI mocking. Restrict from uploading sensitive branding or trade secrets.",
     "createdAt": "2026-07-15T12:00:00.000Z"
   },
   {
@@ -207,14 +235,13 @@
     "nistFunctions": [
       "Govern",
       "Map",
-      "Measure",
       "Manage"
     ],
     "dataCategories": [
       "Source Code"
     ],
-    "justification": "DeepSeek Coder is classified as Medium risk. Although its local deployment in IDEs mitigates the risks of external data exfiltration and third-party PII exposure, the model directly interacts with and generates proprietary source code. The primary risks involve the potential introduction of security vulnerabilities into the software supply chain, intellectual property or licensing contamination from the training data, and accidental telemetry sharing if outbound connections are not strictly blocked. This necessitates active governance, risk mapping, and security verification of the generated output.",
-    "recommendedPolicy": "Restrict deployment to pre-approved local IDE environments with outbound telemetry disabled. Mandate that all code generated by the tool undergo mandatory Static Application Security Testing (SAST) and peer code review prior to merging into production branches.",
+    "justification": "Open-source model processing code logic. Self-hosted options exist, but cloud version transfers IP to external servers.",
+    "recommendedPolicy": "Self-host where possible. Restrict third-party API keys from proprietary workspaces.",
     "createdAt": "2026-07-15T13:00:00.000Z"
   },
   {
@@ -322,25 +349,5 @@
     "justification": "Attends video conferences and records voices, transcriptions, and meeting notes. Broad exposure of internal board decisions.",
     "recommendedPolicy": "Blocked from client-facing meetings and confidential internal corporate reviews.",
     "createdAt": "2026-07-16T12:00:00.000Z"
-  },
-  {
-    "id": "09b2290b-e763-4b0e-a3df-c2ecc5606ae8",
-    "name": "NotebookLM",
-    "description": "AI note-taking and source analysis tool",
-    "riskTier": "Medium",
-    "nistFunctions": [
-      "Govern",
-      "Map",
-      "Manage"
-    ],
-    "dataCategories": [
-      "PII",
-      "Financial",
-      "Source Code"
-    ],
-    "justification": "NotebookLM processes user-uploaded documents to generate summaries and insights, presenting a medium risk of data leakage if employees upload sensitive corporate intellectual property, personally identifiable information (PII), or financial records to third-party servers. While enterprise agreements can mitigate some privacy concerns, consumer-grade use of the tool poses compliance risks under data protection frameworks like the EU AI Act due to potential third-party data ingestion and model training. Additionally, reliance on LLM-synthesized outputs for critical decision-making introduces risk from potential hallucinations or misinterpretations of source materials.",
-    "recommendedPolicy": "Restrict access to corporate-managed accounts covered by enterprise-grade data privacy agreements that explicitly prohibit the use of customer data for model training. Implement automated data loss prevention (DLP) rules to block the upload of highly sensitive data categories (PII, financial statements, and proprietary source code), and require human-in-the-loop validation of all generated summaries prior to downstream use.",
-    "status": "approved",
-    "createdAt": "2026-07-18T15:28:33.546Z"
   }
 ]
