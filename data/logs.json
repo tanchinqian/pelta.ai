@@ -374,5 +374,29 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-18T12:30:23.578Z"
+  },
+  {
+    "id": "ac2b75e7-a21c-4149-b031-73853774e4cd",
+    "promptSnippet": "This is an internal document about our financial projections for Q3. It contains proprietary information about our revenue targets.",
+    "verdict": "flag",
+    "riskLevel": "medium",
+    "reason": "LLM assessment: The text references internal financial projections and proprietary revenue targets, which constitutes business-sensitive context.",
+    "detectionMethod": "llm",
+    "dataCategory": "Financial",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-18T11:08:17.999Z"
+  },
+  {
+    "id": "72e39f72-2baa-4945-8ea3-93685e2359d1",
+    "promptSnippet": "please access my email elson@gmail.com",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-07-18T11:13:57.280Z"
   }
 ]

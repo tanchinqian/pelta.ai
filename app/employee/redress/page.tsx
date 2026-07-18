@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
+import { toast } from 'sonner';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -174,8 +175,11 @@ export default function RedressPage() {
       });
       const data = await res.json();
       setSubmitSuccess(true);
+      toast.success('Appeal submitted successfully');
       setTimeout(() => { setAccessRequest(data); setModalOpen(false); setReason(''); setSelectedSections([]); setSubmitSuccess(false); startPolling(data.id); }, 800);
-    } catch {}
+    } catch {
+      toast.error('Failed to submit appeal');
+    }
     finally { setSubmitting(false); }
   };
 

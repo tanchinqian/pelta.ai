@@ -6,6 +6,7 @@ import {
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -309,6 +310,7 @@ export default function RequestsPage() {
   const [selectedTool, setSelectedTool] = useState<ToolRequest | null>(null);
   const [toolFilter, setToolFilter] = useState<ToolFilterStatus>('all');
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -339,11 +341,16 @@ export default function RequestsPage() {
     const patch = { status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now };
     setAppeals((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
     setSelectedAppeal((prev) => prev && prev.id === id ? { ...prev, ...patch } : prev);
-    await fetch('/api/access-requests', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status, adminComment, reviewerName: 'Admin' }),
-    });
+    try {
+      await fetch('/api/access-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status, adminComment, reviewerName: 'Admin' }),
+      });
+      toast.success(`Appeal ${status} successfully`);
+    } catch (err) {
+      toast.error('Failed to update appeal');
+    }
     setRejectingId(null); setRejectionDraft('');
     const audit = await fetch('/api/audit-log').then((r) => r.json());
     setAuditLog(Array.isArray(audit) ? audit : []);
@@ -353,11 +360,16 @@ export default function RequestsPage() {
   const updateToolReq = async (id: string, status: 'approved' | 'denied') => {
     setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt: new Date().toISOString() } : r));
     setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt: new Date().toISOString() } : prev);
-    await fetch('/api/requests', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    });
+    try {
+      await fetch('/api/requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      toast.success(`Tool request ${status} successfully`);
+    } catch (err) {
+      toast.error('Failed to update tool request');
+    }
   };
 
   // ── Derived ──
@@ -378,6 +390,27 @@ export default function RequestsPage() {
     if (a.status === 'pending' && b.status !== 'pending') return -1;
     if (a.status !== 'pending' && b.status === 'pending') return 1;
     return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
+  });
+
+  const searchedAppeals = sortedAppeals.filter((r) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.employeeName.toLowerCase().includes(q) ||
+      r.reason.toLowerCase().includes(q) ||
+      r.id.toLowerCase().includes(q) ||
+      (r.riskLevel || '').toLowerCase().includes(q)
+    );
+  });
+
+  const searchedTools = sortedTools.filter((r) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.employeeName.toLowerCase().includes(q) ||
+      r.toolRequested.toLowerCase().includes(q) ||
+      r.department.toLowerCase().includes(q)
+    );
   });
 
   if (loading) {
@@ -420,12 +453,12 @@ export default function RequestsPage() {
         {/* Tabs */}
         <div className="flex items-center border-b border-border gap-0">
           <TabButton
-            active={activeTab === 'appeals'} onClick={() => setActiveTab('appeals')}
+            active={activeTab === 'appeals'} onClick={() => { setActiveTab('appeals'); setSearchQuery(''); }}
             label="Redress Appeals" badge={pendingAppeals.length}
             icon={<ShieldAlert size={11} />}
           />
           <TabButton
-            active={activeTab === 'tools'} onClick={() => setActiveTab('tools')}
+            active={activeTab === 'tools'} onClick={() => { setActiveTab('tools'); setSearchQuery(''); }}
             label="Tool Requests" badge={pendingTools.length}
             icon={<Briefcase size={11} />}
           />
@@ -434,30 +467,41 @@ export default function RequestsPage() {
         {/* ── Tab: Redress Appeals ──────────────────────────── */}
         {activeTab === 'appeals' && (
           <div className="space-y-3 animate-slide-in">
-            {/* Filter tabs */}
-            <div className="flex items-center gap-1 text-[11px] font-medium">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
-                const count = f === 'all' ? appeals.length : appeals.filter((r) => r.status === f).length;
-                return (
-                  <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                      appealFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
-                    }`}>
-                    {f}
-                    <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Filter tabs + Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
+              <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
+                {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
+                  const count = f === 'all' ? appeals.length : appeals.filter((r) => r.status === f).length;
+                  return (
+                    <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                        appealFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
+                      }`}>
+                      {f}
+                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                placeholder="Search appeals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
+              />
             </div>
 
             {/* Table */}
             <div className="panel p-0 overflow-hidden">
-              {sortedAppeals.length === 0 ? (
+              {searchedAppeals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-                  <span className="text-xs text-text-tertiary">{appealFilter === 'all' ? 'No appeals yet.' : `No ${appealFilter} appeals.`}</span>
+                  <span className="text-xs text-text-tertiary">
+                    {searchQuery ? 'No matching appeals found.' : appealFilter === 'all' ? 'No appeals yet.' : `No ${appealFilter} appeals.`}
+                  </span>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -475,7 +519,7 @@ export default function RequestsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedAppeals.map((req, i) => (
+                      {searchedAppeals.map((req, i) => (
                         <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                           <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
                           <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
@@ -575,30 +619,41 @@ export default function RequestsPage() {
         {/* ── Tab: Tool Requests ───────────────────────────── */}
         {activeTab === 'tools' && (
           <div className="space-y-3 animate-slide-in">
-            {/* Filter tabs */}
-            <div className="flex items-center gap-1 text-[11px] font-medium">
-              {(['all', 'pending', 'approved', 'denied'] as const).map((f) => {
-                const count = f === 'all' ? toolReqs.length : toolReqs.filter((r) => r.status === f).length;
-                return (
-                  <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                      toolFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/50'
-                    }`}>
-                    {f}
-                    <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Filter tabs + Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
+              <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
+                {(['all', 'pending', 'approved', 'denied'] as const).map((f) => {
+                  const count = f === 'all' ? toolReqs.length : toolReqs.filter((r) => r.status === f).length;
+                  return (
+                    <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
+                        toolFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
+                      }`}>
+                      {f}
+                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                placeholder="Search tool requests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
+              />
             </div>
 
             {/* Table */}
             <div className="panel p-0 overflow-hidden">
-              {sortedTools.length === 0 ? (
+              {searchedTools.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-                  <span className="text-xs text-text-tertiary">{toolFilter === 'all' ? 'No tool requests yet.' : `No ${toolFilter} tool requests.`}</span>
+                  <span className="text-xs text-text-tertiary">
+                    {searchQuery ? 'No matching tool requests found.' : toolFilter === 'all' ? 'No tool requests yet.' : `No ${toolFilter} tool requests.`}
+                  </span>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -614,7 +669,7 @@ export default function RequestsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedTools.map((req, i) => (
+                      {searchedTools.map((req, i) => (
                         <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                           <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
                           <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.department}</td>

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History, ShieldCheck } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
 
@@ -96,8 +97,10 @@ export default function NewRequestPage() {
       const reqRes = await fetch('/api/requests').then((r) => r.json()) as RequestRecord[];
       setMyRequests(reqRes.filter((r) => r.employeeName === DEMO_EMPLOYEE));
       setDone(true);
+      toast.success('Request submitted successfully');
     } catch (err: any) {
       setError(err.message);
+      toast.error(err.message || 'Failed to submit request');
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import Sidebar, { SlimTopBar } from "@/components/Sidebar";
+import { Toaster } from 'sonner';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
           <SlimTopBar />
           <main className="flex-1 flex flex-col min-h-0">{children}</main>
         </div>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );
