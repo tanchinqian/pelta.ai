@@ -45,7 +45,7 @@ const VERDICT_COLOR: Record<string, string> = {
 };
 
 const NIST_COLORS: Record<string, string> = {
-  Govern: 'var(--color-accent)', Map: '#7d9b9a', Measure: 'var(--color-risk-low)', Manage: '#c48b6c',
+  Govern: 'var(--nist-govern)', Map: 'var(--nist-map)', Measure: 'var(--nist-measure)', Manage: 'var(--nist-manage)',
 };
 
 const REASON_SOFT_LIMIT = 500;

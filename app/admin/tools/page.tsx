@@ -99,7 +99,7 @@ function NistTag({ label }: { label: string }) {
 }
 
 function DataTag({ label }: { label: string }) {
-  const color = label === 'PII' ? '#a39171' : label === 'Financial' ? '#c48b6c' : label === 'Source Code' ? '#7d9b9a' : '#8c8980';
+  const color = label === 'PII' ? 'var(--data-pii)' : label === 'Financial' ? 'var(--data-financial)' : label === 'Source Code' ? 'var(--data-source-code)' : 'var(--data-none)';
   return (
     <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border/40" style={{ color, background: `${color}12` }}>
       {label}

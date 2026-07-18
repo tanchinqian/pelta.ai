@@ -94,7 +94,7 @@ export function retrieveNistContext(
 }
 
 /**
- * Format retrieved context for injection into a Gemini prompt.
+ * Format retrieved context for injection into a LLM prompt.
  */
 export function formatNistContextForPrompt(results: NistRetrievalResult[]): string {
   if (results.length === 0) return '';

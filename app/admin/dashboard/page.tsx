@@ -35,16 +35,16 @@ const VERDICT = { allow: 'var(--color-risk-low)', flag: 'var(--color-risk-medium
 const RISK    = { low: 'var(--color-risk-low)', medium: 'var(--color-risk-medium)', high: 'var(--color-risk-high)' };
 
 const DATA_CAT: Record<string, string> = {
-  PII: '#a39171', Financial: '#c48b6c', 'Source Code': '#7d9b9a', None: '#8c8980',
+  PII: 'var(--data-pii)', Financial: 'var(--data-financial)', 'Source Code': 'var(--data-source-code)', None: 'var(--data-none)',
 };
 
-const DETECTION = { regex: '#7d9b9a', llm: '#c48b6c' };
+const DETECTION = { regex: 'var(--data-source-code)', llm: 'var(--data-financial)' };
 
 const NIST_COLORS: Record<string, string> = {
-  Govern: 'var(--color-accent)', Map: '#7d9b9a', Measure: 'var(--color-risk-low)', Manage: '#c48b6c',
+  Govern: 'var(--nist-govern)', Map: 'var(--nist-map)', Measure: 'var(--nist-measure)', Manage: 'var(--nist-manage)',
 };
 
-const DEPT_PALETTE = ['var(--color-accent)', '#7d9b9a', '#c48b6c', '#8c8980', '#a39171', '#8f9e7b'];
+const DEPT_PALETTE = ['var(--nist-govern)', 'var(--nist-map)', 'var(--nist-manage)', 'var(--data-none)', 'var(--data-pii)', 'var(--data-source-code)'];
 
 /* ── Helpers ────────────────────────────────────────────── */
 

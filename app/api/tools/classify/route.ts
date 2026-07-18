@@ -31,16 +31,16 @@ export async function POST(req: NextRequest) {
     const existing = tools.find((t) => t.name.toLowerCase() === name.trim().toLowerCase());
 
     // classifyToolRisk handles its own fallback (mock on no-key/quota errors)
-    const geminiResult = await classifyToolRisk(name.trim(), description.trim());
+    const llmResult = await classifyToolRisk(name.trim(), description.trim());
     const classification = {
       name: name.trim(),
       description: description.trim(),
-      riskTier: geminiResult.riskTier,
-      nistFunctions: geminiResult.nistFunctions,
-      dataCategories: geminiResult.dataCategories,
-      justification: geminiResult.justification,
-      recommendedPolicy: geminiResult.recommendedPolicy,
-      retrievedNistContext: geminiResult.retrievedNistContext,
+      riskTier: llmResult.riskTier,
+      nistFunctions: llmResult.nistFunctions,
+      dataCategories: llmResult.dataCategories,
+      justification: llmResult.justification,
+      recommendedPolicy: llmResult.recommendedPolicy,
+      retrievedNistContext: llmResult.retrievedNistContext,
     };
 
     let finalTool: ToolRecord;

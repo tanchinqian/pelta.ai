@@ -387,7 +387,7 @@ export default function ClassifyToolPage() {
             <div className="space-y-1">
               <h2 className="text-sm font-serif font-semibold text-zinc-900 dark:text-zinc-100">Classify New AI Tool</h2>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Submit an AI service name and its corporate use case. Gemini will automatically classify its risk tier, data categories, and NIST functions.
+                Submit an AI service name and its corporate use case. The system will classify its risk tier, data categories, and NIST functions.
               </p>
             </div>
 
@@ -798,7 +798,7 @@ export default function ClassifyToolPage() {
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleReclassify(t); }}
-                                title="Re-classify with Gemini"
+                                title="Re-classify with LLM"
                                 disabled={reclassifyingId === t.id}
                                 className="text-text-secondary hover:text-accent p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40"
                               >

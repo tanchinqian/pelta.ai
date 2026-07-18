@@ -25,10 +25,10 @@ const VERDICT_COLOR: Record<string, string> = {
 };
 
 const DATA_CAT_COLOR: Record<string, string> = {
-  PII: '#818cf8',
-  Financial: '#c084fc',
-  'Source Code': '#22d3ee',
-  None: '#64748b',
+  PII: 'var(--data-pii)',
+  Financial: 'var(--data-financial)',
+  'Source Code': 'var(--data-source-code)',
+  None: 'var(--data-none)',
 };
 
 export default function LogsPage() {

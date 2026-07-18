@@ -4,7 +4,7 @@
 
 1. Open 3 tabs: **Landing** (`/`), **Classify** (`/admin/tools/new`), **Prompt Guard** (`/employee/prompt-guard`)
 2. Toggle Admin on the landing page so the role switcher is visible
-3. If using real Gemini key: verify `.env.local` has `GEMINI_API_KEY` set. If not, the mock fallback still works — just have the responses in mind.
+3. If using real LLM key: verify `.env.local` has `LLM_API_KEY` set. If not, the mock fallback still works — just have the responses in mind.
 4. Window size ~1400px wide so charts are legible
 
 ---
@@ -36,7 +36,7 @@
 
 > *Type name + description, click **Classify**. Wait ~2-3s for the response.*
 
-**"The system sends this to Gemini with a structured prompt requesting JSON-only output — no markdown, no preamble. The result is a full risk profile: tier, NIST functions implicated, data categories touched, a plain-English justification, and a recommended access policy."**
+**"The system sends this to LLM with a structured prompt requesting JSON-only output — no markdown, no preamble. The result is a full risk profile: tier, NIST functions implicated, data categories touched, a plain-English justification, and a recommended access policy."**
 
 > *Result card appears with all fields.*
 
@@ -68,7 +68,7 @@ Our internal budget is confidential — do not share externally.
 
 > *Verdict card appears on the right.*
 
-**"If no hard regex matched, the system would escalate to Gemini for a judgment call — does this look like confidential business content? But here, the regex caught high-severity patterns, so the verdict is instant. Blocked."**
+**"If no hard regex matched, the system would escalate to LLM for a judgment call — does this look like confidential business content? But here, the regex caught high-severity patterns, so the verdict is instant. Blocked."**
 
 > *Point to the highlighted spans in the scanned text panel.*
 
@@ -94,14 +94,14 @@ Our internal budget is confidential — do not share externally.
 
 ## 5. Close (10s)
 
-**"pelta.ai addresses all three case study challenges: frictionless approval workflows, real-time data privacy protection, and full explainability. Built in ~2 days on Next.js with Gemini for LLM inference, recharts for visualisation, and zero infrastructure — everything runs off flat files on disk. Happy to take questions."**
+**"pelta.ai addresses all three case study challenges: frictionless approval workflows, real-time data privacy protection, and full explainability. Built in ~2 days on Next.js with LLM for LLM inference, recharts for visualisation, and zero infrastructure — everything runs off flat files on disk. Happy to take questions."**
 
 ---
 
 ## Appendix: If They Ask About...
 
-### "What if you don't have a Gemini key?"
-The mock fallback returns realistic data. The demo works identically — just say "The Gemini call is disabled in this environment, but the response structure is the same."
+### "What if you don't have a LLM key?"
+The mock fallback returns realistic data. The demo works identically — just say "The LLM call is disabled in this environment, but the response structure is the same."
 
 ### "Is the regex + LLM hybrid novel?"
 "The hybrid approach is pragmatic: regex catches the obvious patterns instantly at zero cost, LLM only fires for ambiguous cases. This keeps latency low on common paths while still catching nuanced confidential content."

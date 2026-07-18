@@ -46,7 +46,7 @@ const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/employee/requests/new': { title: 'Request Tool', crumb: 'Request a new AI tool' },
   '/employee/redress': { title: 'Redress', crumb: 'Right to Explanation · EU AI Act' },
   '/admin/dashboard': { title: 'Dashboard', crumb: 'Overview' },
-  '/admin/tools/new': { title: 'Classify', crumb: 'Gemini-powered risk assessment' },
+  '/admin/tools/new': { title: 'Classify', crumb: 'LLM-powered risk assessment' },
   '/admin/tools': { title: 'Tools', crumb: 'AI tool registry' },
   '/admin/approvals': { title: 'Requests', crumb: 'Approve or deny submissions' },
   '/admin/logs': { title: 'Logs', crumb: 'Detection audit trail' },
