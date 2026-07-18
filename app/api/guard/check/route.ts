@@ -12,6 +12,8 @@ interface GuardLog {
   reason: string;
   detectionMethod: 'regex' | 'llm';
   dataCategory: string;
+  source?: string;
+  tool?: string;
   timestamp: string;
 }
 
@@ -26,7 +28,7 @@ function inferDataCategory(prompt: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const { prompt, source, tool } = await req.json();
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json({ error: 'prompt is required' }, { status: 400 });
     }
@@ -48,6 +50,7 @@ export async function POST(req: NextRequest) {
         reason: `Regex detected high-severity patterns: ${detail}.`,
         detectionMethod: 'regex',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
@@ -64,6 +67,7 @@ export async function POST(req: NextRequest) {
         reason: `Regex detected medium-severity patterns: ${detail}.`,
         detectionMethod: 'regex',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
@@ -84,6 +88,7 @@ export async function POST(req: NextRequest) {
           reason: `LLM assessment: ${llmResult.reason}`,
           detectionMethod: 'llm',
           dataCategory,
+          source, tool,
           timestamp: new Date().toISOString(),
         };
         addItem('logs', log);
@@ -102,6 +107,7 @@ export async function POST(req: NextRequest) {
           : 'Text appears to contain business-sensitive context. Recommend admin review.',
         detectionMethod: 'llm',
         dataCategory,
+        source, tool,
         timestamp: new Date().toISOString(),
       };
       addItem('logs', log);
@@ -117,6 +123,7 @@ export async function POST(req: NextRequest) {
       reason: 'No sensitive data detected by regex scan.',
       detectionMethod: 'regex',
       dataCategory,
+      source, tool,
       timestamp: new Date().toISOString(),
     };
     addItem('logs', log);

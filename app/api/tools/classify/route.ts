@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { classifyToolRisk } from '@/lib/gemini';
-import { addItem, readStore } from '@/lib/fileStore';
+import { addItem } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
 interface ToolRecord {
@@ -26,24 +26,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If no API key, return a mock result
-    if (!process.env.GEMINI_API_KEY) {
-      const mock: ToolRecord = {
-        id: uuid(),
-        name,
-        description,
-        status: 'pending',
-        riskTier: 'Medium',
-        nistFunctions: ['Govern', 'Map'],
-        dataCategories: ['None'],
-        justification: `Mock classification: "${name}" was assessed based on its description. As a general productivity tool, it presents moderate governance concerns around data handling and access control.`,
-        recommendedPolicy: 'Allow for non-sensitive tasks. Review quarterly for policy changes.',
-        createdAt: new Date().toISOString(),
-      };
-      addItem('tools', mock);
-      return NextResponse.json(mock);
-    }
-
+    // Always returns a result — falls back to heuristic mock on quota/API errors
     const classification = await classifyToolRisk(name, description);
 
     const tool: ToolRecord = {

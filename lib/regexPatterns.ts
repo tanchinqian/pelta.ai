@@ -33,7 +33,7 @@ const SUSPICIOUS_KEYWORDS = [
   'confidential', 'salary', 'compensation', 'bonus', 'internal', 'proprietary',
   'trade secret', 'nda', 'non-disclosure', 'financial', 'revenue', 'acquisition',
   'merger', 'layoff', 'restructuring', 'insider', 'classified', 'sensitive',
-  'password', 'credentials', 'pii', 'personally identifiable', 'patient',
+  'password', 'credentials', 'pii', 'personally identifiable', 'patient', 
   'health record', 'hipaa', 'gdpr', 'bank account', 'routing',
 ];
 

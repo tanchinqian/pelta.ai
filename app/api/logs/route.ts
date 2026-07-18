@@ -8,6 +8,9 @@ interface GuardLog {
   riskLevel: string;
   reason: string;
   detectionMethod: string;
+  dataCategory?: string;
+  source?: string;
+  tool?: string;
   timestamp: string;
 }
 
