@@ -53,6 +53,12 @@ export default function ClassifyToolPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [flyoutTool, setFlyoutTool] = useState<ToolRecord | null>(null);
   const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, riskFilter, statusFilter, sortKey, sortDir]);
 
   const autocompleteSuggestions = name.trim()
     ? tools.filter(
@@ -326,6 +332,12 @@ export default function ClassifyToolPage() {
     if (av > bv) return sortDir === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const totalItems = displayedTools.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const paginatedTools = displayedTools.slice((page - 1) * pageSize, page * pageSize);
+  const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalItems);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchTools(); }, []);
@@ -655,7 +667,7 @@ export default function ClassifyToolPage() {
                       </td>
                     </tr>
                   )}
-                  {displayedTools.map((t, i) => {
+                  {paginatedTools.map((t, i) => {
                     const isSelected = result?.id === t.id;
                     return (
                       <tr
@@ -758,6 +770,61 @@ export default function ClassifyToolPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+            {/* Pagination Footer */}
+            <div className="px-5 pb-4">
+              <div className="w-full flex items-center justify-between pt-4 mt-2 border-t border-zinc-100 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center">
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="inline-flex items-center gap-1 border border-zinc-200 dark:border-zinc-700 px-2 py-1 rounded bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 ml-1 cursor-pointer focus:outline-none text-xs"
+                  >
+                    <option value={5}>Rows per page: 5</option>
+                    <option value={10}>Rows per page: 10</option>
+                    <option value={20}>Rows per page: 20</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs">{startItem} - {endItem} of {totalItems}</span>
+                  <div className="flex items-center gap-1 font-mono text-xs">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={`px-2 py-1 transition-colors ${page === 1 ? 'opacity-35 cursor-not-allowed' : 'hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer'}`}
+                      title="Previous Page"
+                    >
+                      &lt;
+                    </button>
+                    {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pNum) => {
+                      const isActive = pNum === page;
+                      return (
+                        <button
+                          key={pNum}
+                          onClick={() => setPage(pNum)}
+                          className={isActive
+                            ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium px-2.5 py-1 rounded-md cursor-default"
+                            : "hover:text-zinc-800 dark:hover:text-zinc-200 px-2 py-1 cursor-pointer transition-colors"
+                          }
+                        >
+                          {pNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={`px-2 py-1 transition-colors ${page === totalPages ? 'opacity-35 cursor-not-allowed' : 'hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer'}`}
+                      title="Next Page"
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
