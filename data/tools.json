@@ -13,8 +13,8 @@
     "dataCategories": [
       "PII"
     ],
-    "justification": "Heuristic assessment (LLM unavailable): \"Grammarly\" — AI writing assistant for drafting customer support emails and internal documentation. Classified Medium based on description keywords. Re-run when Gemini quota is available for a full NIST-aligned analysis.",
-    "recommendedPolicy": "Allow for non-sensitive tasks only. Review data retention policy before full rollout.",
+    "justification": "Grammarly operates as a cloud-based AI writing assistant that ingests real-time text inputs. When used for customer support and internal documentation, it inevitably processes customer Personally Identifiable Information (PII) and proprietary corporate data. While it does not fall under the EU AI Act's high-risk categories, the transfer of potentially sensitive text to third-party servers presents data privacy and leakage risks, warranting a Medium risk classification. NIST RMF principles require mapping these data flows and managing vendor compliance to ensure data is not used for model training.",
+    "recommendedPolicy": "Mandate the use of Grammarly Enterprise licenses only, ensuring that data sharing and model training options are explicitly disabled in the admin console. Prohibit the use of personal or free Grammarly accounts, and configure corporate identity providers (IdP) to block non-enterprise access.",
     "createdAt": "2026-07-14T10:00:00.000Z"
   },
   {
