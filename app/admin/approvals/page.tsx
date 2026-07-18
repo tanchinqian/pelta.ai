@@ -6,6 +6,7 @@ import {
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -348,11 +349,16 @@ export default function RequestsPage() {
     const patch = { status, adminComment: adminComment ?? null, reviewerName: 'Admin', decidedAt: now };
     setAppeals((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
     setSelectedAppeal((prev) => prev && prev.id === id ? { ...prev, ...patch } : prev);
-    await fetch('/api/access-requests', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status, adminComment, reviewerName: 'Admin' }),
-    });
+    try {
+      await fetch('/api/access-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status, adminComment, reviewerName: 'Admin' }),
+      });
+      toast.success(`Appeal ${status} successfully`);
+    } catch (err) {
+      toast.error('Failed to update appeal');
+    }
     setRejectingId(null); setRejectionDraft('');
     const audit = await fetch('/api/audit-log').then((r) => r.json());
     setAuditLog(Array.isArray(audit) ? audit : []);
@@ -362,11 +368,16 @@ export default function RequestsPage() {
   const updateToolReq = async (id: string, status: 'approved' | 'denied') => {
     setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt: new Date().toISOString() } : r));
     setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt: new Date().toISOString() } : prev);
-    await fetch('/api/requests', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    });
+    try {
+      await fetch('/api/requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      toast.success(`Tool request ${status} successfully`);
+    } catch (err) {
+      toast.error('Failed to update tool request');
+    }
   };
 
   // ── Derived ──

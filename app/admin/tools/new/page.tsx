@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
 
 interface ToolRecord {
   id: string; name: string; description: string; status: string;
@@ -85,9 +86,11 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to update status');
       }
+      toast.success(`Status updated to ${newStatus}`);
       fetchTools();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to update status');
       fetchTools();
     }
   };
@@ -106,9 +109,11 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to delete tool');
       }
+      toast.success('Tool deleted successfully');
       fetchTools();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to delete tool');
       fetchTools();
     }
   };
@@ -283,9 +288,14 @@ export default function ClassifyToolPage() {
       if (res.ok) {
         setResult(data);
         fetchTools();
+        toast.success(`${tool.name} re-classified successfully`);
         if (flyoutTool?.id === tool.id) setFlyoutTool(data);
+      } else {
+        toast.error(data.error ?? 'Re-classification failed');
       }
-    } catch {}
+    } catch (err) {
+      toast.error('Failed to re-classify tool');
+    }
     finally { setReclassifyingId(null); }
   };
 
@@ -349,8 +359,11 @@ export default function ClassifyToolPage() {
       setName('');
       setDescription('');
       fetchTools();
+      toast.success(`${data.name} classified successfully`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
