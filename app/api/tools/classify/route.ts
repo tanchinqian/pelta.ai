@@ -13,6 +13,7 @@ interface ToolRecord {
   dataCategories: string[];
   justification: string;
   recommendedPolicy: string;
+  retrievedNistContext?: { function: string; definition: string; concerns: string[]; score: number; matchedKeywords: string[] }[];
   createdAt: string;
 }
 
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
       dataCategories: geminiResult.dataCategories,
       justification: geminiResult.justification,
       recommendedPolicy: geminiResult.recommendedPolicy,
+      retrievedNistContext: geminiResult.retrievedNistContext,
     };
 
     let finalTool: ToolRecord;
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
         dataCategories: classification.dataCategories,
         justification: classification.justification,
         recommendedPolicy: classification.recommendedPolicy,
+        retrievedNistContext: classification.retrievedNistContext,
       };
       updateItem<ToolRecord>('tools', existing.id, updates);
       finalTool = { ...existing, ...updates } as ToolRecord;

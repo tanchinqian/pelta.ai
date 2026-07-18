@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NistRetrievalResult, retrieveNistContext, formatNistContextForPrompt } from './nistRetrieval';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 
@@ -33,6 +34,7 @@ export interface ToolRiskResponse {
   dataCategories: Array<'PII' | 'Financial' | 'Source Code' | 'None'>;
   justification: string;
   recommendedPolicy: string;
+  retrievedNistContext?: NistRetrievalResult[];
 }
 
 const SYSTEM_PROMPT = `You are an AI governance classification engine aligned with NIST AI RMF (Govern, Map, Measure, Manage) and EU AI Act principles.
@@ -201,10 +203,14 @@ export async function classifyToolRisk(
 ): Promise<ToolRiskResponse> {
   if (!apiKey) return mockToolRisk(toolName, description);
   try {
-    const prompt = `${SYSTEM_PROMPT}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
+    const nistContext = retrieveNistContext(toolName, description);
+    const contextBlock = formatNistContextForPrompt(nistContext);
+
+    const prompt = `${SYSTEM_PROMPT}\n\n${contextBlock}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
     const text = await generateWithFallback(prompt);
     try {
-      return parseJson(text) as ToolRiskResponse;
+      const parsed = parseJson(text) as ToolRiskResponse;
+      return { ...parsed, retrievedNistContext: nistContext };
     } catch {
       console.warn('[gemini] parse failed, using heuristic mock');
       return mockToolRisk(toolName, description);
