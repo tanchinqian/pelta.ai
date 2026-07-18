@@ -3,10 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 interface ToolRecord {
   id: string; name: string; description: string; status: string;
@@ -33,13 +29,15 @@ const PRESETS = [
 type SortDir = 'asc' | 'desc' | null;
 type SortKey = 'name' | 'riskTier' | 'status' | null;
 
-function SortTh({ label, sortKey: key, active, dir, onToggle }: {
-  label: string; sortKey: SortKey; active: SortKey; dir: SortDir; onToggle: (k: SortKey) => void;
+function SortTh({ label, sortKey: key, active, dir, onToggle, align = 'left' }: {
+  label: string; sortKey: SortKey; active: SortKey; dir: SortDir; onToggle: (k: SortKey) => void; align?: 'left' | 'center' | 'right';
 }) {
   const isActive = active === key;
+  const alignmentClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+  const flexAlignmentClass = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
   return (
-    <th className="py-2 px-4 font-medium cursor-pointer select-none hover:text-text-primary transition-colors text-left" onClick={() => onToggle(key)}>
-      <span className="flex items-center gap-1">
+    <th className={`py-2.5 px-4 font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer select-none hover:text-accent transition-colors ${alignmentClass}`} onClick={() => onToggle(key)}>
+      <span className={`flex items-center gap-1 ${flexAlignmentClass}`}>
         {label}
         {isActive ? (dir === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />) : <ArrowUpDown size={10} className="text-text-muted" />}
       </span>
@@ -47,24 +45,9 @@ function SortTh({ label, sortKey: key, active, dir, onToggle }: {
   );
 }
 
-const isHeuristic = (justification: string) => {
-  return /heuristic|llm unavailable/i.test(justification || '');
-};
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Tool name is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-});
-type FormValues = z.infer<typeof formSchema>;
-
 export default function ClassifyToolPage() {
-  const { register, handleSubmit, setValue, watch, formState: { errors }, clearErrors } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { name: '', description: '' },
-  });
-  const name = watch('name');
-  const description = watch('description');
-
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,12 +62,12 @@ export default function ClassifyToolPage() {
   const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
   const [showGrounded, setShowGrounded] = useState(false);
 
-  const autocompleteSuggestions = (name || '').trim()
+  const autocompleteSuggestions = name.trim()
     ? tools.filter(
-        (t) =>
-          t.name.toLowerCase().startsWith((name || '').toLowerCase()) &&
-          t.name.toLowerCase() !== (name || '').toLowerCase()
-      )
+      (t) =>
+        t.name.toLowerCase().startsWith(name.toLowerCase()) &&
+        t.name.toLowerCase() !== name.toLowerCase()
+    )
     : [];
 
   const fetchTools = async () => {
@@ -108,18 +91,16 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to update status');
       }
-      toast.success(`Status updated to ${newStatus}`);
       fetchTools();
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update status');
       fetchTools();
     }
   };
 
   const handleDeleteTool = async (id: string) => {
     if (!confirm('Are you sure you want to delete this tool?')) return;
-    
+
     setTools((prev) => prev.filter((t) => t.id !== id));
     if (result && result.id === id) {
       setResult(null);
@@ -131,11 +112,9 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to delete tool');
       }
-      toast.success('Tool deleted successfully');
       fetchTools();
     } catch (err) {
       console.error(err);
-      toast.error('Failed to delete tool');
       fetchTools();
     }
   };
@@ -310,14 +289,9 @@ export default function ClassifyToolPage() {
       if (res.ok) {
         setResult(data);
         fetchTools();
-        toast.success(`${tool.name} re-classified successfully`);
         if (flyoutTool?.id === tool.id) setFlyoutTool(data);
-      } else {
-        toast.error(data.error ?? 'Re-classification failed');
       }
-    } catch (err) {
-      toast.error('Failed to re-classify tool');
-    }
+    } catch { }
     finally { setReclassifyingId(null); }
   };
 
@@ -344,10 +318,10 @@ export default function ClassifyToolPage() {
 
   const displayedTools = [...filteredTools].sort((a, b) => {
     if (!sortKey || !sortDir) return 0;
-    
+
     let av: string | number;
     let bv: string | number;
-    
+
     if (sortKey === 'riskTier') {
       av = RISK_ORDER[a.riskTier ?? ''] ?? 0;
       bv = RISK_ORDER[b.riskTier ?? ''] ?? 0;
@@ -355,7 +329,7 @@ export default function ClassifyToolPage() {
       av = (a[sortKey] ?? '').toLowerCase();
       bv = (b[sortKey] ?? '').toLowerCase();
     }
-    
+
     if (av < bv) return sortDir === 'asc' ? -1 : 1;
     if (av > bv) return sortDir === 'asc' ? 1 : -1;
     return 0;
@@ -364,7 +338,8 @@ export default function ClassifyToolPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchTools(); }, []);
 
-  const onSubmit = async (data: FormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
     setResult(null);
     setLoading(true);
@@ -372,429 +347,482 @@ export default function ClassifyToolPage() {
       const res = await fetch('/api/tools/classify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: data.name.trim(), description: data.description.trim() }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
       });
-      const responseData = await res.json();
-      if (!res.ok) throw new Error(responseData.error ?? 'Classification failed');
-      setResult(responseData);
-      setValue('name', '');
-      setValue('description', '');
-      clearErrors();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Classification failed');
+      setResult(data);
+      setName('');
+      setDescription('');
       fetchTools();
-      toast.success(`${responseData.name} classified successfully`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg);
-      toast.error(msg);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 p-4 max-w-5xl mx-auto w-full space-y-4">
+    <div className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full text-text-primary">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <RadarIcon size={14} className="text-accent" />
-        <span className="text-sm font-semibold text-text-primary">Classify a New AI Tool</span>
-        <span className="text-[10px] font-mono text-text-tertiary">/ gemini-powered risk assessment</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-border dark:border-[#27272a] gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <RadarIcon size={16} className="text-accent" />
+            <h1 className="text-lg font-serif font-semibold text-text-primary">Tool Classification Intelligence</h1>
+          </div>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">Govern, assess, and audit artificial intelligence applications across the enterprise.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono uppercase tracking-wider bg-accent-dim/60 text-accent px-2.5 py-1 rounded border border-accent/20">
+            NIST AI RMF Compliant
+          </span>
+        </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="panel p-4 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Tool Name</label>
-            <div className="relative">
-              <input
-                {...register('name', {
-                  onChange: () => setShowSuggestions(true),
-                  onBlur: () => setTimeout(() => setShowSuggestions(false), 200)
-                })}
-                className={`w-full bg-background border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors ${errors.name ? 'border-risk-high focus:border-risk-high' : 'border-border focus:border-accent'}`}
-                placeholder="e.g. Grammarly, GitHub Copilot"
-                disabled={loading}
-              />
-              {name && !loading && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue('name', '');
-                    setShowSuggestions(false);
-                  }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
-                  title="Clear Tool Name"
-                >
-                  <X size={12} />
-                </button>
-              )}
-              {errors.name && <p className="text-[10px] text-risk-high mt-1">{errors.name.message}</p>}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Request & Classify Tool Panel */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-lg p-5 space-y-5">
+            <div className="space-y-1">
+              <h2 className="text-sm font-serif font-semibold text-zinc-900 dark:text-zinc-100">Classify New AI Tool</h2>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Submit an AI service name and its corporate use case. Gemini will automatically classify its risk tier, data categories, and NIST functions.
+              </p>
+            </div>
 
-              {/* Autocomplete suggestions dropdown */}
-              {showSuggestions && autocompleteSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 z-50 mt-1 bg-surface border border-border rounded shadow-md max-h-48 overflow-y-auto">
-                  {autocompleteSuggestions.map((t) => (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Tool Name</label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
+                    placeholder="e.g. Grammarly, GitHub Copilot"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    required
+                    disabled={loading}
+                  />
+                  {name && !loading && (
                     <button
-                      key={t.id}
                       type="button"
                       onClick={() => {
-                        setValue('name', t.name);
-                        setValue('description', t.description);
-                        clearErrors();
+                        setName('');
                         setShowSuggestions(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-xs text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
+                      title="Clear Tool Name"
                     >
-                      <span className="font-semibold">{t.name}</span>
-                      <span className="text-[10px] text-text-tertiary ml-2 block sm:inline truncate max-w-[250px]">{t.description}</span>
+                      <X size={12} />
+                    </button>
+                  )}
+
+                  {/* Autocomplete suggestions dropdown */}
+                  {showSuggestions && autocompleteSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-surface border border-border dark:border-[#27272a] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {autocompleteSuggestions.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => {
+                            setName(t.name);
+                            setDescription(t.description);
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
+                        >
+                          <span className="font-semibold">{t.name}</span>
+                          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 ml-2 block sm:inline truncate max-w-[250px]">{t.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Intended Use Case</label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
+                    placeholder="e.g. AI writing assistant for customer emails"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  {description && !loading && (
+                    <button
+                      type="button"
+                      onClick={() => setDescription('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
+                      title="Clear description"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Preset suggestions */}
+              <div className="space-y-2">
+                <span className="block text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-semibold">Quick Suggestions</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => {
+                        setName(preset.name);
+                        setDescription(preset.description);
+                      }}
+                      disabled={loading}
+                      className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-accent hover:border-accent transition-colors cursor-pointer disabled:opacity-30"
+                    >
+                      {preset.name}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">What is it used for?</label>
-            <div className="relative">
-              <input
-                {...register('description')}
-                className={`w-full bg-background border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors ${errors.description ? 'border-risk-high focus:border-risk-high' : 'border-border focus:border-accent'}`}
-                placeholder="e.g. AI writing assistant for customer emails"
+              </div>
+
+              <button
+                type="submit"
                 disabled={loading}
-              />
-              {description && !loading && (
-                <button
-                  type="button"
-                  onClick={() => setValue('description', '')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
-                  title="Clear description"
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-            {errors.description && <p className="text-[10px] text-risk-high mt-1">{errors.description.message}</p>}
-          </div>
-        </div>
-        
-        {/* Preset suggestions */}
-        <div className="flex items-center gap-2 flex-wrap text-[10px] pt-1">
-          <span className="text-text-tertiary uppercase font-semibold tracking-wider font-mono">Suggestions:</span>
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.name}
-              type="button"
-              onClick={() => {
-                setValue('name', preset.name);
-                setValue('description', preset.description);
-                clearErrors();
-              }}
-              disabled={loading}
-              className="px-2 py-1 rounded bg-background border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {preset.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono text-text-tertiary">Result persists to tool registry</span>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-1.5 text-xs font-medium text-text-primary bg-surface-hover hover:bg-surface border border-border rounded px-4 py-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <><div className="size-3 border border-text-tertiary border-t-text-primary rounded-full animate-spin" /> Classifying</>
-            ) : (
-              <><Search size={12} /> Classify</>
-            )}
-          </button>
-        </div>
-      </form>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-xs rounded-lg px-3 py-2">
-          {error}
-        </div>
-      )}
-
-      {/* Result Card — accent panel */}
-      {result && (
-        <div className="animate-slide-in panel-primary p-4 space-y-3 relative">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-text-primary">{result.name}</p>
-              <p className="text-xs text-text-secondary mt-0.5">{result.description}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {result.justification && (
-                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
-                  isHeuristic(result.justification) ? 'bg-background border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
-                }`}>
-                  {isHeuristic(result.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
-                </span>
-              )}
-              <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
-                style={{ color: RISK[result.riskTier ?? 'Low'], background: `color-mix(in srgb, ${RISK[result.riskTier ?? 'Low']} 10%, transparent)` }}
+                className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg px-4 py-2.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {result.riskTier ?? 'Unclassified'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setResult(null)}
-                className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer"
-                title="Dismiss details"
-              >
-                <X size={12} />
+                {loading ? (
+                  <><div className="size-3 border border-white border-t-transparent rounded-full animate-spin" /> Classifying Tool...</>
+                ) : (
+                  <><Search size={12} /> Classify Tool</>
+                )}
               </button>
-            </div>
+            </form>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">NIST Functions</p>
-              <div className="flex flex-wrap gap-1">
-                {result.nistFunctions.length > 0 ? result.nistFunctions.map((f) => (
-                  <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{f}</span>
-                )) : <span className="text-text-muted">—</span>}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Data Categories</p>
-              <div className="flex flex-wrap gap-1">
-                {result.dataCategories.length > 0 ? result.dataCategories.map((c) => (
-                  <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{c}</span>
-                )) : <span className="text-text-muted">—</span>}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-xs space-y-2 pt-2 border-t border-border">
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-0.5">Justification</p>
-              <p className="text-text-secondary leading-relaxed">{result.justification}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-0.5">Recommended Policy</p>
-              <p className="text-text-secondary leading-relaxed">{result.recommendedPolicy}</p>
-            </div>
-          </div>
-
-          {/* Grounded in NIST AI RMF */}
-          {result.retrievedNistContext && result.retrievedNistContext.length > 0 && (
-            <div className="border-t border-border pt-2">
-              <button
-                type="button"
-                onClick={() => setShowGrounded((v) => !v)}
-                className="w-full flex items-center justify-between text-left hover:bg-surface-hover/50 rounded px-2 py-1.5 -mx-2 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-1.5">
-                  <BookOpen size={12} className="text-accent" />
-                  <span className="text-[11px] font-semibold text-text-secondary">Grounded in NIST AI RMF</span>
-                  <span className="text-[10px] font-mono text-text-tertiary">
-                    ({result.retrievedNistContext.length} retrieved)
-                  </span>
-                </div>
-                {showGrounded ? <ChevronUp size={12} className="text-text-tertiary" /> : <ChevronDown size={12} className="text-text-tertiary" />}
-              </button>
-
-              {showGrounded && (
-                <div className="space-y-2 mt-2 animate-slide-in">
-                  {result.retrievedNistContext.map((ctx) => (
-                    <div key={ctx.function} className="bg-background border border-border rounded p-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-bold font-mono text-text-primary">{ctx.function}</span>
-                        {ctx.score > 0 && (
-                          <span className="text-[9px] font-mono text-text-tertiary">
-                            score {ctx.score} · {ctx.matchedKeywords.slice(0, 3).join(', ')}
-                            {ctx.matchedKeywords.length > 3 && ` +${ctx.matchedKeywords.length - 3}`}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-text-secondary leading-relaxed mt-1">{ctx.definition}</p>
-                      {ctx.concerns.length > 0 && (
-                        <p className="text-[10px] text-text-tertiary italic mt-1 line-clamp-2">
-                          {ctx.concerns[0]}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                  <p className="text-[9px] text-text-tertiary font-mono">
-                    Source: NIST AI RMF Playbook (via keyword retrieval over derived function reference).
-                    {' '}
-                    <a
-                      href="https://www.nist.gov/itl/ai-risk-management-framework"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-accent hover:text-accent-hover"
-                    >
-                      NIST AI RMF ↗
-                    </a>
-                  </p>
-                </div>
-              )}
+          {/* Error */}
+          {error && (
+            <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-xs rounded-lg px-3 py-2 animate-slide-in">
+              {error}
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-3 border-t border-border/60">
-            <button
-              type="button"
-              onClick={() => exportToJson(result)}
-              className="flex items-center gap-1 text-[10px] font-medium text-text-secondary hover:text-text-primary bg-background border border-border rounded px-2.5 py-1.5 transition-colors cursor-pointer"
-            >
-              <Download size={10} />
-              Export JSON
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePrintReport(result)}
-              className="flex items-center gap-1 text-[10px] font-medium text-text-secondary hover:text-text-primary bg-background border border-border rounded px-2.5 py-1.5 transition-colors cursor-pointer"
-            >
-              <Printer size={10} />
-              Print Report
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Registry Table */}
-      <div className="panel">
-        <div className="px-4 py-2 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider shrink-0">
-            Tool Registry <span className="text-text-tertiary font-normal">({displayedTools.length} of {tools.length})</span>
-          </span>
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-36 transition-colors"
-            />
-            <select
-              value={riskFilter}
-              onChange={(e) => setRiskFilter(e.target.value)}
-              className="bg-background border border-border rounded px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:border-accent cursor-pointer transition-colors"
-            >
-              <option value="all">All Risks</option>
-              <option value="Low">Low Risk</option>
-              <option value="Medium">Medium Risk</option>
-              <option value="High">High Risk</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-background border border-border rounded px-2 py-1 text-[11px] text-text-secondary focus:outline-none focus:border-accent cursor-pointer transition-colors"
-            >
-              <option value="all">All Statuses</option>
-              <option value="approved">Accept</option>
-              <option value="pending">Pending</option>
-              <option value="blocked">Decline</option>
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-text-secondary border-b border-border">
-                <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
-                <SortTh label="Risk" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
-                <th className="py-2 px-4 font-medium hidden sm:table-cell">NIST</th>
-                <th className="py-2 px-4 font-medium hidden md:table-cell">Data</th>
-                <SortTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} />
-              </tr>
-            </thead>
-            <tbody>
-              {displayedTools.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-                    <span className="text-text-tertiary text-xs">No tools found matching your filters.</span>
-                  </div>
-                </td></tr>
-              )}
-              {displayedTools.map((t, i) => {
-                const isSelected = result?.id === t.id;
-                return (
-                  <tr
-                    key={t.id}
-                    className={`border-b border-border/40 hover:bg-surface-hover/70 transition-colors ${
-                      isSelected ? 'bg-[var(--accent-dim)] border-l-2 border-l-[var(--accent)] font-medium' : i % 2 === 1 ? 'bg-surface-hover/20' : ''
-                    }`}
+          {/* Result Card — styled success panel */}
+          {result && (
+            <div className="animate-slide-in bg-accent-dim/30 border border-accent/20 rounded-lg p-5 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-accent font-semibold">Latest Classification</span>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1">{result.name}</p>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">{result.description}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${result.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                      result.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
+                        'bg-risk-low-bg text-risk-low border border-risk-low/15'
+                    }`}>
+                    {result.riskTier ?? 'Unclassified'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setResult(null)}
+                    className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer"
+                    title="Dismiss details"
                   >
-                    <td className="py-2 px-4">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setFlyoutTool(t); }}
-                        className="text-left hover:underline decoration-border"
-                      >
-                        <div className="font-medium text-text-primary flex items-center gap-1.5 flex-wrap">
-                          <span>{t.name}</span>
-                          {t.justification && (
-                            <span className={`text-[8px] font-semibold font-mono px-1 rounded-sm border leading-none py-0.5 ${
-                              isHeuristic(t.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/10 border-accent/20 text-accent'
-                            }`}>
-                              {isHeuristic(t.justification) ? 'Heuristic' : 'Gemini'}
-                            </span>
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">NIST Functions</p>
+                  <div className="flex flex-wrap gap-1">
+                    {result.nistFunctions.length > 0 ? result.nistFunctions.map((f) => (
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{f}</span>
+                    )) : <span className="text-text-muted">—</span>}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Data Categories</p>
+                  <div className="flex flex-wrap gap-1">
+                    {result.dataCategories.length > 0 ? result.dataCategories.map((c) => (
+                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{c}</span>
+                    )) : <span className="text-text-muted">—</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs space-y-2.5 pt-3 border-t border-border">
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Justification</p>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-[11px]">{result.justification}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Recommended Policy</p>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-[11px] italic">&ldquo;{result.recommendedPolicy}&rdquo;</p>
+                </div>
+              </div>
+
+              {/* Grounded in NIST AI RMF */}
+              {result.retrievedNistContext && result.retrievedNistContext.length > 0 && (
+                <div className="border-t border-border pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowGrounded((v) => !v)}
+                    className="w-full flex items-center justify-between text-left hover:bg-surface-hover/50 rounded px-2 py-1.5 -mx-2 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <BookOpen size={12} className="text-accent" />
+                      <span className="text-[11px] font-semibold text-text-secondary">Grounded in NIST AI RMF</span>
+                      <span className="text-[10px] font-mono text-text-tertiary">
+                        ({result.retrievedNistContext.length} retrieved)
+                      </span>
+                    </div>
+                    {showGrounded ? <ChevronUp size={12} className="text-text-tertiary" /> : <ChevronDown size={12} className="text-text-tertiary" />}
+                  </button>
+
+                  {showGrounded && (
+                    <div className="space-y-2 mt-2 animate-slide-in">
+                      {result.retrievedNistContext.map((ctx) => (
+                        <div key={ctx.function} className="bg-background border border-border rounded p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-bold font-mono text-text-primary">{ctx.function}</span>
+                            {ctx.score > 0 && (
+                              <span className="text-[9px] font-mono text-text-tertiary">
+                                score {ctx.score} · {ctx.matchedKeywords.slice(0, 3).join(', ')}
+                                {ctx.matchedKeywords.length > 3 && ` +${ctx.matchedKeywords.length - 3}`}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-text-secondary leading-relaxed mt-1">{ctx.definition}</p>
+                          {ctx.concerns.length > 0 && (
+                            <p className="text-[10px] text-text-tertiary italic mt-1 line-clamp-2">
+                              {ctx.concerns[0]}
+                            </p>
                           )}
-                          <ChevronRight size={10} className="text-text-muted" />
                         </div>
-                        <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
-                      </button>
-                    </td>
-                    <td className="py-2 px-4">
-                      {t.riskTier ? (
-                        <span className="text-[10px] font-bold font-mono uppercase" style={{ color: RISK[t.riskTier] }}>{t.riskTier}</span>
-                      ) : <span className="text-text-muted">—</span>}
-                    </td>
-                    <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden sm:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
-                    <td className="py-2 px-4 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{t.dataCategories.join(', ') || '—'}</td>
-                    <td className="py-2 px-4">
-                      <div className="flex items-center gap-1.5 justify-end sm:justify-start">
-                        <select
-                          value={t.status}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
-                          }}
-                          className={`bg-background border border-border rounded px-1.5 py-0.5 text-[10px] font-mono uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer ${
-                            t.status === 'approved' ? 'text-risk-low border-risk-low/30' :
-                            t.status === 'blocked' ? 'text-risk-high border-risk-high/30' : 'text-risk-medium border-risk-medium/30'
-                          }`}
+                      ))}
+                      <p className="text-[9px] text-text-tertiary font-mono">
+                        Source: NIST AI RMF Playbook (keyword retrieval over derived function reference).{' '}
+                        <a
+                          href="https://www.nist.gov/itl/ai-risk-management-framework"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-accent hover:text-accent-hover"
                         >
-                          <option value="approved" className="text-risk-low bg-background">Accept</option>
-                          <option value="pending" className="text-risk-medium bg-background">Pending</option>
-                          <option value="blocked" className="text-risk-high bg-background">Decline</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleReclassify(t); }}
-                          title="Re-classify with Gemini"
-                          disabled={reclassifyingId === t.id}
-                          className="text-text-secondary hover:text-accent p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40"
-                        >
-                          <RotateCw size={12} className={reclassifyingId === t.id ? 'animate-spin' : ''} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTool(t.id);
-                          }}
-                          className="text-text-secondary hover:text-risk-high p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
-                          title="Delete tool"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
+                          NIST AI RMF ↗
+                        </a>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-3 border-t border-border/60">
+                <button
+                  type="button"
+                  onClick={() => exportToJson(result)}
+                  className="flex items-center gap-1 text-[10px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                >
+                  <Download size={10} />
+                  Export JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrintReport(result)}
+                  className="flex items-center gap-1 text-[10px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer size={10} />
+                  Print Report
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: "Tool Registry" Management Panel */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-lg overflow-hidden">
+            {/* Filter bar & table header */}
+            <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <h2 className="text-sm font-serif font-semibold text-zinc-900 dark:text-zinc-100">Enterprise Registry Matrix</h2>
+                <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+                  Showing {displayedTools.length} of {tools.length} audited applications
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Search field */}
+                <div className="relative">
+                  <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search registry..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-7 pr-3 py-1 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent w-40 transition-colors"
+                  />
+                </div>
+
+                {/* Risks Dropdown */}
+                <select
+                  value={riskFilter}
+                  onChange={(e) => setRiskFilter(e.target.value)}
+                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-accent cursor-pointer transition-colors"
+                >
+                  <option value="all">All Risks</option>
+                  <option value="Low">Low Risk</option>
+                  <option value="Medium">Medium Risk</option>
+                  <option value="High">High Risk</option>
+                </select>
+
+                {/* Statuses Dropdown */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-accent cursor-pointer transition-colors"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="approved">Accept</option>
+                  <option value="pending">Pending</option>
+                  <option value="blocked">Decline</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Registry Data Grid Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
+                    <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
+                    <SortTh label="Risk Tier" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
+                    <th className="py-2.5 px-4 font-semibold text-zinc-800 dark:text-zinc-200 text-center">NIST Matrix</th>
+                    <SortTh label="Policy Actions" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} align="center" />
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80">
+                  {displayedTools.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <RadarIcon size={24} className="text-accent animate-radar-pulse" />
+                          <span className="text-text-tertiary text-xs">No tools found matching your filters.</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {displayedTools.map((t, i) => {
+                    const isSelected = result?.id === t.id;
+                    return (
+                      <tr
+                        key={t.id}
+                        className={`transition-colors hover:bg-surface-hover/50 dark:hover:bg-white/[0.03] ${isSelected ? 'bg-accent-dim/20 dark:bg-accent-dim/10 border-l-2 border-l-accent font-medium' : ''
+                          }`}
+                      >
+                        {/* Name column */}
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setFlyoutTool(t); }}
+                            className="text-left group cursor-pointer"
+                          >
+                            <p className="font-semibold text-zinc-800 dark:text-white flex items-center gap-1 group-hover:text-accent transition-colors">
+                              {t.name}
+                              <ChevronRight size={10} className="text-text-muted group-hover:text-accent transition-transform group-hover:translate-x-0.5" />
+                            </p>
+                            <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate max-w-[220px] mt-0.5 leading-normal pb-2" title={t.description}>
+                              {t.description}
+                            </p>
+                          </button>
+                        </td>
+
+                        {/* Risk Tier column */}
+                        <td className="py-3 px-4">
+                          {t.riskTier ? (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
+                                t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
+                                  'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
+                              }`}>
+                              {t.riskTier}
+                            </span>
+                          ) : (
+                            <span className="text-text-muted">—</span>
+                          )}
+                        </td>
+
+                        {/* NIST functions list */}
+                        <td className="py-3 px-4 text-[10px] font-mono text-text-tertiary text-center">
+                          <div className="flex flex-wrap gap-1 justify-center">
+                            {t.nistFunctions.map((f) => (
+                              <span key={f} className="px-1.5 py-0.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/60 text-[9px] text-zinc-700 dark:text-zinc-300">
+                                {f.slice(0, 3)}
+                              </span>
+                            ))}
+                            {t.nistFunctions.length === 0 && <span className="text-text-muted">—</span>}
+                          </div>
+                        </td>
+
+                        {/* Policy actions */}
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center gap-2 justify-center">
+                            <select
+                                value={t.status}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
+                                }}
+                                className={`rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-950 border ${
+                                  t.status === 'approved'
+                                    ? 'text-risk-low dark:text-emerald-400 border-risk-low/30 dark:border-emerald-500/30'
+                                    : t.status === 'blocked'
+                                    ? 'text-risk-high dark:text-rose-400 border-risk-high/30 dark:border-rose-500/30'
+                                    : 'text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30'
+                                }`}
+                              >
+                                <option value="pending" className="text-risk-medium bg-background">Pending</option>
+                                <option value="approved" className="text-risk-low bg-background">Approved</option>
+                                <option value="blocked" className="text-risk-high bg-background">Blocked</option>
+                              </select>
+
+                            {/* Additional paired actions */}
+                            <div className="flex items-center gap-1 ml-auto">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleReclassify(t); }}
+                                title="Re-classify with Gemini"
+                                disabled={reclassifyingId === t.id}
+                                className="text-text-secondary hover:text-accent p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40"
+                              >
+                                <RotateCw size={12} className={reclassifyingId === t.id ? 'animate-spin' : ''} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTool(t.id);
+                                }}
+                                className="text-text-secondary hover:text-risk-high p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
+                                title="Delete tool"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -802,90 +830,96 @@ export default function ClassifyToolPage() {
       {flyoutTool && (
         <div
           className="fixed inset-0 z-50 flex justify-end"
-          style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(1px)' }}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(1px)' }}
           onClick={(e) => { if (e.target === e.currentTarget) setFlyoutTool(null); }}
         >
-          <div className="bg-surface border-l border-border h-full w-full max-w-sm overflow-y-auto animate-slide-in p-5 space-y-4 shadow-2xl flex flex-col">
+          <div className="bg-surface border-l border-border h-full w-[420px] overflow-y-auto animate-slide-in p-6 space-y-6 shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-text-primary truncate">{flyoutTool.name}</p>
-                <p className="text-[11px] text-text-tertiary mt-0.5 leading-relaxed">{flyoutTool.description}</p>
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
+              <div className="min-w-0">
+                <h3 className="text-base font-serif font-semibold text-text-primary truncate">{flyoutTool.name}</h3>
+                <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {flyoutTool.id}</p>
               </div>
-              <button onClick={() => setFlyoutTool(null)} className="text-text-tertiary hover:text-text-primary transition-colors cursor-pointer mt-0.5 shrink-0">
-                <X size={14} />
+              <button
+                onClick={() => setFlyoutTool(null)}
+                className="text-zinc-750 dark:text-zinc-100 hover:text-accent transition-colors cursor-pointer mt-0.5 px-2 py-1 rounded hover:bg-surface-hover text-xs font-mono"
+              >
+                CLOSE
               </button>
             </div>
 
-            {/* Risk + Status */}
-            <div className="flex items-center gap-2">
-              {flyoutTool.riskTier && (
-                <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
-                  style={{ color: RISK[flyoutTool.riskTier], background: `color-mix(in srgb, ${RISK[flyoutTool.riskTier]} 10%, transparent)` }}>
-                  {flyoutTool.riskTier} Risk
-                </span>
-              )}
-              <span className={`text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded border ${
-                flyoutTool.status === 'approved' ? 'text-risk-low border-risk-low/30 bg-risk-low/10' :
-                flyoutTool.status === 'blocked' ? 'text-risk-high border-risk-high/30 bg-risk-high/10' :
-                'text-risk-medium border-risk-medium/30 bg-risk-medium/10'
-              }`}>
-                {flyoutTool.status}
-              </span>
-              {flyoutTool.justification && (
-                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
-                  isHeuristic(flyoutTool.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
-                }`}>
-                  {isHeuristic(flyoutTool.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
-                </span>
-              )}
-            </div>
-
-            {/* NIST + Data */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1">
               <div>
-                <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">NIST Functions</p>
-                <div className="flex flex-wrap gap-1">
-                  {flyoutTool.nistFunctions.length > 0
-                    ? flyoutTool.nistFunctions.map((f) => (
-                        <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{f}</span>
-                      ))
-                    : <span className="text-text-muted text-[10px]">—</span>}
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Description</h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed mt-1">{flyoutTool.description}</p>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Assessment</h4>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                        flyoutTool.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
+                          'bg-risk-low-bg text-risk-low border border-risk-low/15'
+                      }`}>
+                      {flyoutTool.riskTier}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Governance Status</h4>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.status === 'approved' ? 'border-risk-low/15 bg-risk-low-bg text-risk-low' :
+                        flyoutTool.status === 'blocked' ? 'border-risk-high/15 bg-risk-high-bg text-risk-high' :
+                          'border-risk-medium/15 bg-risk-medium-bg text-risk-medium'
+                      }`}>
+                      {flyoutTool.status}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Data Categories</p>
-                <div className="flex flex-wrap gap-1">
-                  {flyoutTool.dataCategories.length > 0
-                    ? flyoutTool.dataCategories.map((c) => (
-                        <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary text-[10px] font-mono">{c}</span>
-                      ))
-                    : <span className="text-text-muted text-[10px]">—</span>}
+
+              {/* NIST functions & Data categories */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">NIST Functions</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {flyoutTool.nistFunctions.map(f => (
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{f}</span>
+                    ))}
+                    {flyoutTool.nistFunctions.length === 0 && <span className="text-text-muted text-[10px]">—</span>}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">Data Categories</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {flyoutTool.dataCategories.map(c => (
+                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{c}</span>
+                    ))}
+                    {flyoutTool.dataCategories.length === 0 && <span className="text-text-muted text-[10px]">—</span>}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Justification */}
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Justification</p>
-              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{flyoutTool.justification || '—'}</p>
-            </div>
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Justification</h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif">{flyoutTool.justification || '—'}</p>
+              </div>
 
-            {/* Recommended Policy */}
-            <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Recommended Policy</p>
-              <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{flyoutTool.recommendedPolicy || '—'}</p>
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Recommended Policy</h4>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif italic">&ldquo;{flyoutTool.recommendedPolicy || '—'}&rdquo;</p>
+              </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-              <span className="text-[10px] font-mono text-text-muted">
-                Added {new Date(flyoutTool.createdAt).toLocaleDateString('en-SG', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
+            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+              <span>Added {new Date(flyoutTool.createdAt).toLocaleDateString()}</span>
               <button
                 onClick={() => handleReclassify(flyoutTool)}
                 disabled={reclassifyingId === flyoutTool.id}
-                className="flex items-center gap-1.5 text-[11px] font-medium text-text-secondary hover:text-text-primary border border-border rounded px-3 py-1.5 hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent border border-border rounded px-3 py-1.5 hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <RotateCw size={11} className={reclassifyingId === flyoutTool.id ? 'animate-spin' : ''} />
                 Re-classify
