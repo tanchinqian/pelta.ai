@@ -133,21 +133,27 @@ function SeedButtonSidebar() {
 function RequestBadge() {
   const [pendingCount, setPendingCount] = useState(0);
 
+  const fetchCount = async () => {
+    try {
+      const [appeals, tools] = await Promise.all([
+        fetch('/api/access-requests').then((r) => r.json()),
+        fetch('/api/requests').then((r) => r.json()),
+      ]);
+      const appealPending = Array.isArray(appeals) ? appeals.filter((r: any) => r.status === 'pending').length : 0;
+      const toolPending = Array.isArray(tools) ? tools.filter((r: any) => r.status === 'pending').length : 0;
+      setPendingCount(appealPending + toolPending);
+    } catch {}
+  };
+
   useEffect(() => {
-    const fetchCount = async () => {
-      try {
-        const [appeals, tools] = await Promise.all([
-          fetch('/api/access-requests').then((r) => r.json()),
-          fetch('/api/requests').then((r) => r.json()),
-        ]);
-        const appealPending = Array.isArray(appeals) ? appeals.filter((r: any) => r.status === 'pending').length : 0;
-        const toolPending = Array.isArray(tools) ? tools.filter((r: any) => r.status === 'pending').length : 0;
-        setPendingCount(appealPending + toolPending);
-      } catch {}
-    };
     fetchCount();
     const interval = setInterval(fetchCount, 30_000);
-    return () => clearInterval(interval);
+    const handler = () => fetchCount();
+    window.addEventListener('pelta:refetch-requests', handler);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pelta:refetch-requests', handler);
+    };
   }, []);
 
   if (pendingCount === 0) return null;

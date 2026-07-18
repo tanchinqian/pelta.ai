@@ -131,6 +131,7 @@ const CURATED_KEYWORDS = {
     'inventory', 'decommission', 'incident response', 'whistleblower', 'diversity', 'stakeholder',
     'agent', 'agents', 'autonomous', 'automation', 'automated', 'third party', 'third-party', 'vendor',
     'procurement', 'contract', 'agreement', 'intellectual property', 'ip', 'liability', 'license',
+    'document', 'documents', 'legal', 'lawyer', 'attorney', 'nda', 'client', 'clients', 'hr', 'human resources',
   ],
   Map: [
     'context', 'use case', 'purpose', 'intended use', 'deployment', 'deploy', 'user', 'users', 'community',
@@ -138,6 +139,10 @@ const CURATED_KEYWORDS = {
     'categorization', 'context of use', 'task', 'tasks', 'automation', 'automate', 'human-ai', 'interaction',
     'feedback', 'problem formulation', 'prompt', 'prompts', 'natural language', 'chatbot', 'chat',
     'customer', 'employee', 'patient', 'applicant', 'candidate', 'borrower', 'consumer',
+    'meeting', 'meetings', 'summarize', 'summary', 'summaries', 'transcribe', 'transcription', 'note', 'notes',
+    'notetaking', 'writing', 'write', 'draft', 'drafting', 'brainstorm', 'brainstorming', 'research',
+    'search', 'searches', 'email', 'emails', 'communication', 'messaging', 'message', 'messages',
+    'video', 'image', 'images', 'design', 'marketing', 'content', 'advertising', 'social media', 'blog',
   ],
   Measure: [
     'test', 'testing', 'evaluation', 'validation', 'verification', 'metric', 'metrics', 'performance',
@@ -146,6 +151,8 @@ const CURATED_KEYWORDS = {
     'statistical', 'quality', 'drift', 'error', 'uncertainty', 'confidence', 'code', 'coding', 'coder',
     'source code', 'software', 'program', 'programming', 'generate', 'generates', 'generated', 'generation',
     'write', 'writes', 'writing', 'review', 'peer review', 'sast', 'vulnerability', 'bug', 'defect',
+    'analysis', 'analytics', 'analyze', 'translation', 'translate', 'translating', 'language', 'languages',
+    'voice', 'audio', 'sound', 'recording', 'record', 'records', 'transcribe', 'transcription', 'speech',
   ],
   Manage: [
     'monitor', 'monitoring', 'respond', 'response', 'incident', 'event', 'feedback', 'appeal', 'override',
@@ -153,6 +160,7 @@ const CURATED_KEYWORDS = {
     'improvement', 'remediation', 'corrective', 'recovery', 'communicate', 'escalation', 'maintenance',
     'deploy', 'deployment', 'production', 'live', 'release', 'rollback', 'incident management',
     'human in the loop', 'human-in-the-loop', 'hitl', 'override', 'appeal', 'opt-out',
+    'assistant', 'companion', 'agent', 'agents', 'meeting', 'meetings', 'call', 'calls', 'video', 'voice',
   ],
 };
 

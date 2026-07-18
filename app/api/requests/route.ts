@@ -44,11 +44,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { id, status } = await req.json();
+  const { id, status, denialReason } = await req.json();
   if (!id || !status) {
     return NextResponse.json({ error: 'id and status are required' }, { status: 400 });
   }
-  const items = updateItem<RequestRecord>('requests', id, { status, decidedAt: new Date().toISOString() });
+  const updates: Partial<RequestRecord> = { status, decidedAt: new Date().toISOString() };
+  if (denialReason) (updates as any).denialReason = denialReason;
+  const items = updateItem<RequestRecord>('requests', id, updates);
   const updated = items.find((i) => i.id === id);
   return NextResponse.json(updated);
 }

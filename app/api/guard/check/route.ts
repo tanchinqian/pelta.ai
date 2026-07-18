@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       return respond(log);
     }
 
-    // Step 3: Nothing suspicious
+    // Step 3: Nothing suspicious — always None category for clean prompts
     const log: GuardLog = {
       id: uuid(),
       promptSnippet: truncated,
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
       riskLevel: 'none',
       reason: 'No sensitive data detected by regex scan.',
       detectionMethod: 'regex',
-      dataCategory,
+      dataCategory: 'None',
       source, tool,
       timestamp: new Date().toISOString(),
     };

@@ -580,7 +580,9 @@ export default function ClassifyToolPage() {
                       <BookOpen size={12} className="text-accent" />
                       <span className="text-[11px] font-semibold text-text-secondary">Grounded in NIST AI RMF</span>
                       <span className="text-[10px] font-mono text-text-tertiary">
-                        ({result.retrievedNistContext.length} retrieved)
+                        ({result.retrievedNistContext.some((c) => c.score > 0)
+                          ? `${result.retrievedNistContext.filter((c) => c.score > 0).length} matched`
+                          : `${result.retrievedNistContext.length} baseline`})
                       </span>
                     </div>
                     {showGrounded ? <ChevronUp size={12} className="text-text-tertiary" /> : <ChevronDown size={12} className="text-text-tertiary" />}

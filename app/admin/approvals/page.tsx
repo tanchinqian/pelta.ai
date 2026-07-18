@@ -217,12 +217,17 @@ function AppealDetailModal({
 /* ── Tool Request Detail Modal ──────────────────────────── */
 
 function ToolDetailModal({
-  req, onClose, onApprove, onDeny,
+  req, onClose, onApprove, onStartDeny,
+  denyingId, denyDraft, onDenyDraftChange, onSendDeny, onCancelDeny,
 }: {
   req: ToolRequest; onClose: () => void;
-  onApprove: (id: string) => void; onDeny: (id: string) => void;
+  onApprove: (id: string) => void; onStartDeny: (id: string) => void;
+  denyingId: string | null; denyDraft: string;
+  onDenyDraftChange: (v: string) => void;
+  onSendDeny: (id: string) => void; onCancelDeny: () => void;
 }) {
   const isPending = req.status === 'pending';
+  const isDenying = denyingId === req.id;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -260,15 +265,35 @@ function ToolDetailModal({
             </div>
           </div>
           {isPending && (
-            <div className="flex items-center gap-2">
-              <button onClick={() => onApprove(req.id)}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
-                <CheckCircle size={12} /> Approve
-              </button>
-              <button onClick={() => onDeny(req.id)}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
-                <XCircle size={12} /> Deny
-              </button>
+            <div>
+              {!isDenying ? (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => onApprove(req.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    <CheckCircle size={12} /> Approve
+                  </button>
+                  <button onClick={() => onStartDeny(req.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    <XCircle size={12} /> Deny
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
+                    placeholder="Reason for denial (required)..."
+                    rows={3} value={denyDraft}
+                    onChange={(e) => onDenyDraftChange(e.target.value)} autoFocus
+                  />
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => onSendDeny(req.id)} disabled={!denyDraft.trim()}
+                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                      Confirm Deny
+                    </button>
+                    <button onClick={onCancelDeny} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -310,6 +335,8 @@ export default function RequestsPage() {
   const [toolReqs, setToolReqs] = useState<ToolRequest[]>([]);
   const [selectedTool, setSelectedTool] = useState<ToolRequest | null>(null);
   const [toolFilter, setToolFilter] = useState<ToolFilterStatus>('all');
+  const [denyingToolId, setDenyingToolId] = useState<string | null>(null);
+  const [denyToolDraft, setDenyToolDraft] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -355,17 +382,18 @@ export default function RequestsPage() {
     setRejectingId(null); setRejectionDraft('');
     const audit = await fetch('/api/audit-log').then((r) => r.json());
     setAuditLog(Array.isArray(audit) ? audit : []);
+    window.dispatchEvent(new CustomEvent('pelta:refetch-requests'));
   };
 
   // ── Tool request actions ──
-  const updateToolReq = async (id: string, status: 'approved' | 'denied') => {
+  const updateToolReq = async (id: string, status: 'approved' | 'denied', denialReason?: string) => {
     setToolReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, decidedAt: new Date().toISOString() } : r));
     setSelectedTool((prev) => prev && prev.id === id ? { ...prev, status, decidedAt: new Date().toISOString() } : prev);
     try {
       await fetch('/api/requests', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, status, denialReason }),
       });
 
       // If approved, trigger classification so the tool enters the registry
@@ -401,6 +429,8 @@ export default function RequestsPage() {
       toast.success(`Tool request ${status} successfully`);
     } catch (err) {
       toast.error('Failed to update tool request');
+    } finally {
+      window.dispatchEvent(new CustomEvent('pelta:refetch-requests'));
     }
   };
 
@@ -758,9 +788,14 @@ export default function RequestsPage() {
       {selectedTool && (
         <ToolDetailModal
           req={selectedTool}
-          onClose={() => setSelectedTool(null)}
+          onClose={() => { setSelectedTool(null); setDenyingToolId(null); setDenyToolDraft(''); }}
           onApprove={(id) => { updateToolReq(id, 'approved'); setSelectedTool(null); }}
-          onDeny={(id) => { updateToolReq(id, 'denied'); setSelectedTool(null); }}
+          onStartDeny={(id) => setDenyingToolId(id)}
+          denyingId={denyingToolId}
+          denyDraft={denyToolDraft}
+          onDenyDraftChange={setDenyToolDraft}
+          onSendDeny={(id) => { updateToolReq(id, 'denied', denyToolDraft.trim()); setSelectedTool(null); setDenyingToolId(null); setDenyToolDraft(''); }}
+          onCancelDeny={() => { setDenyingToolId(null); setDenyToolDraft(''); }}
         />
       )}
     </>
