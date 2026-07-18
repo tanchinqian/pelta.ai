@@ -4,16 +4,17 @@
     "name": "Grammarly",
     "description": "AI writing assistant for drafting customer support emails and internal documentation",
     "status": "approved",
-    "riskTier": "Low",
+    "riskTier": "Medium",
     "nistFunctions": [
       "Govern",
-      "Measure"
+      "Map",
+      "Manage"
     ],
     "dataCategories": [
-      "None"
+      "PII"
     ],
-    "justification": "Grammarly processes text for grammar and style suggestions. Does not store proprietary data or require access to sensitive systems.",
-    "recommendedPolicy": "Allow for email drafting and documentation. Block clipboard access for sensitive fields.",
+    "justification": "Heuristic assessment (LLM unavailable): \"Grammarly\" — AI writing assistant for drafting customer support emails and internal documentation. Classified Medium based on description keywords. Re-run when Gemini quota is available for a full NIST-aligned analysis.",
+    "recommendedPolicy": "Allow for non-sensitive tasks only. Review data retention policy before full rollout.",
     "createdAt": "2026-07-14T10:00:00.000Z"
   },
   {
