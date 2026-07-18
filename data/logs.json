@@ -158,35 +158,5 @@
     "detectionMethod": "regex",
     "dataCategory": "PII",
     "timestamp": "2026-07-16T10:30:00.000Z"
-  },
-  {
-    "id": "1fce3c61-4ab7-484d-b0da-117f563b51bd",
-    "promptSnippet": "Confidential info 07/15/2026",
-    "verdict": "flag",
-    "riskLevel": "medium",
-    "reason": "Regex detected medium-severity patterns: Date of birth.",
-    "detectionMethod": "regex",
-    "dataCategory": "None",
-    "timestamp": "2026-07-16T10:18:02.633Z"
-  },
-  {
-    "id": "aceebb8c-9b16-499a-8476-50dac7e21f8c",
-    "promptSnippet": "tanchinqian@gmail.com",
-    "verdict": "block",
-    "riskLevel": "high",
-    "reason": "Regex detected high-severity patterns: Email address.",
-    "detectionMethod": "regex",
-    "dataCategory": "PII",
-    "timestamp": "2026-07-16T10:18:33.623Z"
-  },
-  {
-    "id": "9663ee31-f97f-4aac-8686-5a287f80bf50",
-    "promptSnippet": "elson@gmail.com",
-    "verdict": "block",
-    "riskLevel": "high",
-    "reason": "Regex detected high-severity patterns: Email address.",
-    "detectionMethod": "regex",
-    "dataCategory": "PII",
-    "timestamp": "2026-07-16T14:31:34.850Z"
   }
 ]
