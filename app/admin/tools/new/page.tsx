@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface ToolRecord {
   id: string; name: string; description: string; status: string;
@@ -36,9 +40,24 @@ function SortTh({ label, sortKey: key, active, dir, onToggle }: {
   );
 }
 
+const isHeuristic = (justification: string) => {
+  return /heuristic|llm unavailable/i.test(justification || '');
+};
+
+const formSchema = z.object({
+  name: z.string().min(1, 'Tool name is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+});
+type FormValues = z.infer<typeof formSchema>;
+
 export default function ClassifyToolPage() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const { register, handleSubmit, setValue, watch, formState: { errors }, clearErrors } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { name: '', description: '' },
+  });
+  const name = watch('name');
+  const description = watch('description');
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,11 +71,11 @@ export default function ClassifyToolPage() {
   const [flyoutTool, setFlyoutTool] = useState<ToolRecord | null>(null);
   const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
 
-  const autocompleteSuggestions = name.trim()
+  const autocompleteSuggestions = (name || '').trim()
     ? tools.filter(
         (t) =>
-          t.name.toLowerCase().startsWith(name.toLowerCase()) &&
-          t.name.toLowerCase() !== name.toLowerCase()
+          t.name.toLowerCase().startsWith((name || '').toLowerCase()) &&
+          t.name.toLowerCase() !== (name || '').toLowerCase()
       )
     : [];
 
@@ -81,9 +100,11 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to update status');
       }
+      toast.success(`Status updated to ${newStatus}`);
       fetchTools();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to update status');
       fetchTools();
     }
   };
@@ -102,9 +123,11 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to delete tool');
       }
+      toast.success('Tool deleted successfully');
       fetchTools();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to delete tool');
       fetchTools();
     }
   };
@@ -279,9 +302,14 @@ export default function ClassifyToolPage() {
       if (res.ok) {
         setResult(data);
         fetchTools();
+        toast.success(`${tool.name} re-classified successfully`);
         if (flyoutTool?.id === tool.id) setFlyoutTool(data);
+      } else {
+        toast.error(data.error ?? 'Re-classification failed');
       }
-    } catch {}
+    } catch (err) {
+      toast.error('Failed to re-classify tool');
+    }
     finally { setReclassifyingId(null); }
   };
 
@@ -328,8 +356,7 @@ export default function ClassifyToolPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchTools(); }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormValues) => {
     setError(null);
     setResult(null);
     setLoading(true);
@@ -337,16 +364,20 @@ export default function ClassifyToolPage() {
       const res = await fetch('/api/tools/classify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+        body: JSON.stringify({ name: data.name.trim(), description: data.description.trim() }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Classification failed');
-      setResult(data);
-      setName('');
-      setDescription('');
+      const responseData = await res.json();
+      if (!res.ok) throw new Error(responseData.error ?? 'Classification failed');
+      setResult(responseData);
+      setValue('name', '');
+      setValue('description', '');
+      clearErrors();
       fetchTools();
+      toast.success(`${responseData.name} classified successfully`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -362,29 +393,25 @@ export default function ClassifyToolPage() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="panel p-4 space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="panel p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Tool Name</label>
             <div className="relative">
               <input
-                className="w-full bg-background border border-border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                {...register('name', {
+                  onChange: () => setShowSuggestions(true),
+                  onBlur: () => setTimeout(() => setShowSuggestions(false), 200)
+                })}
+                className={`w-full bg-background border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors ${errors.name ? 'border-risk-high focus:border-risk-high' : 'border-border focus:border-accent'}`}
                 placeholder="e.g. Grammarly, GitHub Copilot"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                required
                 disabled={loading}
               />
               {name && !loading && (
                 <button
                   type="button"
                   onClick={() => {
-                    setName('');
+                    setValue('name', '');
                     setShowSuggestions(false);
                   }}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
@@ -393,6 +420,7 @@ export default function ClassifyToolPage() {
                   <X size={12} />
                 </button>
               )}
+              {errors.name && <p className="text-[10px] text-risk-high mt-1">{errors.name.message}</p>}
 
               {/* Autocomplete suggestions dropdown */}
               {showSuggestions && autocompleteSuggestions.length > 0 && (
@@ -402,8 +430,9 @@ export default function ClassifyToolPage() {
                       key={t.id}
                       type="button"
                       onClick={() => {
-                        setName(t.name);
-                        setDescription(t.description);
+                        setValue('name', t.name);
+                        setValue('description', t.description);
+                        clearErrors();
                         setShowSuggestions(false);
                       }}
                       className="w-full text-left px-3 py-2 text-xs text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
@@ -420,17 +449,15 @@ export default function ClassifyToolPage() {
             <label className="block text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">What is it used for?</label>
             <div className="relative">
               <input
-                className="w-full bg-background border border-border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                {...register('description')}
+                className={`w-full bg-background border rounded pl-3 pr-8 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors ${errors.description ? 'border-risk-high focus:border-risk-high' : 'border-border focus:border-accent'}`}
                 placeholder="e.g. AI writing assistant for customer emails"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
                 disabled={loading}
               />
               {description && !loading && (
                 <button
                   type="button"
-                  onClick={() => setDescription('')}
+                  onClick={() => setValue('description', '')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded hover:bg-surface-hover transition-colors"
                   title="Clear description"
                 >
@@ -438,6 +465,7 @@ export default function ClassifyToolPage() {
                 </button>
               )}
             </div>
+            {errors.description && <p className="text-[10px] text-risk-high mt-1">{errors.description.message}</p>}
           </div>
         </div>
         
@@ -449,8 +477,9 @@ export default function ClassifyToolPage() {
               key={preset.name}
               type="button"
               onClick={() => {
-                setName(preset.name);
-                setDescription(preset.description);
+                setValue('name', preset.name);
+                setValue('description', preset.description);
+                clearErrors();
               }}
               disabled={loading}
               className="px-2 py-1 rounded bg-background border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
@@ -492,6 +521,13 @@ export default function ClassifyToolPage() {
               <p className="text-xs text-text-secondary mt-0.5">{result.description}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {result.justification && (
+                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
+                  isHeuristic(result.justification) ? 'bg-background border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
+                }`}>
+                  {isHeuristic(result.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
+                </span>
+              )}
               <span className="text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded"
                 style={{ color: RISK[result.riskTier ?? 'Low'], background: `color-mix(in srgb, ${RISK[result.riskTier ?? 'Low']} 10%, transparent)` }}
               >
@@ -629,10 +665,17 @@ export default function ClassifyToolPage() {
                         onClick={(e) => { e.stopPropagation(); setFlyoutTool(t); }}
                         className="text-left hover:underline decoration-border"
                       >
-                        <p className="font-medium text-text-primary flex items-center gap-1">
-                          {t.name}
+                        <div className="font-medium text-text-primary flex items-center gap-1.5 flex-wrap">
+                          <span>{t.name}</span>
+                          {t.justification && (
+                            <span className={`text-[8px] font-semibold font-mono px-1 rounded-sm border leading-none py-0.5 ${
+                              isHeuristic(t.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/10 border-accent/20 text-accent'
+                            }`}>
+                              {isHeuristic(t.justification) ? 'Heuristic' : 'Gemini'}
+                            </span>
+                          )}
                           <ChevronRight size={10} className="text-text-muted" />
-                        </p>
+                        </div>
                         <p className="text-[10px] text-text-tertiary truncate max-w-[200px]">{t.description}</p>
                       </button>
                     </td>
@@ -725,6 +768,13 @@ export default function ClassifyToolPage() {
               }`}>
                 {flyoutTool.status}
               </span>
+              {flyoutTool.justification && (
+                <span className={`text-[9px] font-semibold font-mono px-1.5 py-0.5 rounded border ${
+                  isHeuristic(flyoutTool.justification) ? 'bg-surface border-border text-text-tertiary' : 'bg-accent/15 border-accent/25 text-accent'
+                }`}>
+                  {isHeuristic(flyoutTool.justification) ? '≈ Heuristic' : '⚡ Gemini AI'}
+                </span>
+              )}
             </div>
 
             {/* NIST + Data */}

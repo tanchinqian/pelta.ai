@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Shield, Lock, FileText, BarChart3, Eye, Users } from 'lucide-react';
+import { Shield, Lock, FileText, BarChart3, Users } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 
 const views = {
@@ -11,7 +11,6 @@ const views = {
     title: 'Employee View',
     description: 'Guard your prompts before they leave the organisation. Real-time regex + LLM detection for PII, secrets, and confidential business data.',
     links: [
-      { href: '/employee/prompt-guard', label: 'Prompt Guard', desc: 'Scan prompts for sensitive data', icon: <Eye size={14} /> },
       { href: '/employee/redress', label: 'Right to Explanation', desc: 'EU AI Act Article 86 — understand why a prompt was blocked', icon: <FileText size={14} /> },
     ],
   },
@@ -22,8 +21,7 @@ const views = {
     links: [
       { href: '/admin/tools/new', label: 'Classify a Tool', desc: 'Submit an AI tool for Gemini-powered risk assessment', icon: <BarChart3 size={14} /> },
       { href: '/admin/dashboard', label: 'Dashboard', desc: 'Usage charts, tool registry, prompt guard logs', icon: <BarChart3 size={14} /> },
-      { href: '/admin/requests', label: 'Approval Requests', desc: 'Review and approve/deny employee tool requests', icon: <Users size={14} /> },
-      { href: '/admin/approvals', label: 'Approvals', desc: 'Review access requests — approve or decline with full audit trail', icon: <Shield size={14} /> },
+      { href: '/admin/approvals', label: 'Approvals', desc: 'Review access requests and tool requests — approve or decline with full audit trail', icon: <Shield size={14} /> },
     ],
   },
 };
