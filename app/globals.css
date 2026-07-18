@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ── Dark mode: tie Tailwind dark: prefix to .dark class ─── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Dark mode (default) ─────────────────────────────── */
 :root {
   --bg: #0d0d0c;
