@@ -7,11 +7,16 @@
   "host_permissions": [
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
     "http://localhost:3000/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://chat.openai.com/*", "https://chatgpt.com/*"],
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*"
+      ],
       "js": ["content-script.js"],
       "css": ["overlay.css"],
       "run_at": "document_end"

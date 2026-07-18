@@ -3,10 +3,17 @@
  *   Intercepts the send action, checks via local API, overlays result.
  * ─────────────────────────────────────────────────────────── */
 
-/* ── Selectors (update if ChatGPT's DOM changes) ──────────── */
+function getToolName() {
+  const host = window.location.hostname;
+  if (host.includes('gemini')) return 'Gemini';
+  if (host.includes('deepseek')) return 'DeepSeek';
+  return 'ChatGPT';
+}
+
+/* ── Selectors (supports ChatGPT, Gemini, etc.) ──────────── */
 const SELECTORS = {
-  input: '#prompt-textarea',
-  sendButton: '#composer-submit-button',
+  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"]',
+  sendButton: '#composer-submit-button, button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], button[aria-label*="submit"]',
 };
 
 /* ── State ───────────────────────────────────────────────── */
@@ -72,8 +79,7 @@ function removeActiveBadge() {
 /* ── Bootstrap ─────────────────────────────────────────── */
 function acquire() {
   inputEl = document.querySelector(SELECTORS.input);
-  sendEl = document.querySelector(SELECTORS.sendButton);
-  if (inputEl && sendEl) {
+  if (inputEl) {
     attachListeners();
     showActiveBadge();
     return true;
@@ -84,7 +90,7 @@ function acquire() {
 function watchForMount() {
   if (reconnectObserver) reconnectObserver.disconnect();
   reconnectObserver = new MutationObserver(() => {
-    if (!inputEl || !sendEl || !document.contains(inputEl) || !document.contains(sendEl)) {
+    if (!inputEl || !document.contains(inputEl)) {
       detachListeners();
       if (acquire()) console.log('[pelta] re-acquired chat elements');
     }
@@ -112,6 +118,9 @@ function attachListeners() {
 
   clickHandler = (e) => {
     if (replaying) return;
+    const btn = e.target.closest(SELECTORS.sendButton);
+    if (!btn) return;
+
     const text = getPromptText();
     if (!text || !text.trim()) return;
     e.preventDefault();
@@ -121,15 +130,15 @@ function attachListeners() {
   };
 
   inputEl.addEventListener('keydown', keydownHandler, true);
-  sendEl.addEventListener('click', clickHandler, true);
+  document.addEventListener('click', clickHandler, true);
 }
 
 function detachListeners() {
   if (keydownHandler && inputEl) {
     inputEl.removeEventListener('keydown', keydownHandler, true);
   }
-  if (clickHandler && sendEl) {
-    sendEl.removeEventListener('click', clickHandler, true);
+  if (clickHandler) {
+    document.removeEventListener('click', clickHandler, true);
   }
   keydownHandler = null;
   clickHandler = null;
@@ -144,21 +153,25 @@ function getPromptText() {
   return inputEl.textContent || '';
 }
 
-/* ── Clear ProseMirror content ──────────────────────────── */
+/* ── Clear ProseMirror/Quill content ────────────────────── */
 function clearPrompt() {
   if (!inputEl) return;
-  // Set minimal empty paragraph — ProseMirror needs at least <p><br></p>
-  inputEl.innerHTML = '<p><br></p>';
-  // Dispatch an InputEvent so React/ProseMirror syncs its state
+  const tool = getToolName();
+  if (tool === 'Gemini') {
+    inputEl.innerHTML = '';
+  } else {
+    inputEl.innerHTML = '<p><br></p>';
+  }
+  // Dispatch an InputEvent so React/ProseMirror/Quill syncs its state
   inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
 }
 
 /* ── Re-dispatch the send action ────────────────────────── */
 function replaySend() {
   replaying = true;
-  // Small delay to allow overlay removal paint before re-trigger
   requestAnimationFrame(() => {
-    if (sendEl) sendEl.click();
+    const btn = document.querySelector(SELECTORS.sendButton);
+    if (btn) btn.click();
     replaying = false;
   });
 }
@@ -181,7 +194,7 @@ function removeOverlay() {
 /* ── Verification flow ──────────────────────────────────── */
 function startCheck(text, trigger) {
   showChecking(text);
-  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text }, (response) => {
+  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName() }, (response) => {
     if (!response) {
       showError('No response from extension background — check console.');
       return;
