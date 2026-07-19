@@ -35,7 +35,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: <BarChart3 size={15} />, matchPaths: ['/admin/dashboard'] },
   { href: '/admin/tools/new', label: 'Classify', icon: <Search size={15} />, matchPaths: ['/admin/tools/new'] },
   { href: '/admin/tools', label: 'Tools', icon: <Layers size={15} />, matchPaths: ['/admin/tools'], exact: true },
-  { href: '/admin/approvals', label: 'Requests', icon: <ClipboardList size={15} />, matchPaths: ['/admin/approvals', '/admin/requests'] },
+  { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={15} />, matchPaths: ['/admin/requests'] },
   { href: '/admin/logs', label: 'Logs', icon: <FileText size={15} />, matchPaths: ['/admin/logs'] },
 ];
 
@@ -48,7 +48,7 @@ const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/admin/dashboard': { title: 'Dashboard', crumb: 'Overview' },
   '/admin/tools/new': { title: 'Classify', crumb: 'LLM-powered risk assessment' },
   '/admin/tools': { title: 'Tools', crumb: 'AI tool registry' },
-  '/admin/approvals': { title: 'Requests', crumb: 'Approve or deny submissions' },
+  '/admin/requests': { title: 'Requests', crumb: 'Approve or deny submissions' },
   '/admin/logs': { title: 'Logs', crumb: 'Detection audit trail' },
 };
 
@@ -174,7 +174,7 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
         const active = item.exact
           ? pathname === item.href
           : item.matchPaths.some((p) => pathname.startsWith(p));
-        const isRequests = item.href === '/admin/approvals';
+        const isRequests = item.href === '/admin/requests';
         return (
           <Link
             key={item.href}

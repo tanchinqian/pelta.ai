@@ -22,7 +22,7 @@ const views = {
     links: [
       { href: '/admin/dashboard', label: 'System Dashboard', desc: 'Usage metrics, risk breakdowns, and trend charts', icon: <BarChart3 size={14} /> },
       { href: '/admin/tools', label: 'Tool Registry', desc: 'Registry of classified corporate AI tools', icon: <BarChart3 size={14} /> },
-      { href: '/admin/approvals', label: 'Access Requests', desc: 'Approve or deny employee requests with full audit trail', icon: <Users size={14} /> },
+      { href: '/admin/requests', label: 'Access Requests', desc: 'Approve or deny employee requests with full audit trail', icon: <Users size={14} /> },
       { href: '/admin/logs', label: 'Security Audit Logs', desc: 'Historical stream of detected prompts and verdicts', icon: <FileText size={14} /> },
     ],
   },
