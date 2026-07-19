@@ -21,14 +21,39 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, status } = await req.json();
-    if (!id || !status) {
-      return NextResponse.json({ error: 'id and status are required' }, { status: 400 });
+    const data = await req.json();
+    const { id, status, justification, recommendedPolicy, riskTier, nistFunctions, dataCategories } = data;
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
     }
-    if (!['pending', 'approved', 'blocked'].includes(status)) {
-      return NextResponse.json({ error: 'invalid status' }, { status: 400 });
+    
+    const updateFields: Partial<ToolRecord> = {};
+    if (status !== undefined) {
+      if (!['pending', 'approved', 'blocked'].includes(status)) {
+        return NextResponse.json({ error: 'invalid status' }, { status: 400 });
+      }
+      updateFields.status = status;
     }
-    const items = updateItem<ToolRecord>('tools', id, { status });
+    if (justification !== undefined) {
+      updateFields.justification = justification;
+    }
+    if (recommendedPolicy !== undefined) {
+      updateFields.recommendedPolicy = recommendedPolicy;
+    }
+    if (riskTier !== undefined) {
+      if (riskTier !== null && !['Low', 'Medium', 'High'].includes(riskTier)) {
+        return NextResponse.json({ error: 'invalid riskTier' }, { status: 400 });
+      }
+      updateFields.riskTier = riskTier;
+    }
+    if (nistFunctions !== undefined) {
+      updateFields.nistFunctions = nistFunctions;
+    }
+    if (dataCategories !== undefined) {
+      updateFields.dataCategories = dataCategories;
+    }
+
+    const items = updateItem<ToolRecord>('tools', id, updateFields);
     const updated = items.find((i) => i.id === id);
     if (!updated) {
       return NextResponse.json({ error: 'tool not found' }, { status: 404 });

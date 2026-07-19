@@ -61,9 +61,8 @@
     "status": "approved",
     "riskTier": "Medium",
     "nistFunctions": [
-      "Govern",
       "Map",
-      "Manage"
+      "Measure"
     ],
     "dataCategories": [
       "PII",
@@ -349,5 +348,26 @@
     "justification": "Attends video conferences and records voices, transcriptions, and meeting notes. Broad exposure of internal board decisions.",
     "recommendedPolicy": "Blocked from client-facing meetings and confidential internal corporate reviews.",
     "createdAt": "2026-07-16T12:00:00.000Z"
+  },
+  {
+    "id": "671aba02-e9cf-4afa-91c0-12a579474f4f",
+    "name": "Claude 3.5 Sonnet",
+    "description": "Advanced conversational LLM used for brainstorming and complex analysis",
+    "riskTier": "Medium",
+    "nistFunctions": [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage"
+    ],
+    "dataCategories": [
+      "PII",
+      "Financial",
+      "Source Code"
+    ],
+    "justification": "Claude 3.5 Sonnet is a highly advanced general-purpose LLM. When utilized for complex analysis, users are highly likely to input proprietary source code, sensitive financial data, or PII to get high-quality outputs. Because data is transmitted to third-party servers, this creates significant risk of data leakage, intellectual property exposure, and compliance violations (such as GDPR or CCPA). Under the EU AI Act, general-purpose AI models require governance to manage systemic risks, and the NIST AI RMF highlights the need to continuously measure and manage third-party data processing risks and potential model hallucinations.",
+    "recommendedPolicy": "Restrict access to enterprise-tier accounts with guaranteed data-privacy opt-outs (where prompts are not used for model training). Deploy browser-based Data Loss Prevention (DLP) tools to block the pasting of unmasked PII, financial ledgers, or raw cryptographic keys, and require mandatory training on safe LLM prompting.",
+    "status": "pending",
+    "createdAt": "2026-07-18T18:42:04.800Z"
   }
 ]
