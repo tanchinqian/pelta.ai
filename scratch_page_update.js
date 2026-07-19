@@ -1,43 +1,19 @@
-'use client';
+const fs = require('fs');
+let code = fs.readFileSync('app/page.tsx', 'utf8');
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Shield, Lock, FileText, BarChart3, Users, AlertTriangle, CheckCircle2, XCircle, ChevronRight, Activity, ShieldCheck, Cpu, Database, ArrowRight, BookOpen, Scale, Globe, Eye, Send, Search, Layers } from 'lucide-react';
-import { motion } from 'framer-motion';
-import RadarIcon from '@/components/RadarIcon';
+// Update imports
+code = code.replace(
+  "import { Shield, Lock, FileText, BarChart3, Users, AlertTriangle, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';",
+  "import { Shield, Lock, FileText, BarChart3, Users, AlertTriangle, CheckCircle2, XCircle, ChevronRight, Activity, ShieldCheck, Cpu, Database, ArrowRight, BookOpen, Scale, Globe } from 'lucide-react';\nimport { motion } from 'framer-motion';"
+);
 
-const views = {
-  employee: {
-    icon: <Lock size={16} className="text-text-secondary" />,
-    title: 'Employee View',
-    description: 'Request access to AI tools or check decisions. Prompt guard proxy monitors compliance automatically.',
-    links: [
-      { href: '/employee/requests/new', label: 'Request Tool', desc: 'Submit a new AI tool for security approval', icon: <Send size={14} /> },
-      { href: '/employee/redress', label: 'Right to Explanation', desc: 'EU AI Act Article 86 — understand why a request was decided', icon: <FileText size={14} /> },
-    ],
-  },
-  admin: {
-    icon: <Shield size={16} className="text-text-secondary" />,
-    title: 'Admin View',
-    description: 'Classify tools, monitor usage, and manage approvals. Every logged event is explainable and auditable.',
-    links: [
-      { href: '/admin/dashboard', label: 'System Dashboard', desc: 'Usage metrics, risk breakdowns, and trend charts', icon: <BarChart3 size={14} /> },
-      { href: '/admin/tools/new', label: 'Classify Tool', desc: 'Classify a tool and assess risks using Gemini LLM', icon: <Search size={14} /> },
-      { href: '/admin/tools', label: 'Tool Registry', desc: 'Registry of classified corporate AI tools', icon: <Layers size={14} /> },
-      { href: '/admin/requests', label: 'Access Requests', desc: 'Approve or deny employee requests with full audit trail', icon: <Users size={14} /> },
-      { href: '/admin/logs', label: 'Security Audit Logs', desc: 'Historical stream of detected prompts and verdicts', icon: <FileText size={14} /> },
-    ],
-  },
-};
-
-export default function LandingPage() {
-  const [view, setView] = useState<'employee' | 'admin'>('employee');
-  const active = views[view];
-
-  return (
+// Replace return statement
+const returnStart = code.indexOf('  return (\n    <div className="flex-1 flex flex-col bg-background text-text-primary">');
+if (returnStart !== -1) {
+  const newReturn = `  return (
     <div className="flex-1 flex flex-col bg-background text-text-primary overflow-y-auto overflow-x-hidden">
       {/* ── Hero Section ── */}
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center p-6 md:p-12 lg:min-h-[85vh]">
+      <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center p-6 md:p-12 lg:min-h-[85vh]">
         {/* Left Column: Brand, Editorial Intro & Simulator Sandbox */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
@@ -94,11 +70,11 @@ export default function LandingPage() {
             </div>
 
             {/* Live Verdict Banner */}
-            <div className={`p-2.5 rounded border text-[11px] flex items-start gap-2 ${
+            <div className={\`p-2.5 rounded border text-[11px] flex items-start gap-2 \${
               scanResult.verdict === 'block' ? 'bg-risk-high-bg text-risk-high border-risk-high/30' :
               scanResult.verdict === 'flag' ? 'bg-risk-medium-bg text-risk-medium border-risk-medium/30' :
               'bg-risk-low-bg text-risk-low border-risk-low/30'
-            }`}>
+            }\`}>
               <span className="mt-0.5 shrink-0">
                 {scanResult.verdict === 'block' ? <XCircle size={12} /> :
                  scanResult.verdict === 'flag' ? <AlertTriangle size={12} /> :
@@ -132,47 +108,46 @@ export default function LandingPage() {
           <div className="space-y-1">
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Workspace Access</h3>
             <p className="text-sm text-text-secondary">Choose a perspective to explore the governance workflow.</p>
->>>>>>> elson2
           </div>
 
           {/* Toggle */}
-          <div className="flex items-center bg-surface border border-border rounded-lg p-0.5">
+          <div className="flex items-center bg-background border border-border rounded p-0.5">
             <button
               onClick={() => setView('employee')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer ${
+              className={\`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer \${
                 view === 'employee'
-                  ? 'bg-surface-hover text-text-primary shadow-sm'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
+                  ? 'bg-surface text-text-primary border border-border/80 shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+              }\`}
             >
               <Lock size={13} className={view === 'employee' ? 'text-accent' : ''} />
               Employee
             </button>
             <button
               onClick={() => setView('admin')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer ${
+              className={\`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer \${
                 view === 'admin'
-                  ? 'bg-surface-hover text-text-primary shadow-sm'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
+                  ? 'bg-surface text-text-primary border border-border/80 shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+              }\`}
             >
               <Shield size={13} className={view === 'admin' ? 'text-accent' : ''} />
               Admin
             </button>
           </div>
 
-          {/* Content */}
+          {/* View Description & Links */}
           <div className="space-y-4 animate-slide-in" key={view}>
             <p className="text-sm text-text-secondary leading-relaxed">
               {active.description}
             </p>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               {active.links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-accent/30 hover:bg-accent-dim transition-all group"
+                  className="flex items-center justify-between p-3.5 rounded border border-border hover:border-accent/40 hover:bg-surface-hover transition-all group"
                 >
                   <div className="flex items-start gap-3.5 min-w-0">
                     <span className="mt-0.5 text-text-tertiary group-hover:text-accent transition-colors shrink-0">
@@ -185,6 +160,7 @@ export default function LandingPage() {
                       <p className="text-[10px] text-text-tertiary mt-0.5 truncate">{link.desc}</p>
                     </div>
                   </div>
+                  <ChevronRight size={13} className="text-text-tertiary group-hover:text-accent transition-colors group-hover:translate-x-0.5" />
                 </Link>
               ))}
             </div>
@@ -194,7 +170,7 @@ export default function LandingPage() {
 
       {/* ── NIST AI RMF Capabilities Section ── */}
       <div className="border-t border-border bg-surface-hover/30">
-        <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-6 py-20">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -235,7 +211,7 @@ export default function LandingPage() {
 
       {/* ── Workflow Section ── */}
       <div className="border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
@@ -246,7 +222,7 @@ export default function LandingPage() {
               <h2 className="text-3xl font-serif text-text-primary">How Pelta Works</h2>
               <div className="space-y-8">
                 {[
-                  { step: '01', title: 'Request & Classify', desc: 'Employees request access to new AI tools. Pelta uses LLMs to automatically classify the tool\'s risk tier and applicable data categories.' },
+                  { step: '01', title: 'Request & Classify', desc: 'Employees request access to new AI tools. Pelta uses LLMs to automatically classify the tool\\'s risk tier and applicable data categories.' },
                   { step: '02', title: 'Approve & Provision', desc: 'Admins review the automated risk profile and approve the tool. Access is provisioned safely within the enterprise boundary.' },
                   { step: '03', title: 'Real-time Proxy', desc: 'As employees use approved tools, Pelta intercepts prompts to redact sensitive info and flag policy violations instantly.' }
                 ].map((w, i) => (
@@ -291,7 +267,7 @@ export default function LandingPage() {
 
       {/* ── Mocked Metrics Section ── */}
       <div className="border-t border-border bg-surface-hover/20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-border/50 text-center">
             {[
               { val: '24/7', label: 'Real-time Scanning' },
@@ -317,7 +293,7 @@ export default function LandingPage() {
 
       {/* ── Comprehensive Footer (Local to Home Page) ── */}
       <footer className="border-t border-border bg-background py-12 mt-auto">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-2">
               <RadarIcon size={20} className="text-accent" />
@@ -354,11 +330,16 @@ export default function LandingPage() {
           </div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-6 mt-12 pt-6 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-mono text-text-tertiary">
+        <div className="max-w-6xl mx-auto px-6 mt-12 pt-6 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-mono text-text-tertiary">
           <span>&copy; {new Date().getFullYear()} Pelta AI Governance. All rights reserved.</span>
-          <span className="text-accent bg-accent/10 px-2 py-1 rounded">v1.0</span>
+          <span className="text-accent bg-accent/10 px-2 py-1 rounded">v2.0 (Hackathon Edition)</span>
         </div>
       </footer>
     </div>
   );
+`;
+  code = code.substring(0, returnStart) + newReturn;
+  fs.writeFileSync('app/page.tsx', code);
+} else {
+  console.log("Could not find return statement");
 }

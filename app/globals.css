@@ -26,6 +26,16 @@
   --risk-high: #e11d48;
   --risk-high-bg: rgba(225,29,72,0.06);
 
+  --nist-govern: #3b82f6;
+  --nist-map: #06b6d4;
+  --nist-measure: #22c55e;
+  --nist-manage: #8b5cf6;
+
+  --data-pii: #818cf8;
+  --data-financial: #c084fc;
+  --data-source-code: #22d3ee;
+  --data-none: #64748b;
+
   --chart-grid: #242422;
   --chart-tooltip-bg: #141413;
   --chart-tooltip-border: #242422;
@@ -58,6 +68,16 @@
   --risk-medium-bg: rgba(180,83,9,0.06);
   --risk-high: #be123c;
   --risk-high-bg: rgba(190,18,60,0.06);
+
+  --nist-govern: #3b82f6;
+  --nist-map: #06b6d4;
+  --nist-measure: #22c55e;
+  --nist-manage: #8b5cf6;
+
+  --data-pii: #818cf8;
+  --data-financial: #c084fc;
+  --data-source-code: #22d3ee;
+  --data-none: #64748b;
 
   --chart-grid: #e6e4de;
   --chart-tooltip-bg: #ffffff;
@@ -92,6 +112,16 @@
     --risk-high: #be123c;
     --risk-high-bg: rgba(190,18,60,0.06);
 
+    --nist-govern: #3b82f6;
+    --nist-map: #06b6d4;
+    --nist-measure: #22c55e;
+    --nist-manage: #8b5cf6;
+
+    --data-pii: #818cf8;
+    --data-financial: #c084fc;
+    --data-source-code: #22d3ee;
+    --data-none: #64748b;
+
     --chart-grid: #e6e4de;
     --chart-tooltip-bg: #ffffff;
     --chart-tooltip-border: #e6e4de;
@@ -119,6 +149,14 @@
   --color-risk-low: var(--risk-low);
   --color-risk-medium: var(--risk-medium);
   --color-risk-high: var(--risk-high);
+  --color-nist-govern: var(--nist-govern);
+  --color-nist-map: var(--nist-map);
+  --color-nist-measure: var(--nist-measure);
+  --color-nist-manage: var(--nist-manage);
+  --color-data-pii: var(--data-pii);
+  --color-data-financial: var(--data-financial);
+  --color-data-source-code: var(--data-source-code);
+  --color-data-none: var(--data-none);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-lora);

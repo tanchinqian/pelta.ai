@@ -68,7 +68,7 @@ function StatusBadge({ status }: { status: string }) {
   const s = STATUS_STYLE[status] ?? STATUS_STYLE.pending;
   return (
     <span
-      className="inline-flex items-center gap-1 text-[9px] font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
+      className="inline-flex items-center gap-1 text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
       style={{ color: s.color, background: s.bg, borderColor: s.border }}
     >
       {s.icon}
@@ -78,11 +78,11 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function RiskBadge({ tier }: { tier: string | null }) {
-  if (!tier) return <span className="text-[10px] text-text-muted">—</span>;
+  if (!tier) return <span className="text-sm text-text-muted">—</span>;
   const s = RISK_STYLE[tier] ?? RISK_STYLE.Low;
   return (
     <span
-      className="text-[9px] font-bold font-mono uppercase px-1.5 py-0.5 rounded"
+      className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded"
       style={{ color: s.color, background: s.bg }}
     >
       {tier}
@@ -92,16 +92,16 @@ function RiskBadge({ tier }: { tier: string | null }) {
 
 function NistTag({ label }: { label: string }) {
   return (
-    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary">
+    <span className="text-sm font-mono px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary">
       {label}
     </span>
   );
 }
 
 function DataTag({ label }: { label: string }) {
-  const color = label === 'PII' ? '#a39171' : label === 'Financial' ? '#c48b6c' : label === 'Source Code' ? '#7d9b9a' : '#8c8980';
+  const color = label === 'PII' ? 'var(--data-pii)' : label === 'Financial' ? 'var(--data-financial)' : label === 'Source Code' ? 'var(--data-source-code)' : 'var(--data-none)';
   return (
-    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border/40" style={{ color, background: `${color}12` }}>
+    <span className="text-sm font-mono px-1.5 py-0.5 rounded border border-border/40" style={{ color, background: `${color}12` }}>
       {label}
     </span>
   );
@@ -122,7 +122,7 @@ function SortTh({
   const isActive = active === sortKey;
   return (
     <th
-      className="pb-2 pt-2 px-3 text-zinc-900 dark:text-zinc-100 font-semibold cursor-pointer select-none hover:text-text-primary transition-colors"
+      className="px-4 py-3 font-medium cursor-pointer select-none hover:text-text-primary transition-colors"
       onClick={() => onToggle(sortKey)}
     >
       <span className="flex items-center gap-1">
@@ -335,7 +335,7 @@ export default function ToolsRegistryPage() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <RadarIcon size={32} className="text-accent animate-radar-pulse" />
-        <span className="text-xs text-text-tertiary font-mono">Loading tool registry...</span>
+        <span className="text-sm text-text-tertiary font-mono">Loading tool registry...</span>
       </div>
     );
   }
@@ -346,13 +346,13 @@ export default function ToolsRegistryPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <h2 className="text-base font-serif font-semibold text-text-primary">Tool Registry</h2>
-          <span className="text-[10px] font-mono text-text-tertiary">/ {counts.total} tools</span>
+          <h2 className="text-lg font-serif font-semibold text-text-primary">Tool Registry</h2>
+          <span className="text-sm font-mono text-text-tertiary">/ {counts.total} tools</span>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/tools/new"
-            className="flex items-center gap-1 text-[10px] font-semibold text-text-primary bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent rounded px-2.5 py-1.5 transition-colors"
+            className="flex items-center gap-1 text-sm font-semibold text-text-primary bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent rounded px-2.5 py-1.5 transition-colors"
           >
             <Plus size={11} /> Classify New Tool
           </Link>
@@ -406,14 +406,14 @@ export default function ToolsRegistryPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 p-2 flex flex-wrap items-center gap-2 rounded-lg shadow-sm">
-        <div className="flex items-center gap-1 text-[10px] font-mono text-text-tertiary">
+      <div className="panel p-2 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1 text-sm font-mono text-text-tertiary">
           <Filter size={11} /> Filters:
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-[10px] font-mono bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
         >
           <option value="all">All statuses</option>
           <option value="approved">Approved</option>
@@ -423,7 +423,7 @@ export default function ToolsRegistryPage() {
         <select
           value={riskFilter}
           onChange={(e) => setRiskFilter(e.target.value)}
-          className="text-[10px] font-mono bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
         >
           <option value="all">All risk tiers</option>
           <option value="High">High</option>
@@ -433,7 +433,7 @@ export default function ToolsRegistryPage() {
         <select
           value={nistFilter}
           onChange={(e) => setNistFilter(e.target.value)}
-          className="text-[10px] font-mono bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
         >
           <option value="all">All NIST functions</option>
           {NIST_FUNCTIONS.map((fn) => <option key={fn} value={fn}>{fn}</option>)}
@@ -445,7 +445,7 @@ export default function ToolsRegistryPage() {
             placeholder="Search tools, policies, justification..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="text-[11px] bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 placeholder:text-text-muted focus:outline-none focus:border-accent w-56"
+            className="text-base bg-background border border-border rounded px-2 py-1 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-56"
           />
         </div>
       </div>
@@ -455,20 +455,20 @@ export default function ToolsRegistryPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-            <span className="text-xs text-text-tertiary">No tools match the current filters.</span>
+            <span className="text-sm text-text-tertiary">No tools match the current filters.</span>
           </div>
         ) : (
           <div className="overflow-x-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-zinc-50 dark:bg-zinc-900 z-10">
-                <tr className="text-left text-zinc-900 dark:text-zinc-100 font-semibold border-b border-zinc-200 dark:border-zinc-800">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-surface z-10">
+                <tr className="text-left text-text-secondary border-b border-border">
                   <SortTh label="Tool" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
-                  <th className="pb-2 pt-2 px-3 text-zinc-900 dark:text-zinc-100 font-semibold hidden md:table-cell">Description</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">Description</th>
                   <SortTh label="Risk" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                   <SortTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} />
-                  <th className="pb-2 pt-2 px-3 text-zinc-900 dark:text-zinc-100 font-semibold hidden lg:table-cell">NIST</th>
-                  <th className="pb-2 pt-2 px-3 text-zinc-900 dark:text-zinc-100 font-semibold hidden lg:table-cell">Data Categories</th>
-                  <th className="pb-2 pt-2 px-3 text-zinc-900 dark:text-zinc-100 font-semibold hidden xl:table-cell">Recommended Policy</th>
+                  <th className="px-4 py-3 font-medium hidden lg:table-cell">NIST</th>
+                  <th className="px-4 py-3 font-medium hidden lg:table-cell">Data Categories</th>
+                  <th className="px-4 py-3 font-medium hidden xl:table-cell">Recommended Policy</th>
                   <SortTh label="Added" sortKey="createdAt" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                 </tr>
               </thead>
@@ -481,35 +481,35 @@ export default function ToolsRegistryPage() {
                       selectedTool?.id === t.id ? 'bg-accent-dim/40 border-l border-accent font-medium' : 'border-l border-transparent'
                     } ${i % 2 === 1 ? 'bg-zinc-50/20 dark:bg-zinc-800/10' : ''}`}
                   >
-                    <td className="px-3 py-2 align-top">
-                      <p className="font-bold text-zinc-900 dark:text-zinc-50 whitespace-nowrap">{t.name}</p>
-                      <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">{t.id.slice(0, 8)}…</p>
+                    <td className="px-4 py-3 align-top">
+                      <p className="font-medium text-text-primary whitespace-nowrap">{t.name}</p>
+                      <p className="text-sm font-mono text-text-tertiary mt-0.5">{t.id.slice(0, 8)}…</p>
                     </td>
-                    <td className="pr-3 py-2 align-top hidden md:table-cell">
-                      <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed max-w-[240px] line-clamp-2">{t.description}</p>
+                    <td className="px-4 py-3 align-top hidden md:table-cell">
+                      <p className="text-base text-text-secondary leading-relaxed max-w-[240px] line-clamp-2">{t.description}</p>
                     </td>
-                    <td className="pr-3 py-2 align-top whitespace-nowrap">
+                    <td className="px-4 py-3 align-top whitespace-nowrap">
                       <RiskBadge tier={t.riskTier} />
                     </td>
-                    <td className="pr-3 py-2 align-top whitespace-nowrap">
+                    <td className="px-4 py-3 align-top whitespace-nowrap">
                       <StatusBadge status={t.status} />
                     </td>
-                    <td className="pr-3 py-2 align-top hidden lg:table-cell">
+                    <td className="px-4 py-3 align-top hidden lg:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {t.nistFunctions.map((fn) => <NistTag key={fn} label={fn} />)}
                         {t.nistFunctions.length === 0 && <span className="text-text-muted">—</span>}
                       </div>
                     </td>
-                    <td className="pr-3 py-2 align-top hidden lg:table-cell">
+                    <td className="px-4 py-3 align-top hidden lg:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {t.dataCategories.map((c) => <DataTag key={c} label={c} />)}
                         {t.dataCategories.length === 0 && <span className="text-text-muted">—</span>}
                       </div>
                     </td>
-                    <td className="pr-3 py-2 align-top hidden xl:table-cell">
-                      <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed max-w-[280px] line-clamp-2">{t.recommendedPolicy}</p>
+                    <td className="px-4 py-3 align-top hidden xl:table-cell">
+                      <p className="text-base text-text-secondary leading-relaxed max-w-[280px] line-clamp-2">{t.recommendedPolicy}</p>
                     </td>
-                    <td className="pr-3 py-2 align-top whitespace-nowrap text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+                    <td className="px-4 py-3 align-top whitespace-nowrap text-sm font-mono text-text-tertiary">
                       {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                     </td>
                   </tr>
@@ -521,7 +521,7 @@ export default function ToolsRegistryPage() {
       </div>
 
       {/* Footer hint */}
-      <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-tertiary">
+      <div className="flex items-center gap-1.5 text-sm font-mono text-text-tertiary">
         <Shield size={10} />
         <span>NIST AI RMF — Govern · Map · Manage</span>
       </div>
@@ -540,18 +540,18 @@ export default function ToolsRegistryPage() {
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <RadarIcon size={14} className="text-accent" />
-                <h3 className="text-sm font-serif font-semibold text-text-primary">Tool Details</h3>
+                <h3 className="text-base font-serif font-semibold text-text-primary">Tool Details</h3>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="text-[11px] font-mono font-medium hover:text-accent border border-border rounded px-2.5 py-1 transition-colors hover:bg-surface-hover cursor-pointer"
+                  className="text-xs font-mono font-medium hover:text-accent border border-border rounded px-2.5 py-1 transition-colors hover:bg-surface-hover cursor-pointer"
                 >
                   {isEditing ? 'CANCEL' : 'EDIT'}
                 </button>
                 <button
                   onClick={() => handleDeleteTool(selectedTool.id)}
-                  className="text-[11px] font-mono font-medium text-risk-high hover:bg-risk-high/10 border border-risk-high/20 hover:border-risk-high/40 rounded px-2.5 py-1 transition-colors cursor-pointer"
+                  className="text-xs font-mono font-medium text-risk-high hover:bg-risk-high/10 border border-risk-high/20 hover:border-risk-high/40 rounded px-2.5 py-1 transition-colors cursor-pointer"
                 >
                   DELETE
                 </button>
@@ -562,15 +562,6 @@ export default function ToolsRegistryPage() {
                   CLOSE
                 </button>
               </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-5 pr-1">
-              <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Tool Name</h4>
-                <p className="text-base font-serif font-semibold text-text-primary mt-1">{selectedTool.name}</p>
-                <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {selectedTool.id}</p>
-              </div>
-
               {isEditing ? (
                 /* Edit Mode */
                 <div className="space-y-4 pt-1">
@@ -674,11 +665,11 @@ export default function ToolsRegistryPage() {
                 <div className="space-y-5">
                   <div className="flex items-center gap-6">
                     <div>
-                      <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Tier</h4>
+                      <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">Risk Tier</h4>
                       <div className="mt-1"><RiskBadge tier={selectedTool.riskTier} /></div>
                     </div>
                     <div>
-                      <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
+                      <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">Registry Status</h4>
                       <div className="mt-1"><StatusBadge status={selectedTool.status} /></div>
                     </div>
                   </div>
@@ -688,7 +679,7 @@ export default function ToolsRegistryPage() {
                     {selectedTool.status !== 'approved' && (
                       <button
                         onClick={() => updateToolStatus(selectedTool.id, 'approved')}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
                       >
                         <CheckCircle2 size={12} /> Approve
                       </button>
@@ -696,7 +687,7 @@ export default function ToolsRegistryPage() {
                     {selectedTool.status !== 'blocked' && (
                       <button
                         onClick={() => updateToolStatus(selectedTool.id, 'blocked')}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer"
                       >
                         <XCircle size={12} /> Block
                       </button>
@@ -704,7 +695,7 @@ export default function ToolsRegistryPage() {
                     {selectedTool.status !== 'pending' && (
                       <button
                         onClick={() => updateToolStatus(selectedTool.id, 'pending')}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-text-secondary bg-surface-hover hover:bg-border border border-border rounded px-3 py-1.5 transition-colors cursor-pointer"
                       >
                         <Clock size={12} /> Reset to Pending
                       </button>
@@ -712,47 +703,47 @@ export default function ToolsRegistryPage() {
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Description</h4>
-                    <p className="text-xs text-text-secondary leading-relaxed mt-1">{selectedTool.description}</p>
+                    <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">Description</h4>
+                    <p className="text-sm text-text-secondary leading-relaxed mt-1">{selectedTool.description}</p>
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">NIST AI RMF Functions</h4>
+                    <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">NIST AI RMF Functions</h4>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {selectedTool.nistFunctions.map(fn => (
-                        <span key={fn} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-background text-text-secondary flex items-center gap-1.5">
+                        <span key={fn} className="text-sm font-mono px-1.5 py-0.5 rounded border border-border bg-background text-text-secondary flex items-center gap-1.5">
                           <span className="size-1 rounded-full" style={{ background: NIST_COLORS[fn] ?? 'var(--accent)' }} />
                           {fn}
                         </span>
                       ))}
-                      {selectedTool.nistFunctions.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                      {selectedTool.nistFunctions.length === 0 && <span className="text-sm text-text-tertiary">—</span>}
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Data Categories Allowed</h4>
+                    <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">Data Categories Allowed</h4>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {selectedTool.dataCategories.map(cat => (
                         <DataTag key={cat} label={cat} />
                       ))}
-                      {selectedTool.dataCategories.length === 0 && <span className="text-xs text-text-tertiary">—</span>}
+                      {selectedTool.dataCategories.length === 0 && <span className="text-sm text-text-tertiary">—</span>}
                     </div>
                   </div>
 
                   <div className="p-3 bg-background border border-border rounded space-y-1.5">
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy</h4>
-                    <p className="text-xs text-text-secondary leading-relaxed font-serif italic">&ldquo;{selectedTool.recommendedPolicy}&rdquo;</p>
+                    <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary font-semibold">Recommended Access Policy</h4>
+                    <p className="text-sm text-text-secondary leading-relaxed font-serif italic">&ldquo;{selectedTool.recommendedPolicy}&rdquo;</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary">Risk Justification</h4>
-                    <p className="text-xs text-text-secondary leading-relaxed font-serif">{selectedTool.justification}</p>
+                    <h4 className="text-sm font-mono uppercase tracking-widest text-text-tertiary">Risk Justification</h4>
+                    <p className="text-sm text-text-secondary leading-relaxed font-serif">{selectedTool.justification}</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-border flex items-center justify-between text-[9px] font-mono text-text-tertiary">
+            <div className="pt-3 border-t border-border flex items-center justify-between text-sm font-mono text-text-tertiary">
               <span>Registered {new Date(selectedTool.createdAt).toLocaleString()}</span>
               {!isEditing && (
                 <button
@@ -777,12 +768,12 @@ export default function ToolsRegistryPage() {
 
 function StatCard({ label, value, color, icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
-    <div className="bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 px-3 py-2 rounded-lg shadow-sm">
+    <div className="panel px-3 py-2">
       <div className="flex items-center gap-1">
         {icon && <span className="text-text-tertiary">{icon}</span>}
-        <p className="text-[10px] font-semibold text-zinc-650 dark:text-zinc-400 uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
       </div>
-      <p className="text-lg font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>{value}</p>
+      <p className="text-xl font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 }

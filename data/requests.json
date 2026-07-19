@@ -89,8 +89,8 @@
     "employeeName": "Alice Chen",
     "department": "Engineering",
     "toolRequested": "Notion AI",
-    "status": "pending",
+    "status": "approved",
     "requestedAt": "2026-07-17T10:00:00.000Z",
-    "decidedAt": null
+    "decidedAt": "2026-07-18T18:23:58.750Z"
   }
 ]

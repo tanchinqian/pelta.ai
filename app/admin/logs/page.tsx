@@ -25,10 +25,10 @@ const VERDICT_COLOR: Record<string, string> = {
 };
 
 const DATA_CAT_COLOR: Record<string, string> = {
-  PII: '#818cf8',
-  Financial: '#c084fc',
-  'Source Code': '#22d3ee',
-  None: '#64748b',
+  PII: 'var(--data-pii)',
+  Financial: 'var(--data-financial)',
+  'Source Code': 'var(--data-source-code)',
+  None: 'var(--data-none)',
 };
 
 export default function LogsPage() {
@@ -99,7 +99,7 @@ export default function LogsPage() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <RadarIcon size={32} className="text-accent animate-radar-pulse" />
-        <span className="text-xs text-text-tertiary font-mono">Loading audit trail...</span>
+        <span className="text-sm text-text-tertiary font-mono">Loading audit trail...</span>
       </div>
     );
   }
@@ -110,11 +110,11 @@ export default function LogsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <span className="text-sm font-semibold text-text-primary">Detection Logs</span>
-          <span className="text-[10px] font-mono text-text-tertiary">/ {logs.length} events</span>
+          <span className="text-base font-semibold text-text-primary">Detection Logs</span>
+          <span className="text-sm font-mono text-text-tertiary">/ {logs.length} events</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportJson} className="flex items-center gap-1 text-[10px] font-mono text-text-secondary hover:text-text-primary border border-border rounded px-2 py-1 transition-colors cursor-pointer">
+          <button onClick={exportJson} className="flex items-center gap-1 text-sm font-mono text-text-secondary hover:text-text-primary border border-border rounded px-2 py-1 transition-colors cursor-pointer">
             <Download size={11} /> Export
           </button>
           <button onClick={fetchLogs} className="p-1.5 rounded border border-border hover:bg-surface-hover transition-colors cursor-pointer">
@@ -126,28 +126,28 @@ export default function LogsPage() {
       {/* Filter bar */}
       <div className="panel p-2 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 text-[10px] font-mono text-text-tertiary">
+          <div className="flex items-center gap-1 text-sm font-mono text-text-tertiary">
             <Filter size={11} /> Filters:
           </div>
-          <select value={filterVerdict} onChange={(e) => setFilterVerdict(e.target.value)} className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
+          <select value={filterVerdict} onChange={(e) => setFilterVerdict(e.target.value)} className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
             <option value="all">All verdicts</option>
             <option value="allow">Allow</option>
             <option value="flag">Flag</option>
             <option value="block">Block</option>
           </select>
-          <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
+          <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
             <option value="all">All sources</option>
             <option value="extension">Extension</option>
             <option value="manual">Manual</option>
           </select>
-          <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
+          <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
             <option value="all">All risks</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
             <option value="low">Low</option>
             <option value="none">None</option>
           </select>
-          <select value={filterTool} onChange={(e) => setFilterTool(e.target.value)} className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
+          <select value={filterTool} onChange={(e) => setFilterTool(e.target.value)} className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer">
             <option value="all">All tools</option>
             {tools.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -158,24 +158,24 @@ export default function LogsPage() {
               placeholder="Search snippet or reason..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="text-[11px] bg-background border border-border rounded px-2 py-1 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-56"
+              className="text-base bg-background border border-border rounded px-2 py-1 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-56"
             />
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2">
-          <span className="text-[10px] font-mono text-text-tertiary">Date range:</span>
+          <span className="text-sm font-mono text-text-tertiary">Date range:</span>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+            className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
           />
-          <span className="text-[10px] text-text-muted">to</span>
+          <span className="text-sm text-text-muted">to</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="text-[10px] font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+            className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
           />
           {(filterVerdict !== 'all' || filterSource !== 'all' || filterRisk !== 'all' || filterTool !== 'all' || dateFrom || dateTo || search) && (
             <button
@@ -188,7 +188,7 @@ export default function LogsPage() {
                 setDateTo('');
                 setSearch('');
               }}
-              className="text-[10px] font-mono text-text-secondary hover:text-text-primary ml-auto transition-colors cursor-pointer"
+              className="text-sm font-mono text-text-secondary hover:text-text-primary ml-auto transition-colors cursor-pointer"
             >
               Clear all
             </button>
@@ -199,7 +199,7 @@ export default function LogsPage() {
       {/* Log table */}
       <div className="panel overflow-hidden">
         <div className="overflow-x-auto" style={{ maxHeight: 'calc(100vh - 270px)' }}>
-          <table className="w-full text-xs">
+          <table className="w-full text-sm">
             <thead className="sticky top-0 bg-surface z-10">
               <tr className="text-left text-text-secondary border-b border-border">
                 <th className="px-3 py-2 font-medium">Time</th>
@@ -223,26 +223,26 @@ export default function LogsPage() {
                     onClick={() => setExpanded(expanded === l.id ? null : l.id)}
                     className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors cursor-pointer ${i % 2 === 1 ? 'bg-surface-hover/20' : ''} ${expanded === l.id ? 'bg-surface-hover/30' : ''}`}
                   >
-                    <td className="px-3 py-2 text-[10px] font-mono text-text-tertiary whitespace-nowrap">
+                    <td className="px-3 py-2 text-sm font-mono text-text-tertiary whitespace-nowrap">
                       {new Date(l.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-[10px] font-bold font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.verdict}</span>
+                      <span className="text-sm font-bold font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.verdict}</span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-[10px] font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.riskLevel}</span>
+                      <span className="text-sm font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.riskLevel}</span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className={`text-[10px] font-mono ${l.source === 'extension' ? 'text-accent' : 'text-text-tertiary'}`}>
+                      <span className={`text-sm font-mono ${l.source === 'extension' ? 'text-accent' : 'text-text-tertiary'}`}>
                         {l.source ?? 'manual'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-[10px] font-mono text-text-secondary hidden md:table-cell">{l.tool ?? '—'}</td>
-                    <td className="px-3 py-2 text-[10px] font-mono text-text-tertiary hidden md:table-cell">{l.detectionMethod}</td>
+                    <td className="px-3 py-2 text-sm font-mono text-text-secondary hidden md:table-cell">{l.tool ?? '—'}</td>
+                    <td className="px-3 py-2 text-sm font-mono text-text-tertiary hidden md:table-cell">{l.detectionMethod}</td>
                     <td className="px-3 py-2 hidden lg:table-cell">
-                      <span className="text-[10px] font-mono" style={{ color: DATA_CAT_COLOR[l.dataCategory] ?? '#64748b' }}>{l.dataCategory}</span>
+                      <span className="text-sm font-mono" style={{ color: DATA_CAT_COLOR[l.dataCategory] ?? '#64748b' }}>{l.dataCategory}</span>
                     </td>
-                    <td className="px-3 py-2 text-[10px] font-mono text-text-tertiary truncate max-w-[260px]">{l.promptSnippet}</td>
+                    <td className="px-3 py-2 text-sm font-mono text-text-tertiary truncate max-w-[260px]">{l.promptSnippet}</td>
                     <td className="px-3 py-2 text-text-muted">
                       {expanded === l.id ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                     </td>
@@ -261,24 +261,24 @@ export default function LogsPage() {
         </div>
         {/* Pagination */}
         <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-surface/40">
-          <span className="text-[10px] font-mono text-text-tertiary">
+          <span className="text-sm font-mono text-text-tertiary">
             {filtered.length === 0 ? '0 results' : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="text-[10px] font-mono px-2 py-1 rounded border border-border hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="text-sm font-mono px-2 py-1 rounded border border-border hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Previous
             </button>
-            <span className="text-[10px] font-mono text-text-secondary px-2">
+            <span className="text-sm font-mono text-text-secondary px-2">
               {page} / {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="text-[10px] font-mono px-2 py-1 rounded border border-border hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="text-sm font-mono px-2 py-1 rounded border border-border hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Next
             </button>
@@ -301,18 +301,18 @@ function ExpandedDetail({ log }: { log: GuardLog }) {
       </div>
 
       <div>
-        <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Reason</p>
-        <p className="text-xs text-text-secondary leading-relaxed">{log.reason}</p>
+        <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-1">Reason</p>
+        <p className="text-sm text-text-secondary leading-relaxed">{log.reason}</p>
       </div>
 
       {patterns.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Detected Patterns</p>
+          <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-1">Detected Patterns</p>
           <div className="flex flex-wrap gap-1.5">
             {patterns.map((p, i) => (
               <span
                 key={i}
-                className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
+                className={`text-sm font-mono px-1.5 py-0.5 rounded border ${
                   p.severity === 'high'
                     ? 'text-risk-high border-risk-high/30 bg-risk-high/10'
                     : 'text-risk-medium border-risk-medium/30 bg-risk-medium/10'
@@ -326,9 +326,9 @@ function ExpandedDetail({ log }: { log: GuardLog }) {
       )}
 
       <div>
-        <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Prompt Snippet</p>
+        <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-1">Prompt Snippet</p>
         <div className="bg-background border border-border rounded-lg p-3">
-          <p className="text-[11px] font-mono text-text-secondary leading-relaxed break-all">
+          <p className="text-base font-mono text-text-secondary leading-relaxed break-all">
             {renderHighlightedText(log.promptSnippet)}
           </p>
         </div>
@@ -340,8 +340,8 @@ function ExpandedDetail({ log }: { log: GuardLog }) {
 function DetailField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">{label}</p>
-      <p className={`text-[11px] text-text-secondary mt-0.5 ${mono ? 'font-mono' : ''}`}>{value}</p>
+      <p className="text-sm font-semibold text-text-tertiary uppercase tracking-wider">{label}</p>
+      <p className={`text-base text-text-secondary mt-0.5 ${mono ? 'font-mono' : ''}`}>{value}</p>
     </div>
   );
 }

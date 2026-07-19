@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NistRetrievalResult, retrieveNistContext, formatNistContextForPrompt } from './nistRetrieval';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
+const apiKey = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || '';
 
 /** Try these in order — free-tier availability varies by project */
 const MODEL_CANDIDATES = [
@@ -33,6 +34,7 @@ export interface ToolRiskResponse {
   dataCategories: Array<'PII' | 'Financial' | 'Source Code' | 'None'>;
   justification: string;
   recommendedPolicy: string;
+  retrievedNistContext?: NistRetrievalResult[];
 }
 
 const SYSTEM_PROMPT = `You are an AI governance classification engine aligned with NIST AI RMF (Govern, Map, Measure, Manage) and EU AI Act principles.
@@ -80,7 +82,7 @@ const SUGGEST_FALLBACK: string[] = [
 ];
 
 async function generateWithFallback(prompt: string): Promise<string> {
-  if (!apiKey) throw new Error('No GEMINI_API_KEY');
+  if (!apiKey) throw new Error('No LLM_API_KEY configured');
   const genAI = getClient();
   let lastErr: Error | null = null;
 
@@ -94,7 +96,7 @@ async function generateWithFallback(prompt: string): Promise<string> {
       const msg = String(err?.message ?? err);
       // Try next model on quota / not found / rate limit
       if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED/i.test(msg)) {
-        console.warn(`[gemini] ${modelName} failed, trying next:`, msg.slice(0, 120));
+        console.warn(`[llm] ${modelName} failed, trying next:`, msg.slice(0, 120));
         continue;
       }
       throw err;
@@ -131,7 +133,7 @@ function mockToolRisk(toolName: string, description: string): ToolRiskResponse {
     riskTier,
     nistFunctions,
     dataCategories,
-    justification: `Heuristic assessment (LLM unavailable): "${toolName}" — ${description}. Classified ${riskTier} based on description keywords. Re-run when Gemini quota is available for a full NIST-aligned analysis.`,
+    justification: `Heuristic assessment (LLM unavailable): "${toolName}" — ${description}. Classified ${riskTier} based on description keywords. Re-run when LLM is available for a full NIST-aligned analysis.`,
     recommendedPolicy:
       riskTier === 'High'
         ? 'Restrict to approved teams. Block file upload and sensitive data categories. Quarterly review required.'
@@ -174,7 +176,7 @@ export async function suggestSafePrompts(
       return SUGGEST_FALLBACK;
     }
   } catch (err: any) {
-    console.warn('[gemini] suggestSafePrompts fallback:', err?.message);
+    console.warn('[llm] suggestSafePrompts fallback:', err?.message);
     return SUGGEST_FALLBACK;
   }
 }
@@ -190,7 +192,7 @@ export async function classifyPromptRisk(text: string): Promise<PromptRiskRespon
       return { riskLevel: 'medium', reason: 'Failed to parse LLM response; defaulting to medium risk.' };
     }
   } catch (err: any) {
-    console.warn('[gemini] classifyPromptRisk fallback:', err?.message);
+    console.warn('[llm] classifyPromptRisk fallback:', err?.message);
     return mockPromptRisk(text);
   }
 }
@@ -201,16 +203,20 @@ export async function classifyToolRisk(
 ): Promise<ToolRiskResponse> {
   if (!apiKey) return mockToolRisk(toolName, description);
   try {
-    const prompt = `${SYSTEM_PROMPT}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
+    const nistContext = retrieveNistContext(toolName, description);
+    const contextBlock = formatNistContextForPrompt(nistContext);
+
+    const prompt = `${SYSTEM_PROMPT}\n\n${contextBlock}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
     const text = await generateWithFallback(prompt);
     try {
-      return parseJson(text) as ToolRiskResponse;
+      const parsed = parseJson(text) as ToolRiskResponse;
+      return { ...parsed, retrievedNistContext: nistContext };
     } catch {
-      console.warn('[gemini] parse failed, using heuristic mock');
+      console.warn('[llm] parse failed, using heuristic mock');
       return mockToolRisk(toolName, description);
     }
   } catch (err: any) {
-    console.warn('[gemini] classifyToolRisk fallback:', err?.message);
+    console.warn('[llm] classifyToolRisk fallback:', err?.message);
     return mockToolRisk(toolName, description);
   }
 }

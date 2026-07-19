@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     body: JSON.stringify({
       prompt: msg.text,
       source: 'extension',
-      tool: 'ChatGPT',
+      tool: msg.tool || 'ChatGPT',
     }),
   })
     .then((r) => {

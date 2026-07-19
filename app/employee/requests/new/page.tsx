@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History, ShieldCheck } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { toast } from 'sonner';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
 
@@ -96,8 +97,10 @@ export default function NewRequestPage() {
       const reqRes = await fetch('/api/requests').then((r) => r.json()) as RequestRecord[];
       setMyRequests(reqRes.filter((r) => r.employeeName === DEMO_EMPLOYEE));
       setDone(true);
+      toast.success('Request submitted successfully');
     } catch (err: any) {
       setError(err.message);
+      toast.error(err.message || 'Failed to submit request');
     } finally {
       setLoading(false);
     }
@@ -108,21 +111,21 @@ export default function NewRequestPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="panel p-6 max-w-sm w-full text-center space-y-3">
           <RadarIcon size={32} className="text-accent mx-auto" />
-          <p className="text-sm font-semibold text-text-primary">Request Submitted</p>
-          <p className="text-xs text-text-secondary">
+          <p className="text-base font-semibold text-text-primary">Request Submitted</p>
+          <p className="text-sm text-text-secondary">
             Your request for <span className="font-medium text-text-primary">{name}</span> is pending admin review.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => { setDone(false); setName(''); setDescription(''); setDepartment(''); }}
-              className="text-xs text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+              className="text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
             >
               Submit Another
             </button>
             <span className="text-text-muted">·</span>
             <button
               onClick={() => router.push('/employee/redress')}
-              className="text-xs text-accent hover:text-accent-hover transition-colors cursor-pointer"
+              className="text-sm text-accent hover:text-accent-hover transition-colors cursor-pointer"
             >
               View Redress
             </button>
@@ -138,7 +141,7 @@ export default function NewRequestPage() {
     <div className="flex-1 p-4 max-w-6xl mx-auto w-full">
       {/* Quick status bar */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-2 text-[10px] font-mono text-text-tertiary">
+        <div className="flex items-center gap-2 text-sm font-mono text-text-tertiary">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
           <span>·</span>
           <span className="px-1.5 py-0.5 rounded bg-risk-medium/10 text-risk-medium">{pendingCount} pending</span>
@@ -154,16 +157,16 @@ export default function NewRequestPage() {
           <div className="panel p-4 space-y-3">
             <div className="flex items-center gap-2">
               <RadarIcon size={14} className="text-accent" />
-              <h2 className="text-base font-serif font-semibold text-text-primary">Request a New AI Tool</h2>
+              <h2 className="text-lg font-serif font-semibold text-text-primary">Request a New AI Tool</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-2.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <Wrench size={10} /> Tool Name
                 </label>
                 <input
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                   placeholder="e.g. NotebookLM, Copilot"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -171,7 +174,7 @@ export default function NewRequestPage() {
                   disabled={loading}
                 />
                 {approvedMatch && (
-                  <p className="text-[10px] text-risk-low flex items-center gap-1 animate-slide-in">
+                  <p className="text-sm text-risk-low flex items-center gap-1 animate-slide-in">
                     <CheckCircle2 size={10} />
                     &ldquo;{approvedMatch.name}&rdquo; is already approved (risk: {approvedMatch.riskTier}). No request needed.
                   </p>
@@ -179,11 +182,11 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <FileText size={10} /> What will you use it for?
                 </label>
                 <input
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                   placeholder="e.g. AI note-taking for meeting summaries"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -193,11 +196,11 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <Building size={10} /> Department
                 </label>
                 <select
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary focus:outline-none focus:border-accent transition-colors"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   required
@@ -209,7 +212,7 @@ export default function NewRequestPage() {
               </div>
 
               {error && (
-                <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-xs rounded-lg px-3 py-2">
+                <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-sm rounded-lg px-3 py-2">
                   {error}
                 </div>
               )}
@@ -217,10 +220,10 @@ export default function NewRequestPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-text-primary bg-surface-hover hover:bg-surface border border-border rounded px-4 py-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-text-primary bg-surface-hover hover:bg-surface border border-border rounded px-4 py-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <span className="flex items-center gap-1.5 text-text-tertiary text-xs font-mono">
+                  <span className="flex items-center gap-1.5 text-text-tertiary text-sm font-mono">
                     <span className="relative inline-flex size-2">
                       <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-40" />
                       <span className="relative inline-block size-2 rounded-full bg-accent" />
@@ -238,14 +241,14 @@ export default function NewRequestPage() {
           <div className="panel p-3">
             <div className="flex items-center gap-2 mb-2">
               <History size={12} className="text-text-tertiary" />
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
                 Your Request History
               </span>
-              <span className="text-[10px] font-mono text-text-tertiary ml-auto">{myRequests.length}</span>
+              <span className="text-sm font-mono text-text-tertiary ml-auto">{myRequests.length}</span>
             </div>
 
             {myRequests.length === 0 ? (
-              <p className="text-[11px] text-text-tertiary text-center py-4">No previous requests.</p>
+              <p className="text-base text-text-tertiary text-center py-4">No previous requests.</p>
             ) : (
               <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
                 {[...myRequests]
@@ -253,9 +256,9 @@ export default function NewRequestPage() {
                   .map((req) => (
                     <div key={req.id} className="bg-background border border-border rounded-lg p-2">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-text-primary font-medium truncate">{req.toolRequested}</span>
+                        <span className="text-sm text-text-primary font-medium truncate">{req.toolRequested}</span>
                         <span
-                          className={`text-[9px] font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
+                          className={`text-sm font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
                             req.status === 'approved' ? 'text-risk-low' :
                             req.status === 'denied' ? 'text-risk-high' : 'text-risk-medium'
                           }`}
@@ -266,12 +269,12 @@ export default function NewRequestPage() {
                           {req.status}
                         </span>
                       </div>
-                      <p className="text-[9px] text-text-muted font-mono mt-0.5">
+                      <p className="text-sm text-text-muted font-mono mt-0.5">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {req.department && ` · ${req.department}`}
                       </p>
                       {req.status === 'denied' && req.denialReason && (
-                        <p className="text-[10px] text-text-tertiary italic mt-1 leading-relaxed">
+                        <p className="text-sm text-text-tertiary italic mt-1 leading-relaxed">
                           Reason: {req.denialReason}
                         </p>
                       )}
@@ -287,14 +290,14 @@ export default function NewRequestPage() {
           <div className="panel p-3">
             <div className="flex items-center gap-2 mb-2">
               <ShieldCheck size={12} className="text-risk-low" />
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
                 Already Approved Tools
               </span>
-              <span className="text-[10px] font-mono text-text-tertiary ml-auto">{approvedTools.length}</span>
+              <span className="text-sm font-mono text-text-tertiary ml-auto">{approvedTools.length}</span>
             </div>
 
             {approvedTools.length === 0 ? (
-              <p className="text-[11px] text-text-tertiary text-center py-4">No approved tools yet.</p>
+              <p className="text-base text-text-tertiary text-center py-4">No approved tools yet.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[420px] overflow-y-auto">
                 {approvedTools
@@ -302,17 +305,17 @@ export default function NewRequestPage() {
                   .map((tool) => (
                     <div key={tool.id} className="bg-background border border-border rounded-lg p-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-text-primary font-medium truncate">{tool.name}</span>
+                        <span className="text-sm text-text-primary font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
                           <span
-                            className="text-[9px] font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
+                            className="text-sm font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
                             style={{ color: RISK_COLOR[tool.riskTier], background: `${RISK_COLOR[tool.riskTier]}15` }}
                           >
                             {tool.riskTier}
                           </span>
                         )}
                       </div>
-                      <p className="text-[9px] text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
+                      <p className="text-sm text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
                     </div>
                   ))}
               </div>

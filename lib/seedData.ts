@@ -576,3 +576,28 @@ export const SEED_ACCESS_REQUESTS = [
     decidedAt: null,
   },
 ];
+
+export const SEED_AUDIT_LOG = [
+  {
+    id: "audit-0001-0000-0000-000000000001",
+    requestId: "cc110002-ac00-0000-0000-000000000002",
+    employeeName: "Demo Employee",
+    action: "approved",
+    reviewerName: "Admin",
+    adminComment: null,
+    sections: ["Financial data"],
+    riskLevel: "medium",
+    timestamp: "2026-07-15T10:15:00.000Z",
+  },
+  {
+    id: "audit-0002-0000-0000-000000000002",
+    requestId: "cc110003-ac00-0000-0000-000000000003",
+    employeeName: "Demo Employee",
+    action: "rejected",
+    reviewerName: "Admin",
+    adminComment: "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",
+    sections: ["PII", "Email address"],
+    riskLevel: "high",
+    timestamp: "2026-07-14T14:00:00.000Z",
+  },
+];

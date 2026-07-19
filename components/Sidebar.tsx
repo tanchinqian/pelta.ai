@@ -35,7 +35,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: <BarChart3 size={15} />, matchPaths: ['/admin/dashboard'] },
   { href: '/admin/tools/new', label: 'Classify', icon: <Search size={15} />, matchPaths: ['/admin/tools/new'] },
   { href: '/admin/tools', label: 'Tools', icon: <Layers size={15} />, matchPaths: ['/admin/tools'], exact: true },
-  { href: '/admin/approvals', label: 'Requests', icon: <ClipboardList size={15} />, matchPaths: ['/admin/approvals', '/admin/requests'] },
+  { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={15} />, matchPaths: ['/admin/requests'] },
   { href: '/admin/logs', label: 'Logs', icon: <FileText size={15} />, matchPaths: ['/admin/logs'] },
 ];
 
@@ -46,9 +46,9 @@ const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/employee/requests/new': { title: 'Request Tool', crumb: 'Request a new AI tool' },
   '/employee/redress': { title: 'Redress', crumb: 'Right to Explanation · EU AI Act' },
   '/admin/dashboard': { title: 'Dashboard', crumb: 'Overview' },
-  '/admin/tools/new': { title: 'Classify', crumb: 'Gemini-powered risk assessment' },
+  '/admin/tools/new': { title: 'Classify', crumb: 'LLM-powered risk assessment' },
   '/admin/tools': { title: 'Tools', crumb: 'AI tool registry' },
-  '/admin/approvals': { title: 'Requests', crumb: 'Approve or deny submissions' },
+  '/admin/requests': { title: 'Requests', crumb: 'Approve or deny submissions' },
   '/admin/logs': { title: 'Logs', crumb: 'Detection audit trail' },
 };
 
@@ -133,21 +133,27 @@ function SeedButtonSidebar() {
 function RequestBadge() {
   const [pendingCount, setPendingCount] = useState(0);
 
+  const fetchCount = async () => {
+    try {
+      const [appeals, tools] = await Promise.all([
+        fetch('/api/access-requests').then((r) => r.json()),
+        fetch('/api/requests').then((r) => r.json()),
+      ]);
+      const appealPending = Array.isArray(appeals) ? appeals.filter((r: any) => r.status === 'pending').length : 0;
+      const toolPending = Array.isArray(tools) ? tools.filter((r: any) => r.status === 'pending').length : 0;
+      setPendingCount(appealPending + toolPending);
+    } catch {}
+  };
+
   useEffect(() => {
-    const fetchCount = async () => {
-      try {
-        const [appeals, tools] = await Promise.all([
-          fetch('/api/access-requests').then((r) => r.json()),
-          fetch('/api/requests').then((r) => r.json()),
-        ]);
-        const appealPending = Array.isArray(appeals) ? appeals.filter((r: any) => r.status === 'pending').length : 0;
-        const toolPending = Array.isArray(tools) ? tools.filter((r: any) => r.status === 'pending').length : 0;
-        setPendingCount(appealPending + toolPending);
-      } catch {}
-    };
     fetchCount();
     const interval = setInterval(fetchCount, 30_000);
-    return () => clearInterval(interval);
+    const handler = () => fetchCount();
+    window.addEventListener('pelta:refetch-requests', handler);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pelta:refetch-requests', handler);
+    };
   }, []);
 
   if (pendingCount === 0) return null;
@@ -168,7 +174,7 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
         const active = item.exact
           ? pathname === item.href
           : item.matchPaths.some((p) => pathname.startsWith(p));
-        const isRequests = item.href === '/admin/approvals';
+        const isRequests = item.href === '/admin/requests';
         return (
           <Link
             key={item.href}

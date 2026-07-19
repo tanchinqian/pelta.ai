@@ -1,13 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight } from 'lucide-react';
+import { Lightbulb, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Trash2, Download, Printer, RotateCw, ChevronRight, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ToolRecord {
   id: string; name: string; description: string; status: string;
   riskTier: string | null; nistFunctions: string[]; dataCategories: string[];
   justification: string; recommendedPolicy: string; createdAt: string;
+  retrievedNistContext?: {
+    function: string;
+    definition: string;
+    concerns: string[];
+    score: number;
+    matchedKeywords: string[];
+  }[];
 }
 
 const RISK: Record<string, string> = { Low: 'var(--risk-low)', Medium: 'var(--risk-medium)', High: 'var(--risk-high)' };
@@ -21,6 +29,36 @@ const PRESETS = [
 
 type SortDir = 'asc' | 'desc' | null;
 type SortKey = 'name' | 'riskTier' | 'status' | null;
+
+function ThinkingState() {
+  const [phase, setPhase] = useState(0);
+  const phases = ['Analyzing tool risks...', 'Mapping to NIST RMF...', 'Checking data categories...'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhase((p) => (p + 1) % phases.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="flex items-center gap-1.5 overflow-hidden">
+      <div className="size-3 border border-white border-t-transparent rounded-full animate-spin shrink-0" />
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phase}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="whitespace-nowrap inline-block"
+        >
+          {phases[phase]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 function SortTh({ label, sortKey: key, active, dir, onToggle, align = 'left' }: {
   label: string; sortKey: SortKey; active: SortKey; dir: SortDir; onToggle: (k: SortKey) => void; align?: 'left' | 'center' | 'right';
@@ -55,6 +93,7 @@ export default function ClassifyToolPage() {
   const [reclassifyingId, setReclassifyingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [showGrounded, setShowGrounded] = useState(false);
 
   useEffect(() => {
     setPage(1);
@@ -373,12 +412,12 @@ export default function ClassifyToolPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <RadarIcon size={16} className="text-accent" />
-            <h1 className="text-lg font-serif font-semibold text-text-primary">Tool Classification Intelligence</h1>
+            <h1 className="text-xl font-serif font-semibold text-text-primary">Tool Classification Intelligence</h1>
           </div>
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">Govern, assess, and audit artificial intelligence applications across the enterprise.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Govern, assess, and audit artificial intelligence applications across the enterprise.</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider bg-accent-dim/60 text-accent px-2.5 py-1 rounded border border-accent/20">
+          <span className="text-sm font-mono uppercase tracking-wider bg-accent-dim/60 text-accent px-2.5 py-1 rounded border border-accent/20">
             NIST AI RMF Compliant
           </span>
         </div>
@@ -389,18 +428,18 @@ export default function ClassifyToolPage() {
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-lg p-5 space-y-5">
             <div className="space-y-1">
-              <h2 className="text-sm font-serif font-semibold text-zinc-900 dark:text-zinc-100">Classify New AI Tool</h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Submit an AI service name and its corporate use case. Gemini will automatically classify its risk tier, data categories, and NIST functions.
+              <h2 className="text-base font-serif font-semibold text-zinc-900 dark:text-zinc-100">Classify New AI Tool</h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Submit an AI service name and its corporate use case. The system will classify its risk tier, data categories, and NIST functions.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Tool Name</label>
+                <label className="block text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Tool Name</label>
                 <div className="relative">
                   <input
-                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
                     placeholder="e.g. Grammarly, GitHub Copilot"
                     value={name}
                     onChange={(e) => {
@@ -438,10 +477,10 @@ export default function ClassifyToolPage() {
                             setDescription(t.description);
                             setShowSuggestions(false);
                           }}
-                          className="w-full text-left px-3 py-2 text-xs text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
+                          className="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
                         >
                           <span className="font-semibold">{t.name}</span>
-                          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 ml-2 block sm:inline truncate max-w-[250px]">{t.description}</span>
+                          <span className="text-sm text-zinc-500 dark:text-zinc-400 ml-2 block sm:inline truncate max-w-[250px]">{t.description}</span>
                         </button>
                       ))}
                     </div>
@@ -450,10 +489,10 @@ export default function ClassifyToolPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Intended Use Case</label>
+                <label className="block text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold">Intended Use Case</label>
                 <div className="relative">
                   <input
-                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent transition-colors"
                     placeholder="e.g. AI writing assistant for customer emails"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -475,7 +514,7 @@ export default function ClassifyToolPage() {
 
               {/* Preset suggestions */}
               <div className="space-y-2">
-                <span className="block text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-semibold">Quick Suggestions</span>
+                <span className="block text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-semibold">Quick Suggestions</span>
                 <div className="flex flex-wrap gap-1.5">
                   {PRESETS.map((preset) => (
                     <button
@@ -486,7 +525,7 @@ export default function ClassifyToolPage() {
                         setDescription(preset.description);
                       }}
                       disabled={loading}
-                      className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-accent hover:border-accent transition-colors cursor-pointer disabled:opacity-30"
+                      className="px-2.5 py-1 rounded-full text-sm font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-accent hover:border-accent transition-colors cursor-pointer disabled:opacity-30"
                     >
                       {preset.name}
                     </button>
@@ -494,38 +533,47 @@ export default function ClassifyToolPage() {
                 </div>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg px-4 py-2.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg px-4 py-2.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <><div className="size-3 border border-white border-t-transparent rounded-full animate-spin" /> Classifying Tool...</>
+                  <ThinkingState />
                 ) : (
                   <><Search size={12} /> Classify Tool</>
                 )}
-              </button>
+              </motion.button>
             </form>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-xs rounded-lg px-3 py-2 animate-slide-in">
+            <div className="bg-risk-high/10 border border-risk-high/30 text-risk-high text-sm rounded-lg px-3 py-2 animate-slide-in">
               {error}
             </div>
           )}
 
           {/* Result Card — styled success panel */}
-          {result && (
-            <div className="animate-slide-in bg-accent-dim/30 border border-accent/20 rounded-lg p-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="bg-accent-dim/30 border border-accent/20 rounded-lg p-5 space-y-4"
+              >
+                <div className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-accent font-semibold">Latest Classification</span>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1">{result.name}</p>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">{result.description}</p>
+                  <span className="text-sm font-mono uppercase tracking-widest text-accent font-semibold">Latest Classification</span>
+                  <p className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mt-1">{result.name}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">{result.description}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${result.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider ${result.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
                       result.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
                         'bg-risk-low-bg text-risk-low border border-risk-low/15'
                     }`}>
@@ -542,41 +590,98 @@ export default function ClassifyToolPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">NIST Functions</p>
+                  <p className="text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">NIST Functions</p>
                   <div className="flex flex-wrap gap-1">
                     {result.nistFunctions.length > 0 ? result.nistFunctions.map((f) => (
-                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{f}</span>
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-sm font-mono">{f}</span>
                     )) : <span className="text-text-muted">—</span>}
                   </div>
                 </div>
                 <div>
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Data Categories</p>
+                  <p className="text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Data Categories</p>
                   <div className="flex flex-wrap gap-1">
                     {result.dataCategories.length > 0 ? result.dataCategories.map((c) => (
-                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{c}</span>
+                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-sm font-mono">{c}</span>
                     )) : <span className="text-text-muted">—</span>}
                   </div>
                 </div>
               </div>
 
-              <div className="text-xs space-y-2.5 pt-3 border-t border-border">
+              <div className="text-sm space-y-2.5 pt-3 border-t border-border">
                 <div>
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Justification</p>
-                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-[11px]">{result.justification}</p>
+                  <p className="text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Justification</p>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-base">{result.justification}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Recommended Policy</p>
-                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-[11px] italic">&ldquo;{result.recommendedPolicy}&rdquo;</p>
+                  <p className="text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5">Recommended Policy</p>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif text-base italic">&ldquo;{result.recommendedPolicy}&rdquo;</p>
                 </div>
               </div>
+
+              {/* Grounded in NIST AI RMF */}
+              {result.retrievedNistContext && result.retrievedNistContext.length > 0 && (
+                <div className="border-t border-border pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowGrounded((v) => !v)}
+                    className="w-full flex items-center justify-between text-left hover:bg-surface-hover/50 rounded px-2 py-1.5 -mx-2 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <BookOpen size={12} className="text-accent" />
+                      <span className="text-base font-semibold text-text-secondary">Grounded in NIST AI RMF</span>
+                      <span className="text-sm font-mono text-text-tertiary">
+                        ({result.retrievedNistContext.some((c) => c.score > 0)
+                          ? `${result.retrievedNistContext.filter((c) => c.score > 0).length} matched`
+                          : `${result.retrievedNistContext.length} baseline`})
+                      </span>
+                    </div>
+                    {showGrounded ? <ChevronUp size={12} className="text-text-tertiary" /> : <ChevronDown size={12} className="text-text-tertiary" />}
+                  </button>
+
+                  {showGrounded && (
+                    <div className="space-y-2 mt-2 animate-slide-in">
+                      {result.retrievedNistContext.map((ctx) => (
+                        <div key={ctx.function} className="bg-background border border-border rounded p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-base font-bold font-mono text-text-primary">{ctx.function}</span>
+                            {ctx.score > 0 && (
+                              <span className="text-sm font-mono text-text-tertiary">
+                                score {ctx.score} · {ctx.matchedKeywords.slice(0, 3).join(', ')}
+                                {ctx.matchedKeywords.length > 3 && ` +${ctx.matchedKeywords.length - 3}`}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-base text-text-secondary leading-relaxed mt-1">{ctx.definition}</p>
+                          {ctx.concerns.length > 0 && (
+                            <p className="text-sm text-text-tertiary italic mt-1 line-clamp-2">
+                              {ctx.concerns[0]}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                      <p className="text-sm text-text-tertiary font-mono">
+                        Source: NIST AI RMF Playbook (keyword retrieval over derived function reference).{' '}
+                        <a
+                          href="https://www.nist.gov/itl/ai-risk-management-framework"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-accent hover:text-accent-hover"
+                        >
+                          NIST AI RMF ↗
+                        </a>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center gap-2 pt-3 border-t border-border/60">
                 <button
                   type="button"
                   onClick={() => exportToJson(result)}
-                  className="flex items-center gap-1 text-[10px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
                 >
                   <Download size={10} />
                   Export JSON
@@ -584,14 +689,15 @@ export default function ClassifyToolPage() {
                 <button
                   type="button"
                   onClick={() => handlePrintReport(result)}
-                  className="flex items-center gap-1 text-[10px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent bg-background border border-border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
                 >
                   <Printer size={10} />
                   Print Report
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Right Column: "Tool Registry" Management Panel */}
@@ -600,8 +706,8 @@ export default function ClassifyToolPage() {
             {/* Filter bar & table header */}
             <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-0.5">
-                <h2 className="text-sm font-serif font-semibold text-zinc-900 dark:text-zinc-100">Enterprise Registry Matrix</h2>
-                <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+                <h2 className="text-base font-serif font-semibold text-zinc-900 dark:text-zinc-100">Enterprise Registry Matrix</h2>
+                <p className="text-sm font-mono text-zinc-500 dark:text-zinc-400">
                   Showing {displayedTools.length} of {tools.length} audited applications
                 </p>
               </div>
@@ -615,7 +721,7 @@ export default function ClassifyToolPage() {
                     placeholder="Search registry..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-7 pr-3 py-1 text-xs placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent w-40 transition-colors"
+                    className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-7 pr-3 py-1 text-sm placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent w-40 transition-colors"
                   />
                 </div>
 
@@ -623,7 +729,7 @@ export default function ClassifyToolPage() {
                 <select
                   value={riskFilter}
                   onChange={(e) => setRiskFilter(e.target.value)}
-                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-accent cursor-pointer transition-colors"
+                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-sm focus:outline-none focus:border-accent cursor-pointer transition-colors"
                 >
                   <option value="all">All Risks</option>
                   <option value="Low">Low Risk</option>
@@ -635,7 +741,7 @@ export default function ClassifyToolPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-accent cursor-pointer transition-colors"
+                  className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-sm focus:outline-none focus:border-accent cursor-pointer transition-colors"
                 >
                   <option value="all">All Statuses</option>
                   <option value="approved">Accept</option>
@@ -647,7 +753,7 @@ export default function ClassifyToolPage() {
 
             {/* Registry Data Grid Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
                     <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
@@ -662,7 +768,7 @@ export default function ClassifyToolPage() {
                       <td colSpan={4} className="py-12 text-center">
                         <div className="flex flex-col items-center gap-2">
                           <RadarIcon size={24} className="text-accent animate-radar-pulse" />
-                          <span className="text-text-tertiary text-xs">No tools found matching your filters.</span>
+                          <span className="text-text-tertiary text-sm">No tools found matching your filters.</span>
                         </div>
                       </td>
                     </tr>
@@ -685,7 +791,7 @@ export default function ClassifyToolPage() {
                               {t.name}
                               <ChevronRight size={10} className="text-text-muted group-hover:text-accent transition-transform group-hover:translate-x-0.5" />
                             </p>
-                            <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate max-w-[220px] mt-0.5 leading-normal pb-2" title={t.description}>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-[220px] mt-0.5 leading-normal pb-2" title={t.description}>
                               {t.description}
                             </p>
                           </button>
@@ -694,7 +800,7 @@ export default function ClassifyToolPage() {
                         {/* Risk Tier column */}
                         <td className="py-3 px-4">
                           {t.riskTier ? (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
                                 t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
                                   'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
                               }`}>
@@ -706,10 +812,10 @@ export default function ClassifyToolPage() {
                         </td>
 
                         {/* NIST functions list */}
-                        <td className="py-3 px-4 text-[10px] font-mono text-text-tertiary text-center">
+                        <td className="py-3 px-4 text-sm font-mono text-text-tertiary text-center">
                           <div className="flex flex-wrap gap-1 justify-center">
                             {t.nistFunctions.map((f) => (
-                              <span key={f} className="px-1.5 py-0.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/60 text-[9px] text-zinc-700 dark:text-zinc-300">
+                              <span key={f} className="px-1.5 py-0.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/60 text-sm text-zinc-700 dark:text-zinc-300">
                                 {f.slice(0, 3)}
                               </span>
                             ))}
@@ -727,7 +833,7 @@ export default function ClassifyToolPage() {
                                   e.stopPropagation();
                                   handleStatusChange(t.id, e.target.value as 'approved' | 'pending' | 'blocked');
                                 }}
-                                className={`rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-950 border ${
+                                className={`rounded-lg px-2 py-1 text-sm font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-950 border ${
                                   t.status === 'approved'
                                     ? 'text-risk-low dark:text-emerald-400 border-risk-low/30 dark:border-emerald-500/30'
                                     : t.status === 'blocked'
@@ -745,7 +851,7 @@ export default function ClassifyToolPage() {
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleReclassify(t); }}
-                                title="Re-classify with Gemini"
+                                title="Re-classify with LLM"
                                 disabled={reclassifyingId === t.id}
                                 className="text-text-secondary hover:text-accent p-1 rounded hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40"
                               >
@@ -841,12 +947,12 @@ export default function ClassifyToolPage() {
             {/* Header */}
             <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
               <div className="min-w-0">
-                <h3 className="text-base font-serif font-semibold text-text-primary truncate">{flyoutTool.name}</h3>
-                <p className="text-[10px] font-mono text-text-muted mt-0.5">ID: {flyoutTool.id}</p>
+                <h3 className="text-lg font-serif font-semibold text-text-primary truncate">{flyoutTool.name}</h3>
+                <p className="text-sm font-mono text-text-muted mt-0.5">ID: {flyoutTool.id}</p>
               </div>
               <button
                 onClick={() => setFlyoutTool(null)}
-                className="text-zinc-750 dark:text-zinc-100 hover:text-accent transition-colors cursor-pointer mt-0.5 px-2 py-1 rounded hover:bg-surface-hover text-xs font-mono"
+                className="text-zinc-750 dark:text-zinc-100 hover:text-accent transition-colors cursor-pointer mt-0.5 px-2 py-1 rounded hover:bg-surface-hover text-sm font-mono"
               >
                 CLOSE
               </button>
@@ -855,15 +961,15 @@ export default function ClassifyToolPage() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto space-y-5 pr-1">
               <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Description</h4>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed mt-1">{flyoutTool.description}</p>
+                <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Description</h4>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mt-1">{flyoutTool.description}</p>
               </div>
 
               <div className="flex items-center gap-6">
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Assessment</h4>
+                  <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Assessment</h4>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider ${flyoutTool.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
                         flyoutTool.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
                           'bg-risk-low-bg text-risk-low border border-risk-low/15'
                       }`}>
@@ -872,9 +978,9 @@ export default function ClassifyToolPage() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Governance Status</h4>
+                  <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Governance Status</h4>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9px] font-mono font-bold uppercase tracking-wider ${flyoutTool.status === 'approved' ? 'border-risk-low/15 bg-risk-low-bg text-risk-low' :
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-sm font-mono font-bold uppercase tracking-wider ${flyoutTool.status === 'approved' ? 'border-risk-low/15 bg-risk-low-bg text-risk-low' :
                         flyoutTool.status === 'blocked' ? 'border-risk-high/15 bg-risk-high-bg text-risk-high' :
                           'border-risk-medium/15 bg-risk-medium-bg text-risk-medium'
                       }`}>
@@ -887,43 +993,43 @@ export default function ClassifyToolPage() {
               {/* NIST functions & Data categories */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">NIST Functions</h4>
+                  <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">NIST Functions</h4>
                   <div className="flex flex-wrap gap-1">
                     {flyoutTool.nistFunctions.map(f => (
-                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{f}</span>
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-sm font-mono">{f}</span>
                     ))}
-                    {flyoutTool.nistFunctions.length === 0 && <span className="text-text-muted text-[10px]">—</span>}
+                    {flyoutTool.nistFunctions.length === 0 && <span className="text-text-muted text-sm">—</span>}
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">Data Categories</h4>
+                  <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 mb-1.5">Data Categories</h4>
                   <div className="flex flex-wrap gap-1">
                     {flyoutTool.dataCategories.map(c => (
-                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-[9px] font-mono">{c}</span>
+                      <span key={c} className="px-1.5 py-0.5 rounded bg-background border border-border text-zinc-700 dark:text-zinc-300 text-sm font-mono">{c}</span>
                     ))}
-                    {flyoutTool.dataCategories.length === 0 && <span className="text-text-muted text-[10px]">—</span>}
+                    {flyoutTool.dataCategories.length === 0 && <span className="text-text-muted text-sm">—</span>}
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Justification</h4>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif">{flyoutTool.justification || '—'}</p>
+                <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Risk Justification</h4>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif">{flyoutTool.justification || '—'}</p>
               </div>
 
               <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Recommended Policy</h4>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif italic">&ldquo;{flyoutTool.recommendedPolicy || '—'}&rdquo;</p>
+                <h4 className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Recommended Policy</h4>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed bg-background border border-border rounded-lg p-3 mt-1.5 font-serif italic">&ldquo;{flyoutTool.recommendedPolicy || '—'}&rdquo;</p>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between text-sm font-mono text-zinc-500 dark:text-zinc-400">
               <span>Added {new Date(flyoutTool.createdAt).toLocaleDateString()}</span>
               <button
                 onClick={() => handleReclassify(flyoutTool)}
                 disabled={reclassifyingId === flyoutTool.id}
-                className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent border border-border rounded px-3 py-1.5 hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 text-base font-medium text-zinc-700 dark:text-zinc-100 hover:text-accent border border-border rounded px-3 py-1.5 hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <RotateCw size={11} className={reclassifyingId === flyoutTool.id ? 'animate-spin' : ''} />
                 Re-classify

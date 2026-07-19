@@ -13,6 +13,7 @@ interface ToolRecord {
   dataCategories: string[];
   justification: string;
   recommendedPolicy: string;
+  retrievedNistContext?: { function: string; definition: string; concerns: string[]; score: number; matchedKeywords: string[] }[];
   createdAt: string;
 }
 
@@ -30,15 +31,16 @@ export async function POST(req: NextRequest) {
     const existing = tools.find((t) => t.name.toLowerCase() === name.trim().toLowerCase());
 
     // classifyToolRisk handles its own fallback (mock on no-key/quota errors)
-    const geminiResult = await classifyToolRisk(name.trim(), description.trim());
+    const llmResult = await classifyToolRisk(name.trim(), description.trim());
     const classification = {
       name: name.trim(),
       description: description.trim(),
-      riskTier: geminiResult.riskTier,
-      nistFunctions: geminiResult.nistFunctions,
-      dataCategories: geminiResult.dataCategories,
-      justification: geminiResult.justification,
-      recommendedPolicy: geminiResult.recommendedPolicy,
+      riskTier: llmResult.riskTier,
+      nistFunctions: llmResult.nistFunctions,
+      dataCategories: llmResult.dataCategories,
+      justification: llmResult.justification,
+      recommendedPolicy: llmResult.recommendedPolicy,
+      retrievedNistContext: llmResult.retrievedNistContext,
     };
 
     let finalTool: ToolRecord;
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
         dataCategories: classification.dataCategories,
         justification: classification.justification,
         recommendedPolicy: classification.recommendedPolicy,
+        retrievedNistContext: classification.retrievedNistContext,
       };
       updateItem<ToolRecord>('tools', existing.id, updates);
       finalTool = { ...existing, ...updates } as ToolRecord;

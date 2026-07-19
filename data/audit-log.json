@@ -25,59 +25,5 @@
     ],
     "riskLevel": "high",
     "timestamp": "2026-07-14T14:00:00.000Z"
-  },
-  {
-    "id": "audit-0003-0000-0000-000000000003",
-    "requestId": "54ec6f07-c0be-4ff8-aeda-ab484a1648aa",
-    "employeeName": "Demo Employee",
-    "action": "rejected",
-    "reviewerName": "Admin",
-    "adminComment": "Noob",
-    "sections": [
-      "Email address"
-    ],
-    "riskLevel": "low",
-    "timestamp": "2026-07-16T15:25:08.895Z"
-  },
-  {
-    "id": "audit-0004-0000-0000-000000000004",
-    "requestId": "a650ebeb-7d29-4bcc-afd0-e780f8e06ac6",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Email address",
-      "Phone number"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-07-16T15:25:38.117Z"
-  },
-  {
-    "id": "3eef0693-0d96-4254-a76d-5af671f66c1c",
-    "requestId": "ec64e217-0b72-48f1-8082-893394fc60e3",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Email address",
-      "Phone number"
-    ],
-    "riskLevel": null,
-    "timestamp": "2026-07-17T05:29:25.780Z"
-  },
-  {
-    "id": "8526e6ff-f3f9-453e-9e78-595c493422ed",
-    "requestId": "a9b06936-0f89-4b6b-aeb9-049372d60f1d",
-    "employeeName": "Demo Employee",
-    "action": "rejected",
-    "reviewerName": "Admin",
-    "adminComment": "No use\n",
-    "sections": [
-      "Email address"
-    ],
-    "riskLevel": null,
-    "timestamp": "2026-07-17T05:32:32.564Z"
   }
 ]

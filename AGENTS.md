@@ -23,7 +23,7 @@ Build order below is priority-sequenced — if time runs short, cut from the bot
 - **Styling**: Tailwind CSS
 - **Backend**: Next.js API routes (no separate server)
 - **Data persistence**: JSON file on disk (`/data/*.json`), read/written via simple fs helpers. No real DB — resets on restart, which is fine for a demo.
-- **LLM**: Gemini API (Messages endpoint), called server-side only from API routes (never expose the key client-side).
+- **LLM**: LLM API (Messages endpoint), called server-side only from API routes (never expose the key client-side).
 - **Auth**: none. Single implicit demo user. A role switcher (Employee / Admin toggle) in the UI is enough — no login flow.
 
 ---
@@ -31,7 +31,7 @@ Build order below is priority-sequenced — if time runs short, cut from the bot
 ## The Two Core Features
 
 ### 1. 🌟 KILLER FEATURE (real, LLM-powered): AI Tool Risk Classification
-**What it does**: Admin submits a new AI tool (name + short description of what it's used for, e.g. "Grammarly for customer emails"). The system calls Gemini to classify it and returns a structured risk profile:
+**What it does**: Admin submits a new AI tool (name + short description of what it's used for, e.g. "Grammarly for customer emails"). The system calls LLM to classify it and returns a structured risk profile:
 - Risk tier: Low / Medium / High
 - Which NIST RMF function(s) it implicates (Govern/Map/Measure/Manage)
 - What data categories it's likely to touch (PII, financial, source code, none)
@@ -40,12 +40,12 @@ Build order below is priority-sequenced — if time runs short, cut from the bot
 
 This is the centerpiece of the live demo — type in a real, unfamiliar tool name live in front of judges and get a genuine classification back.
 
-**Implementation**: one API route `POST /api/tools/classify` that sends a structured prompt to Gemini, requesting **JSON-only output** (see structured output pattern), then renders it as a risk card in the UI. Store the result in the tool registry JSON file so it shows up in the dashboard immediately after.
+**Implementation**: one API route `POST /api/tools/classify` that sends a structured prompt to LLM, requesting **JSON-only output** (see structured output pattern), then renders it as a risk card in the UI. Store the result in the tool registry JSON file so it shows up in the dashboard immediately after.
 
 ### 2. Real (hybrid) Prompt Guard: Sensitive Data Detection
 **What it does**: Simulates the "proxy" — a text box where an employee pastes a prompt before sending it to an AI tool. On submit:
 1. **Regex first pass** (fast, deterministic): flags emails, phone numbers, credit card patterns, API key-looking strings, IC/passport number patterns.
-2. **If regex is inconclusive** (e.g. no hard pattern match but text looks like it might contain confidential business info — long text, mentions "confidential," "salary," "internal," names, financials), escalate to Gemini for a judgment call: "Does this text likely contain sensitive company or personal data? Classify: none / low / medium / high, and say why in one sentence."
+2. **If regex is inconclusive** (e.g. no hard pattern match but text looks like it might contain confidential business info — long text, mentions "confidential," "salary," "internal," names, financials), escalate to LLM for a judgment call: "Does this text likely contain sensitive company or personal data? Classify: none / low / medium / high, and say why in one sentence."
 3. Result renders as a redaction preview: sensitive spans highlighted, an allow/block/flag verdict, and the reason. Log the event to the usage log JSON file.
 
 This is your second real feature — genuinely functional, not mocked, but simpler logic so it's fast to build.
@@ -178,3 +178,15 @@ This project has the Playwright MCP server configured (see `opencode.json`). For
 - Every mocked feature should still be **visually complete** — judges score Design/UI-UX regardless of whether the logic behind it is real.
 - Reference NIST AI RMF (Govern/Map/Measure/Manage) and EU AI Act explicitly in on-screen copy — this signals to judges that the framework research (mentioned in the case study) was actually applied, not just the tech.
 - If time is very short, cut in this order: redress page → mocked approval workflow → dashboard chart polish. Never cut the two real features — they're what makes the demo credible.
+
+## Design Decision: NIST AI RMF Retrieval Grounding
+
+Tool Risk Classification does not rely on the LLM's general knowledge of the NIST AI RMF. Instead, it uses a lightweight, static retrieval layer:
+
+- `data/nist_ai_rmf_playbook.json` is the single source of truth (curated NIST AI RMF playbook content).
+- `scripts/build-nist-functions.js` derives `data/nist_ai_rmf_functions.json` into a queryable shape: `{ function, definition, concerns, keywords }`.
+- `lib/nistRetrieval.ts` performs case-insensitive keyword matching against the tool name + description, returns the top 1–3 most relevant functions, and falls back to all four short definitions if no strong match is found.
+- The retrieved context is injected into the live LLM classification prompt, so the model's NIST function selection is grounded in the actual reference file rather than its training data.
+- The Classify result card exposes an expandable "Grounded in NIST AI RMF" section with a citation, making the retrieval step visible to judges.
+
+This is a deliberate hackathon-scoped tradeoff: keyword retrieval is fast, fully offline, and easy to inspect and demo. A natural next step is replacing it with a vector-embedding retriever over the same curated playbook.
