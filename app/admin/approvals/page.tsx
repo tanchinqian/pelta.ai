@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  CheckCircle, XCircle, ChevronDown, ChevronUp, FileText,
+  CheckCircle, XCircle, ChevronDown,
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
@@ -302,17 +302,6 @@ function ToolDetailModal({
   );
 }
 
-/* ── Stat mini ──────────────────────────────────────────── */
-
-function StatMini({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className="panel px-3 py-2">
-      <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
-      <p className="text-lg font-bold font-mono mt-0.5" style={{ color }}>{value}</p>
-    </div>
-  );
-}
-
 /* ── Page ───────────────────────────────────────────────── */
 
 type Tab = 'appeals' | 'tools';
@@ -328,7 +317,7 @@ export default function RequestsPage() {
   const [selectedAppeal, setSelectedAppeal] = useState<AccessRequest | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionDraft, setRejectionDraft] = useState('');
-  const [showAudit, setShowAudit] = useState(false);
+  const [expandedAudit, setExpandedAudit] = useState<string | null>(null);
   const [appealFilter, setAppealFilter] = useState<FilterStatus>('all');
 
   // ── Tool Requests state ──
@@ -438,6 +427,10 @@ export default function RequestsPage() {
   const pendingAppeals = appeals.filter((r) => r.status === 'pending');
   const pendingTools = toolReqs.filter((r) => r.status === 'pending');
   const totalPending = pendingAppeals.length + pendingTools.length;
+  const approvedAppeals = appeals.filter(r => r.status === 'approved').length;
+  const rejectedAppeals = appeals.filter(r => r.status === 'rejected').length;
+  const approvedTools = toolReqs.filter(r => r.status === 'approved').length;
+  const deniedTools = toolReqs.filter(r => r.status === 'denied').length;
 
   const filteredAppeals = appealFilter === 'all' ? appeals : appeals.filter((r) => r.status === appealFilter);
   const filteredTools = toolFilter === 'all' ? toolReqs : toolReqs.filter((r) => r.status === toolFilter);
@@ -502,14 +495,27 @@ export default function RequestsPage() {
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          <StatMini label="Pending Appeals" value={pendingAppeals.length} color={STATUS_COLOR.pending} />
-          <StatMini label="Approved Appeals" value={appeals.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
-          <StatMini label="Rejected Appeals" value={appeals.filter(r => r.status === 'rejected').length} color={STATUS_COLOR.rejected} />
-          <StatMini label="Pending Tools" value={pendingTools.length} color={STATUS_COLOR.pending} />
-          <StatMini label="Approved Tools" value={toolReqs.filter(r => r.status === 'approved').length} color={STATUS_COLOR.approved} />
-          <StatMini label="Denied Tools" value={toolReqs.filter(r => r.status === 'denied').length} color={STATUS_COLOR.rejected} />
+        {/* Compact stat bar — replaces the old 6-card grid */}
+        <div className="flex items-center gap-2 text-[10px] font-mono text-text-tertiary bg-surface/30 border border-border/60 rounded px-3 py-1.5">
+          <span className="flex items-center gap-1">
+            <ShieldAlert size={10} className="text-risk-medium" />
+            <span style={{ color: STATUS_COLOR.pending }}>{pendingAppeals.length} pending</span>
+            <span className="text-text-muted">·</span>
+            <span style={{ color: STATUS_COLOR.approved }}>{approvedAppeals} approved</span>
+            <span className="text-text-muted">·</span>
+            <span style={{ color: STATUS_COLOR.rejected }}>{rejectedAppeals} rejected</span>
+            <span className="mx-1 text-text-muted">appeals</span>
+          </span>
+          <span className="text-text-muted shrink-0">|</span>
+          <span className="flex items-center gap-1">
+            <Briefcase size={10} className="text-risk-medium" />
+            <span style={{ color: STATUS_COLOR.pending }}>{pendingTools.length} pending</span>
+            <span className="text-text-muted">·</span>
+            <span style={{ color: STATUS_COLOR.approved }}>{approvedTools} approved</span>
+            <span className="text-text-muted">·</span>
+            <span style={{ color: STATUS_COLOR.rejected }}>{deniedTools} denied</span>
+            <span className="text-text-muted">tools</span>
+          </span>
         </div>
 
         {/* Tabs */}
@@ -528,19 +534,19 @@ export default function RequestsPage() {
 
         {/* ── Tab: Redress Appeals ──────────────────────────── */}
         {activeTab === 'appeals' && (
-          <div className="space-y-3 animate-slide-in">
-            {/* Filter tabs + Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
+          <div className="flex flex-col gap-3 animate-slide-in">
+            {/* Filter pills + Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
                 {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
                   const count = f === 'all' ? appeals.length : appeals.filter((r) => r.status === f).length;
                   return (
                     <button key={f} id={`appeal-filter-${f}`} onClick={() => setAppealFilter(f)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                        appealFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
+                        appealFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/40'
                       }`}>
                       {f}
-                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      <span className="text-[9px] font-mono px-1 py-0.5 rounded leading-none bg-background text-text-tertiary">
                         {count}
                       </span>
                     </button>
@@ -556,123 +562,80 @@ export default function RequestsPage() {
               />
             </div>
 
-            {/* Table */}
-            <div className="panel p-0 overflow-hidden">
+            {/* Appeals Card List */}
+            <div className="flex flex-col gap-2">
               {searchedAppeals.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <div className="panel flex flex-col items-center justify-center py-16 gap-3">
                   <RadarIcon size={24} className="text-accent animate-radar-pulse" />
                   <span className="text-xs text-text-tertiary">
                     {searchQuery ? 'No matching appeals found.' : appealFilter === 'all' ? 'No appeals yet.' : `No ${appealFilter} appeals.`}
                   </span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="text-left text-text-secondary border-b border-border bg-surface/60">
-                        <th className="py-2 px-3 font-medium">Employee</th>
-                        <th className="py-2 pr-3 font-medium hidden sm:table-cell">Request ID</th>
-                        <th className="py-2 pr-3 font-medium hidden md:table-cell">Data Categories</th>
-                        <th className="py-2 pr-3 font-medium">Risk</th>
-                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Reason</th>
-                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Submitted</th>
-                        <th className="py-2 pr-3 font-medium">Status</th>
-                        <th className="py-2 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {searchedAppeals.map((req, i) => (
-                        <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                          <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
-                          <td className="py-2 pr-3 hidden md:table-cell">
-                            <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
-                          </td>
-                          <td className="py-2 pr-3 whitespace-nowrap"><RiskBadge level={req.riskLevel} /></td>
-                          <td className="py-2 pr-3 text-[10px] text-text-tertiary max-w-[160px] truncate hidden lg:table-cell">{req.reason}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
-                          <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
-                          <td className="py-2">
-                            <div className="flex items-center gap-1.5">
-                              <button id={`view-appeal-${req.id}`} onClick={() => setSelectedAppeal(req)}
-                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
-                                View
+                searchedAppeals.map((req) => {
+                  const auditEntry = auditLog.find((a) => a.requestId === req.id);
+                  const isExpanded = expandedAudit === req.id;
+                  return (
+                    <div key={req.id} className="panel p-0 overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-3 hover:bg-surface-hover/30 transition-colors cursor-pointer" onClick={() => setExpandedAudit(isExpanded ? null : req.id)}>
+                        <div className="shrink-0" style={{ width: 3, height: 36, borderRadius: 2, background: STATUS_COLOR[req.status] ?? 'var(--border)' }} />
+                        <div className="flex-1 min-w-0 flex items-center gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-text-primary truncate">{req.employeeName}</p>
+                            <p className="text-[10px] font-mono text-text-tertiary truncate">{req.reason.slice(0, 80)}{req.reason.length > 80 ? '…' : ''}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <RiskBadge level={req.riskLevel} />
+                            <StatusBadge status={req.status} />
+                            <span className="text-[9px] font-mono text-text-muted hidden sm:block">{fmt(req.requestedAt)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="hidden xs:flex flex-wrap gap-1">{req.sections.slice(0, 2).map((s) => <SectionTag key={s} label={s} />)}</div>
+                          <ChevronDown size={12} className={`text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </div>
+                      </div>
+
+                      {/* Inline expansion — actions + audit detail */}
+                      {isExpanded && (
+                        <div className="border-t border-border px-4 py-3 flex flex-col gap-3 animate-slide-in bg-surface/20">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-[10px] font-mono text-text-tertiary mr-auto">ID {req.id.slice(0, 8)}… · {fmt(req.requestedAt)}</p>
+                            {req.sections.map((s) => <SectionTag key={s} label={s} />)}
+                          </div>
+                          {req.status === 'pending' && (
+                            <div className="flex items-center gap-2">
+                              <button id={`approve-appeal-${req.id}`} onClick={() => updateAppeal(req.id, 'approved')}
+                                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                                <CheckCircle size={12} /> Approve
                               </button>
-                              {req.status === 'pending' && (
-                                <>
-                                  <button id={`approve-appeal-${req.id}`} onClick={() => updateAppeal(req.id, 'approved')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
-                                    <CheckCircle size={10} /> Approve
-                                  </button>
-                                  <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
-                                    <XCircle size={10} /> Decline
-                                  </button>
-                                </>
+                              <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
+                                className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                                <XCircle size={12} /> Decline
+                              </button>
+                            </div>
+                          )}
+                          {req.status !== 'pending' && auditEntry && (
+                            <div className="flex flex-col gap-1.5">
+                              <div className="h-px bg-border/40" />
+                              <div className="flex items-center gap-2 text-[10px] font-mono text-text-tertiary">
+                                <span>{auditEntry.action === 'approved' ? 'Approved' : 'Rejected'} by {auditEntry.reviewerName}</span>
+                                <span className="text-text-muted">·</span>
+                                <span>{fmt(auditEntry.timestamp)}</span>
+                              </div>
+                              {auditEntry.adminComment && (
+                                <p className="text-[10px] text-text-secondary italic bg-background border border-border rounded p-2">{auditEntry.adminComment}</p>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Audit log accordion */}
-            <div className="panel overflow-hidden">
-              <button id="toggle-audit-log" onClick={() => setShowAudit((v) => !v)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-surface-hover/50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <FileText size={12} className="text-text-tertiary" />
-                  <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Audit Trail</span>
-                  <span className="text-[10px] font-mono text-text-tertiary">({auditLog.length} entries)</span>
-                </div>
-                {showAudit ? <ChevronUp size={13} className="text-text-tertiary" /> : <ChevronDown size={13} className="text-text-tertiary" />}
-              </button>
-              {showAudit && (
-                <div className="border-t border-border">
-                  {auditLog.length === 0 ? (
-                    <p className="text-[11px] text-text-tertiary text-center py-4">No audit entries yet.</p>
-                  ) : (
-                    <div className="overflow-x-auto" style={{ maxHeight: 280 }}>
-                      <table className="w-full text-xs">
-                        <thead className="sticky top-0 bg-surface">
-                          <tr className="text-left text-text-secondary border-b border-border">
-                            <th className="py-1.5 px-3 font-medium">Timestamp</th>
-                            <th className="py-1.5 pr-3 font-medium">Employee</th>
-                            <th className="py-1.5 pr-3 font-medium">Action</th>
-                            <th className="py-1.5 pr-3 font-medium hidden sm:table-cell">Reviewer</th>
-                            <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Categories</th>
-                            <th className="py-1.5 pr-3 font-medium hidden md:table-cell">Risk</th>
-                            <th className="py-1.5 font-medium hidden lg:table-cell">Comment</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {auditLog.map((entry, i) => (
-                            <tr key={entry.id} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                              <td className="py-1.5 px-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap">{fmt(entry.timestamp)}</td>
-                              <td className="py-1.5 pr-3 text-[11px] font-medium text-text-primary whitespace-nowrap">{entry.employeeName}</td>
-                              <td className="py-1.5 pr-3 whitespace-nowrap">
-                                <span className="text-[9px] font-bold font-mono uppercase"
-                                  style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}>
-                                  {entry.action}
-                                </span>
-                              </td>
-                              <td className="py-1.5 pr-3 text-[10px] font-mono text-text-secondary hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
-                              <td className="py-1.5 pr-3 hidden md:table-cell">
-                                <div className="flex flex-wrap gap-1">{entry.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
-                              </td>
-                              <td className="py-1.5 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge level={entry.riskLevel} /></td>
-                              <td className="py-1.5 text-[10px] text-text-tertiary truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          )}
+                          {req.status !== 'pending' && !auditEntry && (
+                            <p className="text-[10px] text-text-tertiary italic">Decided · no audit entry recorded</p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })
               )}
             </div>
           </div>
@@ -680,19 +643,19 @@ export default function RequestsPage() {
 
         {/* ── Tab: Tool Requests ───────────────────────────── */}
         {activeTab === 'tools' && (
-          <div className="space-y-3 animate-slide-in">
-            {/* Filter tabs + Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
+          <div className="flex flex-col gap-3 animate-slide-in">
+            {/* Filter pills + Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
                 {(['all', 'pending', 'approved', 'denied'] as const).map((f) => {
                   const count = f === 'all' ? toolReqs.length : toolReqs.filter((r) => r.status === f).length;
                   return (
                     <button key={f} id={`tool-filter-${f}`} onClick={() => setToolFilter(f)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded capitalize transition-colors cursor-pointer ${
-                        toolFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
+                        toolFilter === f ? 'bg-surface-hover text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-hover/40'
                       }`}>
                       {f}
-                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      <span className="text-[9px] font-mono px-1 py-0.5 rounded leading-none bg-background text-text-tertiary">
                         {count}
                       </span>
                     </button>
@@ -708,61 +671,60 @@ export default function RequestsPage() {
               />
             </div>
 
-            {/* Table */}
-            <div className="panel p-0 overflow-hidden">
+            {/* Tool Requests Card List */}
+            <div className="flex flex-col gap-2">
               {searchedTools.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <div className="panel flex flex-col items-center justify-center py-16 gap-3">
                   <RadarIcon size={24} className="text-accent animate-radar-pulse" />
                   <span className="text-xs text-text-tertiary">
                     {searchQuery ? 'No matching tool requests found.' : toolFilter === 'all' ? 'No tool requests yet.' : `No ${toolFilter} tool requests.`}
                   </span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="text-left text-text-secondary border-b border-border bg-surface/60">
-                        <th className="py-2 px-3 font-medium">Employee</th>
-                        <th className="py-2 pr-3 font-medium hidden sm:table-cell">Department</th>
-                        <th className="py-2 pr-3 font-medium">Tool Requested</th>
-                        <th className="py-2 pr-3 font-medium hidden lg:table-cell">Submitted</th>
-                        <th className="py-2 pr-3 font-medium">Status</th>
-                        <th className="py-2 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {searchedTools.map((req, i) => (
-                        <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                          <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.department}</td>
-                          <td className="py-2 pr-3 font-medium text-text-primary">{req.toolRequested}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
-                          <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
-                          <td className="py-2">
-                            <div className="flex items-center gap-1.5">
-                              <button id={`view-tool-${req.id}`} onClick={() => setSelectedTool(req)}
-                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
-                                View
+                searchedTools.map((req) => {
+                  const denied = req.status === 'denied';
+                  return (
+                    <div key={req.id} className="panel p-0 overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-3 hover:bg-surface-hover/30 transition-colors">
+                        <div className="shrink-0" style={{ width: 3, height: 36, borderRadius: 2, background: STATUS_COLOR[req.status] ?? 'var(--border)' }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-text-primary">{req.toolRequested}</span>
+                            <StatusBadge status={req.status} />
+                          </div>
+                          <p className="text-[10px] font-mono text-text-tertiary mt-0.5">
+                            {req.employeeName}
+                            <span className="text-text-muted mx-1">·</span>
+                            {req.department}
+                            <span className="text-text-muted mx-1">·</span>
+                            {fmt(req.requestedAt)}
+                          </p>
+                          {denied && req.description && (
+                            <p className="text-[10px] text-text-tertiary italic mt-1 bg-background border border-border rounded p-2">Reason: {req.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button id={`view-tool-${req.id}`} onClick={() => setSelectedTool(req)}
+                            className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
+                            View
+                          </button>
+                          {req.status === 'pending' && (
+                            <>
+                              <button id={`approve-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'approved')}
+                                className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                <CheckCircle size={10} /> Approve
                               </button>
-                              {req.status === 'pending' && (
-                                <>
-                                  <button id={`approve-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'approved')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
-                                    <CheckCircle size={10} /> Approve
-                                  </button>
-                                  <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
-                                    <XCircle size={10} /> Deny
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              <button id={`deny-tool-${req.id}`} onClick={() => { setDenyingToolId(req.id); setSelectedTool(req); }}
+                                className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                <XCircle size={10} /> Deny
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
