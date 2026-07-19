@@ -562,6 +562,7 @@ export default function ToolsRegistryPage() {
                   CLOSE
                 </button>
               </div>
+            </div>
               {isEditing ? (
                 /* Edit Mode */
                 <div className="space-y-4 pt-1">
@@ -741,7 +742,6 @@ export default function ToolsRegistryPage() {
                   </div>
                 </div>
               )}
-            </div>
 
             <div className="pt-3 border-t border-border flex items-center justify-between text-sm font-mono text-text-tertiary">
               <span>Registered {new Date(selectedTool.createdAt).toLocaleString()}</span>
