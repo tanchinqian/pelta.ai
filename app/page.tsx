@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Shield, Lock, FileText, BarChart3, Users, AlertTriangle, CheckCircle2, XCircle, ChevronRight, Activity, ShieldCheck, Cpu, Database, ArrowRight, BookOpen, Scale, Globe, Eye, Send, Search, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -30,9 +30,138 @@ const views = {
   },
 };
 
+const DEMO_TEMPLATES = [
+  {
+    label: 'PII Leak',
+    text: 'Send offsite contact list: name, email alice@company.com, and phone +1-555-0188.',
+    category: 'PII'
+  },
+  {
+    label: 'Secret Leak',
+    text: 'Draft python script connecting with apiKey sk-live-99a8b7c6d5e4.',
+    category: 'Credentials'
+  },
+  {
+    label: 'Internal Info',
+    text: 'Summarise Q3 budget: $1.2M revenue with confidential internal salary details.',
+    category: 'Business'
+  },
+  {
+    label: 'Safe Prompt',
+    text: 'Draft a friendly thank-you email to our project partner for their hard work.',
+    category: 'Safe'
+  }
+];
+
 export default function LandingPage() {
   const [view, setView] = useState<'employee' | 'admin'>('employee');
+  const [prompt, setPrompt] = useState('Type a prompt here to test, or click one of the templates below.');
   const active = views[view];
+
+  // Live client-side prompt scanner
+  const scanResult = useMemo(() => {
+    const hits: { text: string; label: string; severity: 'high' | 'medium' }[] = [];
+    
+    // 1. Email check
+    const emailRegex = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+    const emails = prompt.match(emailRegex);
+    if (emails) {
+      emails.forEach(e => hits.push({ text: e, label: 'Email Address', severity: 'high' }));
+    }
+
+    // 2. Phone check
+    const phoneRegex = /\+?\d{1,3}[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+    const phones = prompt.match(phoneRegex);
+    if (phones) {
+      phones.forEach(p => {
+        if (p.replace(/\D/g, '').length >= 7) {
+          hits.push({ text: p, label: 'Phone Number', severity: 'high' });
+        }
+      });
+    }
+
+    // 3. API Key check
+    const keyRegex = /(?:sk-|api[-_]?key|secret)[-_]?[A-Za-z0-9]{12,}/gi;
+    const keys = prompt.match(keyRegex);
+    if (keys) {
+      keys.forEach(k => hits.push({ text: k, label: 'API Credentials', severity: 'high' }));
+    }
+
+    // 4. Keywords check
+    const keywords = ['confidential', 'salary', 'budget', 'internal', 'nda', 'proprietary'];
+    const lower = prompt.toLowerCase();
+    keywords.forEach(kw => {
+      if (lower.includes(kw)) {
+        const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+        const matches = prompt.match(regex);
+        if (matches) {
+          matches.forEach(m => {
+            if (!hits.some(h => h.text.toLowerCase() === m.toLowerCase())) {
+              hits.push({ text: m, label: 'Confidential Business Info', severity: 'medium' });
+            }
+          });
+        }
+      }
+    });
+
+    const hasHigh = hits.some(h => h.severity === 'high');
+    const hasMed = hits.some(h => h.severity === 'medium');
+
+    let verdict: 'allow' | 'flag' | 'block' = 'allow';
+    let risk: 'none' | 'medium' | 'high' = 'none';
+    let reason = 'Safe prompt. No sensitive corporate or personal data detected.';
+
+    if (hasHigh) {
+      verdict = 'block';
+      risk = 'high';
+      reason = `Blocked: High-risk ${hits.filter(h => h.severity === 'high')[0]?.label || 'PII'} leakage detected.`;
+    } else if (hasMed) {
+      verdict = 'flag';
+      risk = 'medium';
+      reason = 'Warning: Contains internal business-sensitive keywords. Recommended review.';
+    }
+
+    return { hits, verdict, risk, reason };
+  }, [prompt]);
+
+  // Renderer for live highlighted preview
+  const renderHighlighted = useMemo(() => {
+    if (!prompt) return <span className="text-text-muted">Type something above...</span>;
+    if (scanResult.hits.length === 0) return <span>{prompt}</span>;
+
+    const sortedHits = [...scanResult.hits].sort((a, b) => b.text.length - a.text.length);
+    const escaped = sortedHits.map(h => h.text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+    const unique = Array.from(new Set(escaped));
+    if (unique.length === 0) return <span>{prompt}</span>;
+
+    const regex = new RegExp(`(${unique.join('|')})`, 'gi');
+    const parts = prompt.split(regex);
+
+    return (
+      <>
+        {parts.map((part, i) => {
+          const hit = sortedHits.find(h => h.text.toLowerCase() === part.toLowerCase());
+          if (hit) {
+            const isHigh = hit.severity === 'high';
+            return (
+              <span 
+                key={i} 
+                className={`px-1 py-0.5 rounded font-medium text-[11px] font-mono mx-0.5 cursor-help ${
+                  isHigh 
+                    ? 'bg-risk-high-bg text-risk-high border border-risk-high/30' 
+                    : 'bg-risk-medium-bg text-risk-medium border border-risk-medium/30'
+                }`}
+                title={hit.label}
+              >
+                {part}
+              </span>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </>
+    );
+  }, [prompt, scanResult.hits]);
 
   return (
     <div className="flex-1 flex flex-col bg-background text-text-primary overflow-y-auto overflow-x-hidden">
@@ -132,7 +261,6 @@ export default function LandingPage() {
           <div className="space-y-1">
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Workspace Access</h3>
             <p className="text-sm text-text-secondary">Choose a perspective to explore the governance workflow.</p>
->>>>>>> elson2
           </div>
 
           {/* Toggle */}
