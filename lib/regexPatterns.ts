@@ -21,7 +21,7 @@ const PATTERNS: { label: string; pattern: RegExp; severity: 'high' | 'medium' | 
   // High severity — definite PII or secrets
   { label: 'Email address', pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, severity: 'high' },
   { label: 'Credit card number', pattern: /\b(?:\d[ -]*?){13,16}\b/g, severity: 'high' },
-  { label: 'API key (generic)', pattern: /\b(sk-|pk-|api[-_]?key|token|secret)[-_]?[A-Za-z0-9]{16,}\b/gi, severity: 'high' },
+  { label: 'API key (generic)', pattern: /\b(sk-|pk-|api[-_\s]?key|token|secret|bearer)[\s=:-]*[A-Za-z0-9_.~+/=-]{16,}\b/gi, severity: 'high' },
   { label: 'Social Security Number (US)', pattern: /\b\d{3}[- ]?\d{2}[- ]?\d{4}\b/g, severity: 'high' },
   { label: 'Passport number', pattern: /\b[A-Z]{1,2}\d{6,9}\b/g, severity: 'high' },
   { label: 'Phone number', pattern: /\b(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, severity: 'high' },
@@ -29,6 +29,7 @@ const PATTERNS: { label: string; pattern: RegExp; severity: 'high' | 'medium' | 
   { label: 'Bank account / routing number', pattern: /\b\d{8,17}\b/g, severity: 'high' },
   { label: 'JWT token', pattern: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, severity: 'high' },
   { label: 'Date of birth', pattern: /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g, severity: 'medium' },
+  { label: 'API key (high entropy token)', pattern: /\b[A-Za-z0-9_.~+/=-]{40,}\b/gi, severity: 'high' },
 ];
 
 const SUSPICIOUS_KEYWORDS = [

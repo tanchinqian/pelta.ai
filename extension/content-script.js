@@ -15,7 +15,7 @@ function getToolName() {
 /* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
   input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
-  sendButton: '#composer-submit-button, button.send-button, button[data-testid="send-button"], button[aria-label*="Send message"], button[aria-label*="Send"], button[aria-label*="submit"], button[class*="send"]',
+  sendButton: '#composer-submit-button, button.send-button, [data-testid="send-button"], [aria-label*="Send message"], [aria-label*="Send prompt"], [aria-label*="Send"], [aria-label*="submit"], button[class*="send"]',
 };
 
 /* ── State ───────────────────────────────────────────────── */
@@ -102,6 +102,7 @@ function watchForMount() {
 
 /* ── Listeners ──────────────────────────────────────────── */
 let keydownHandler = null;
+let keyupHandler = null;
 let clickHandler = null;
 
 function attachListeners() {
@@ -109,6 +110,7 @@ function attachListeners() {
 
   keydownHandler = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !replaying) {
+      if (!inputEl || !inputEl.contains(e.target) && e.target !== inputEl) return;
       const text = getPromptText();
       if (!text || !text.trim()) return;
       e.preventDefault();
@@ -131,18 +133,34 @@ function attachListeners() {
     startCheck(text, 'click');
   };
 
-  inputEl.addEventListener('keydown', keydownHandler, true);
+  keyupHandler = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !replaying) {
+      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }
+  };
+
+  window.addEventListener('keydown', keydownHandler, true);
+  window.addEventListener('keyup', keyupHandler, true);
   document.addEventListener('click', clickHandler, true);
+  document.addEventListener('mousedown', clickHandler, true);
+  document.addEventListener('pointerdown', clickHandler, true);
 }
 
 function detachListeners() {
-  if (keydownHandler && inputEl) {
-    inputEl.removeEventListener('keydown', keydownHandler, true);
+  if (keydownHandler) {
+    window.removeEventListener('keydown', keydownHandler, true);
+  }
+  if (keyupHandler) {
+    window.removeEventListener('keyup', keyupHandler, true);
   }
   if (clickHandler) {
     document.removeEventListener('click', clickHandler, true);
   }
   keydownHandler = null;
+  keyupHandler = null;
   clickHandler = null;
   inputEl = null;
   sendEl = null;

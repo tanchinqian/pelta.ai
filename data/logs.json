@@ -206,5 +206,17 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-17T14:10:00.000Z"
+  },
+  {
+    "id": "be374b6c-77b6-475d-a0fb-d7c84c389253",
+    "promptSnippet": "please check my api key\nAQ.Ab8RN6LElX9B8qDJz3f5GhSBD6e99Mhb3Tcd9FO6_QpCl3Ga7g",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (generic).",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-07-19T08:52:57.635Z"
   }
 ]
