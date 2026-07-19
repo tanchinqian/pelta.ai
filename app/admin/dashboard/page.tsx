@@ -9,7 +9,8 @@ import {
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
 import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
-import { motion } from 'framer-motion';
+import { motion, animate } from 'framer-motion';
+import { useRef } from 'react';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -492,6 +493,26 @@ export default function DashboardPage() {
 
 /* ── Sub-components ─────────────────────────────────────── */
 
+function AnimatedNumber({ value }: { value: number }) {
+  const nodeRef = useRef<HTMLSpanElement>(null);
+  
+  useEffect(() => {
+    const node = nodeRef.current;
+    if (node) {
+      const controls = animate(0, value, {
+        duration: 1.5,
+        ease: "easeOut",
+        onUpdate(v) {
+          node.textContent = Math.round(v).toString();
+        }
+      });
+      return () => controls.stop();
+    }
+  }, [value]);
+
+  return <span ref={nodeRef}>{value}</span>;
+}
+
 function StatCard({ label, value, color, icon, accent }: {
   label: string; value: string | number; color?: string; icon?: React.ReactNode; accent?: boolean;
 }) {
@@ -501,7 +522,9 @@ function StatCard({ label, value, color, icon, accent }: {
         {icon && <span className="text-text-tertiary">{icon}</span>}
         <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
       </div>
-      <p className="text-lg font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>{value}</p>
+      <p className="text-lg font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>
+        {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
+      </p>
     </div>
   );
 }

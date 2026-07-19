@@ -30,6 +30,36 @@ const PRESETS = [
 type SortDir = 'asc' | 'desc' | null;
 type SortKey = 'name' | 'riskTier' | 'status' | null;
 
+function ThinkingState() {
+  const [phase, setPhase] = useState(0);
+  const phases = ['Analyzing tool risks...', 'Mapping to NIST RMF...', 'Checking data categories...'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhase((p) => (p + 1) % phases.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="flex items-center gap-1.5 overflow-hidden">
+      <div className="size-3 border border-white border-t-transparent rounded-full animate-spin shrink-0" />
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phase}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="whitespace-nowrap inline-block"
+        >
+          {phases[phase]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
 function SortTh({ label, sortKey: key, active, dir, onToggle, align = 'left' }: {
   label: string; sortKey: SortKey; active: SortKey; dir: SortDir; onToggle: (k: SortKey) => void; align?: 'left' | 'center' | 'right';
 }) {
@@ -499,7 +529,7 @@ export default function ClassifyToolPage() {
                 className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg px-4 py-2.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <><div className="size-3 border border-white border-t-transparent rounded-full animate-spin" /> Classifying Tool...</>
+                  <ThinkingState />
                 ) : (
                   <><Search size={12} /> Classify Tool</>
                 )}

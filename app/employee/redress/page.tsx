@@ -9,6 +9,7 @@ import {
 import RadarIcon from '@/components/RadarIcon';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -47,6 +48,35 @@ const VERDICT_COLOR: Record<string, string> = {
 const NIST_COLORS: Record<string, string> = {
   Govern: 'var(--nist-govern)', Map: 'var(--nist-map)', Measure: 'var(--nist-measure)', Manage: 'var(--nist-manage)',
 };
+
+function ThinkingState() {
+  const [phase, setPhase] = useState(0);
+  const phases = ['Analyzing prompt context...', 'Filtering sensitive data...', 'Drafting clean alternatives...'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhase((p) => (p + 1) % phases.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="flex items-center gap-1.5 overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phase}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="whitespace-nowrap inline-block text-sm text-text-tertiary font-mono"
+        >
+          {phases[phase]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 const REASON_SOFT_LIMIT = 500;
 
@@ -386,7 +416,7 @@ export default function RedressPage() {
                   <div className="animate-slide-in border border-border rounded-lg p-3 space-y-2">
                     <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Safe Alternatives</p>
                     {loadingSuggestions ? (
-                      <div className="flex items-center gap-2 py-2"><RadarIcon size={12} className="text-accent animate-radar-pulse" /><span className="text-sm text-text-tertiary font-mono">Generating...</span></div>
+                      <div className="flex items-center gap-2 py-2"><RadarIcon size={12} className="text-accent animate-radar-pulse" /><ThinkingState /></div>
                     ) : (
                       <div className="space-y-1.5">
                         {suggestions.map((s, i) => (
