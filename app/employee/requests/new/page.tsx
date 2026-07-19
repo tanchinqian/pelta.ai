@@ -138,15 +138,14 @@ export default function NewRequestPage() {
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
 
   return (
-    <div className="flex-1 p-4 max-w-6xl mx-auto w-full">
-      {/* Quick status bar */}
+    <div className="flex-1 p-4 max-w-6xl mx-auto w-full bg-[#09090b] min-h-screen text-zinc-100">
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-2 text-sm font-mono text-text-tertiary">
+        <div className="flex items-center gap-2 text-sm font-mono text-zinc-400">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
           <span>·</span>
           <span className="px-1.5 py-0.5 rounded bg-risk-medium/10 text-risk-medium">{pendingCount} pending</span>
           <span>·</span>
-          <span className="px-1.5 py-0.5 rounded bg-surface text-text-secondary">{myRequests.length} total</span>
+          <span className="bg-zinc-800/80 text-zinc-300 text-xs px-2 py-0.5 rounded border border-zinc-700/50">{myRequests.length} total</span>
         </div>
       </div>
 
@@ -154,19 +153,24 @@ export default function NewRequestPage() {
         {/* Left column: form + history */}
         <div className="space-y-3">
           {/* Form */}
-          <div className="panel p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <RadarIcon size={14} className="text-accent" />
-              <h2 className="text-lg font-serif font-semibold text-text-primary">Request a New AI Tool</h2>
+          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <RadarIcon size={16} className="text-accent" />
+                <h2 className="font-serif text-zinc-100 text-2xl font-bold tracking-tight">Request a New AI Tool</h2>
+              </div>
+              <p className="text-zinc-500 text-sm">
+                Submit corporate AI tool requests and track approval statuses.
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-2.5">
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
-                  <Wrench size={10} /> Tool Name
+                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
+                  <Wrench size={10} /> TOOL NAME
                 </label>
                 <input
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
                   placeholder="e.g. NotebookLM, Copilot"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -182,11 +186,11 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
-                  <FileText size={10} /> What will you use it for?
+                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
+                  <FileText size={10} /> INTENDED USE CASE
                 </label>
                 <input
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
                   placeholder="e.g. AI note-taking for meeting summaries"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -196,11 +200,11 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
-                  <Building size={10} /> Department
+                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
+                  <Building size={10} /> DEPARTMENT
                 </label>
                 <select
-                  className="w-full bg-background border border-border rounded px-3 py-1.5 text-base text-text-primary focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   required
@@ -220,7 +224,7 @@ export default function NewRequestPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-text-primary bg-surface-hover hover:bg-surface border border-border rounded px-4 py-2 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-1.5 text-sm bg-[#a17a26] hover:bg-[#8e6b20] text-zinc-950 font-semibold rounded-lg py-2.5 transition-colors duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center gap-1.5 text-text-tertiary text-sm font-mono">
@@ -238,13 +242,13 @@ export default function NewRequestPage() {
           </div>
 
           {/* Your Request History */}
-          <div className="panel p-3">
+          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">
-              <History size={12} className="text-text-tertiary" />
-              <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
+              <History size={12} className="text-zinc-400" />
+              <span className="font-serif text-zinc-100 text-lg font-bold tracking-tight">
                 Your Request History
               </span>
-              <span className="text-sm font-mono text-text-tertiary ml-auto">{myRequests.length}</span>
+              <span className="text-sm font-mono text-zinc-500 ml-auto">{myRequests.length}</span>
             </div>
 
             {myRequests.length === 0 ? (
@@ -254,7 +258,7 @@ export default function NewRequestPage() {
                 {[...myRequests]
                   .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
                   .map((req) => (
-                    <div key={req.id} className="bg-background border border-border rounded-lg p-2">
+                    <div key={req.id} className="bg-[#09090b] border border-zinc-800 rounded-lg p-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-text-primary font-medium truncate">{req.toolRequested}</span>
                         <span
@@ -269,12 +273,12 @@ export default function NewRequestPage() {
                           {req.status}
                         </span>
                       </div>
-                      <p className="text-sm text-text-muted font-mono mt-0.5">
+                      <p className="text-zinc-400 text-sm font-mono mt-0.5">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {req.department && ` · ${req.department}`}
                       </p>
                       {req.status === 'denied' && req.denialReason && (
-                        <p className="text-sm text-text-tertiary italic mt-1 leading-relaxed">
+                        <p className="text-zinc-400 text-sm italic mt-1 leading-relaxed">
                           Reason: {req.denialReason}
                         </p>
                       )}
@@ -287,13 +291,13 @@ export default function NewRequestPage() {
 
         {/* Right column: approved tools */}
         <div className="space-y-3">
-          <div className="panel p-3">
+          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">
               <ShieldCheck size={12} className="text-risk-low" />
-              <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="font-serif text-zinc-100 text-lg font-bold tracking-tight">
                 Already Approved Tools
               </span>
-              <span className="text-sm font-mono text-text-tertiary ml-auto">{approvedTools.length}</span>
+              <span className="text-sm font-mono text-zinc-500 ml-auto">{approvedTools.length}</span>
             </div>
 
             {approvedTools.length === 0 ? (
@@ -303,7 +307,7 @@ export default function NewRequestPage() {
                 {approvedTools
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((tool) => (
-                    <div key={tool.id} className="bg-background border border-border rounded-lg p-2.5">
+                    <div key={tool.id} className="bg-[#09090b] border border-zinc-800 rounded-lg p-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-text-primary font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
@@ -315,7 +319,7 @@ export default function NewRequestPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
+                      <p className="text-zinc-400 text-sm mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
                     </div>
                   ))}
               </div>
