@@ -141,7 +141,7 @@ export default function NewRequestPage() {
     <div className="flex-1 p-4 max-w-6xl mx-auto w-full">
       {/* Quick status bar */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-2 text-[10px] font-mono text-text-tertiary">
+        <div className="flex items-center gap-2 text-xs font-mono text-text-tertiary">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
           <span>·</span>
           <span className="px-1.5 py-0.5 rounded bg-risk-medium/10 text-risk-medium">{pendingCount} pending</span>
@@ -162,7 +162,7 @@ export default function NewRequestPage() {
 
             <form onSubmit={handleSubmit} className="space-y-2.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <Wrench size={10} /> Tool Name
                 </label>
                 <input
@@ -174,7 +174,7 @@ export default function NewRequestPage() {
                   disabled={loading}
                 />
                 {approvedMatch && (
-                  <p className="text-[10px] text-risk-low flex items-center gap-1 animate-slide-in">
+                  <p className="text-xs text-risk-low flex items-center gap-1 animate-slide-in">
                     <CheckCircle2 size={10} />
                     &ldquo;{approvedMatch.name}&rdquo; is already approved (risk: {approvedMatch.riskTier}). No request needed.
                   </p>
@@ -182,7 +182,7 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <FileText size={10} /> What will you use it for?
                 </label>
                 <input
@@ -196,7 +196,7 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                   <Building size={10} /> Department
                 </label>
                 <select
@@ -241,14 +241,14 @@ export default function NewRequestPage() {
           <div className="panel p-3">
             <div className="flex items-center gap-2 mb-2">
               <History size={12} className="text-text-tertiary" />
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
                 Your Request History
               </span>
-              <span className="text-[10px] font-mono text-text-tertiary ml-auto">{myRequests.length}</span>
+              <span className="text-xs font-mono text-text-tertiary ml-auto">{myRequests.length}</span>
             </div>
 
             {myRequests.length === 0 ? (
-              <p className="text-[11px] text-text-tertiary text-center py-4">No previous requests.</p>
+              <p className="text-sm text-text-tertiary text-center py-4">No previous requests.</p>
             ) : (
               <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
                 {[...myRequests]
@@ -258,7 +258,7 @@ export default function NewRequestPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-text-primary font-medium truncate">{req.toolRequested}</span>
                         <span
-                          className={`text-[9px] font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
+                          className={`text-xs font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
                             req.status === 'approved' ? 'text-risk-low' :
                             req.status === 'denied' ? 'text-risk-high' : 'text-risk-medium'
                           }`}
@@ -269,12 +269,12 @@ export default function NewRequestPage() {
                           {req.status}
                         </span>
                       </div>
-                      <p className="text-[9px] text-text-muted font-mono mt-0.5">
+                      <p className="text-xs text-text-muted font-mono mt-0.5">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {req.department && ` · ${req.department}`}
                       </p>
                       {req.status === 'denied' && req.denialReason && (
-                        <p className="text-[10px] text-text-tertiary italic mt-1 leading-relaxed">
+                        <p className="text-xs text-text-tertiary italic mt-1 leading-relaxed">
                           Reason: {req.denialReason}
                         </p>
                       )}
@@ -290,14 +290,14 @@ export default function NewRequestPage() {
           <div className="panel p-3">
             <div className="flex items-center gap-2 mb-2">
               <ShieldCheck size={12} className="text-risk-low" />
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
                 Already Approved Tools
               </span>
-              <span className="text-[10px] font-mono text-text-tertiary ml-auto">{approvedTools.length}</span>
+              <span className="text-xs font-mono text-text-tertiary ml-auto">{approvedTools.length}</span>
             </div>
 
             {approvedTools.length === 0 ? (
-              <p className="text-[11px] text-text-tertiary text-center py-4">No approved tools yet.</p>
+              <p className="text-sm text-text-tertiary text-center py-4">No approved tools yet.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[420px] overflow-y-auto">
                 {approvedTools
@@ -308,14 +308,14 @@ export default function NewRequestPage() {
                         <span className="text-xs text-text-primary font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
                           <span
-                            className="text-[9px] font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
+                            className="text-xs font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
                             style={{ color: RISK_COLOR[tool.riskTier], background: `${RISK_COLOR[tool.riskTier]}15` }}
                           >
                             {tool.riskTier}
                           </span>
                         )}
                       </div>
-                      <p className="text-[9px] text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
+                      <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
                     </div>
                   ))}
               </div>

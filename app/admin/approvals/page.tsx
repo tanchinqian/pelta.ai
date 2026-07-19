@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -76,7 +77,7 @@ function RiskBadge({ level }: { level: string | null }) {
   const l = (level ?? 'low').toLowerCase();
   return (
     <span
-      className="text-[9px] font-bold font-mono uppercase px-1.5 py-0.5 rounded"
+      className="text-xs font-bold font-mono uppercase px-1.5 py-0.5 rounded"
       style={{ color: RISK_COLOR[l] ?? RISK_COLOR.low, background: RISK_BG[l] ?? RISK_BG.low }}
     >
       {l}
@@ -87,7 +88,7 @@ function RiskBadge({ level }: { level: string | null }) {
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className="text-[9px] font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
+      className="text-xs font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
       style={{
         color: STATUS_COLOR[status] ?? 'var(--text-secondary)',
         borderColor: `${STATUS_COLOR[status] ?? 'var(--border)'}40`,
@@ -101,7 +102,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function SectionTag({ label }: { label: string }) {
   return (
-    <span className="text-[9px] font-medium font-mono px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary">
+    <span className="text-xs font-medium font-mono px-1.5 py-0.5 rounded bg-background border border-border text-text-secondary">
       {label}
     </span>
   );
@@ -139,7 +140,7 @@ function AppealDetailModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-primary">{req.employeeName}</p>
-              <p className="text-[10px] font-mono text-text-tertiary mt-0.5">ID: {req.id.slice(0, 16)}…</p>
+              <p className="text-xs font-mono text-text-tertiary mt-0.5">ID: {req.id.slice(0, 16)}…</p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <StatusBadge status={req.status} />
@@ -147,32 +148,32 @@ function AppealDetailModal({
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Requested Data Categories</p>
+            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Requested Data Categories</p>
             <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Reason for Access</p>
+            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">Reason for Access</p>
             <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{req.reason}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-background border border-border rounded p-2.5">
-              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
-              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{fmt(req.requestedAt)}</p>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
+              <p className="text-sm font-mono text-text-secondary mt-0.5">{fmt(req.requestedAt)}</p>
             </div>
             <div className="bg-background border border-border rounded p-2.5">
-              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
-              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
+              <p className="text-sm font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
             </div>
           </div>
           {req.reviewerName && (
             <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Reviewed by</p>
+              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Reviewed by</p>
               <p className="text-xs font-mono text-text-secondary">{req.reviewerName}</p>
             </div>
           )}
           {req.adminComment && (
             <div>
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Admin Comment</p>
+              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Admin Comment</p>
               <p className="text-xs text-text-secondary leading-relaxed bg-background border border-border rounded p-2.5">{req.adminComment}</p>
             </div>
           )}
@@ -181,28 +182,28 @@ function AppealDetailModal({
               {!isRejecting ? (
                 <div className="flex items-center gap-2">
                   <button id={`approve-modal-${req.id}`} onClick={() => onApprove(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <CheckCircle size={12} /> Approve
                   </button>
                   <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <XCircle size={12} /> Decline
                   </button>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <textarea
-                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
+                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
                     placeholder="Reason for declining (required)..."
                     rows={3} value={rejectionDraft}
                     onChange={(e) => onRejectionChange(e.target.value)} autoFocus
                   />
                   <div className="flex items-center gap-2">
                     <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
-                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                       Confirm Decline
                     </button>
-                    <button onClick={onCancelReject} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
+                    <button onClick={onCancelReject} className="text-sm text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
                   </div>
                 </div>
               )}
@@ -246,22 +247,22 @@ function ToolDetailModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-primary">{req.employeeName}</p>
-              <p className="text-[10px] font-mono text-text-tertiary mt-0.5">{req.department}</p>
+              <p className="text-xs font-mono text-text-tertiary mt-0.5">{req.department}</p>
             </div>
             <StatusBadge status={req.status} />
           </div>
           <div className="bg-background border border-border rounded p-3">
-            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider mb-1">Requested Tool</p>
+            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1">Requested Tool</p>
             <p className="text-sm font-medium text-text-primary">{req.toolRequested}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-background border border-border rounded p-2.5">
-              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
-              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{fmt(req.requestedAt)}</p>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Submitted</p>
+              <p className="text-sm font-mono text-text-secondary mt-0.5">{fmt(req.requestedAt)}</p>
             </div>
             <div className="bg-background border border-border rounded p-2.5">
-              <p className="text-[9px] font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
-              <p className="text-[11px] font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Decided</p>
+              <p className="text-sm font-mono text-text-secondary mt-0.5">{req.decidedAt ? fmt(req.decidedAt) : '—'}</p>
             </div>
           </div>
           {isPending && (
@@ -269,28 +270,28 @@ function ToolDetailModal({
               {!isDenying ? (
                 <div className="flex items-center gap-2">
                   <button onClick={() => onApprove(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <CheckCircle size={12} /> Approve
                   </button>
                   <button onClick={() => onStartDeny(req.id)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer">
                     <XCircle size={12} /> Deny
                   </button>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <textarea
-                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
+                    className="w-full bg-background border border-border rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
                     placeholder="Reason for denial (required)..."
                     rows={3} value={denyDraft}
                     onChange={(e) => onDenyDraftChange(e.target.value)} autoFocus
                   />
                   <div className="flex items-center gap-2">
                     <button onClick={() => onSendDeny(req.id)} disabled={!denyDraft.trim()}
-                      className="text-[11px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                       Confirm Deny
                     </button>
-                    <button onClick={onCancelDeny} className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
+                    <button onClick={onCancelDeny} className="text-sm text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
                   </div>
                 </div>
               )}
@@ -307,7 +308,7 @@ function ToolDetailModal({
 function StatMini({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="panel px-3 py-2">
-      <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
       <p className="text-lg font-bold font-mono mt-0.5" style={{ color }}>{value}</p>
     </div>
   );
@@ -492,9 +493,9 @@ export default function RequestsPage() {
           <div className="flex items-center gap-2">
             <RadarIcon size={14} className="text-accent" />
             <span className="text-sm font-semibold text-text-primary">Requests</span>
-            <span className="text-[10px] font-mono text-text-tertiary">/ admin only</span>
+            <span className="text-xs font-mono text-text-tertiary">/ admin only</span>
             {totalPending > 0 && (
-              <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
+              <span className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
                 style={{ color: STATUS_COLOR.pending, background: `${STATUS_COLOR.pending}15` }}>
                 {totalPending} pending
               </span>
@@ -528,10 +529,17 @@ export default function RequestsPage() {
 
         {/* ── Tab: Redress Appeals ──────────────────────────── */}
         {activeTab === 'appeals' && (
-          <div className="space-y-3 animate-slide-in">
+          <motion.div
+            key="appeals-tab"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
             {/* Filter tabs + Search */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
-              <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
+              <div className="flex items-center gap-1 text-sm font-medium flex-wrap">
                 {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
                   const count = f === 'all' ? appeals.length : appeals.filter((r) => r.status === f).length;
                   return (
@@ -540,7 +548,7 @@ export default function RequestsPage() {
                         appealFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
                       }`}>
                       {f}
-                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      <span className={`text-xs font-mono px-1 py-0.5 rounded leading-none ${appealFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
                         {count}
                       </span>
                     </button>
@@ -552,7 +560,7 @@ export default function RequestsPage() {
                 placeholder="Search appeals..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
+                className="bg-background border border-border rounded px-2.5 py-1 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
               />
             </div>
 
@@ -584,28 +592,28 @@ export default function RequestsPage() {
                       {searchedAppeals.map((req, i) => (
                         <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                           <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
+                          <td className="py-2 pr-3 text-xs font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
                           <td className="py-2 pr-3 hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                           </td>
                           <td className="py-2 pr-3 whitespace-nowrap"><RiskBadge level={req.riskLevel} /></td>
-                          <td className="py-2 pr-3 text-[10px] text-text-tertiary max-w-[160px] truncate hidden lg:table-cell">{req.reason}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="py-2 pr-3 text-xs text-text-tertiary max-w-[160px] truncate hidden lg:table-cell">{req.reason}</td>
+                          <td className="py-2 pr-3 text-xs font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
                           <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
                           <td className="py-2">
                             <div className="flex items-center gap-1.5">
                               <button id={`view-appeal-${req.id}`} onClick={() => setSelectedAppeal(req)}
-                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
+                                className="text-xs font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
                                 View
                               </button>
                               {req.status === 'pending' && (
                                 <>
                                   <button id={`approve-appeal-${req.id}`} onClick={() => updateAppeal(req.id, 'approved')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    className="flex items-center gap-1 text-xs font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
                                     <CheckCircle size={10} /> Approve
                                   </button>
                                   <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    className="flex items-center gap-1 text-xs font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
                                     <XCircle size={10} /> Decline
                                   </button>
                                 </>
@@ -626,15 +634,15 @@ export default function RequestsPage() {
                 className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-surface-hover/50 transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <FileText size={12} className="text-text-tertiary" />
-                  <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Audit Trail</span>
-                  <span className="text-[10px] font-mono text-text-tertiary">({auditLog.length} entries)</span>
+                  <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Audit Trail</span>
+                  <span className="text-xs font-mono text-text-tertiary">({auditLog.length} entries)</span>
                 </div>
                 {showAudit ? <ChevronUp size={13} className="text-text-tertiary" /> : <ChevronDown size={13} className="text-text-tertiary" />}
               </button>
               {showAudit && (
                 <div className="border-t border-border">
                   {auditLog.length === 0 ? (
-                    <p className="text-[11px] text-text-tertiary text-center py-4">No audit entries yet.</p>
+                    <p className="text-sm text-text-tertiary text-center py-4">No audit entries yet.</p>
                   ) : (
                     <div className="overflow-x-auto" style={{ maxHeight: 280 }}>
                       <table className="w-full text-xs">
@@ -652,20 +660,20 @@ export default function RequestsPage() {
                         <tbody>
                           {auditLog.map((entry, i) => (
                             <tr key={entry.id} className={`border-b border-border/40 ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                              <td className="py-1.5 px-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap">{fmt(entry.timestamp)}</td>
-                              <td className="py-1.5 pr-3 text-[11px] font-medium text-text-primary whitespace-nowrap">{entry.employeeName}</td>
+                              <td className="py-1.5 px-3 text-xs font-mono text-text-tertiary whitespace-nowrap">{fmt(entry.timestamp)}</td>
+                              <td className="py-1.5 pr-3 text-sm font-medium text-text-primary whitespace-nowrap">{entry.employeeName}</td>
                               <td className="py-1.5 pr-3 whitespace-nowrap">
-                                <span className="text-[9px] font-bold font-mono uppercase"
+                                <span className="text-xs font-bold font-mono uppercase"
                                   style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}>
                                   {entry.action}
                                 </span>
                               </td>
-                              <td className="py-1.5 pr-3 text-[10px] font-mono text-text-secondary hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
+                              <td className="py-1.5 pr-3 text-xs font-mono text-text-secondary hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
                               <td className="py-1.5 pr-3 hidden md:table-cell">
                                 <div className="flex flex-wrap gap-1">{entry.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                               </td>
                               <td className="py-1.5 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge level={entry.riskLevel} /></td>
-                              <td className="py-1.5 text-[10px] text-text-tertiary truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
+                              <td className="py-1.5 text-xs text-text-tertiary truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -675,15 +683,22 @@ export default function RequestsPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* ── Tab: Tool Requests ───────────────────────────── */}
+        {/* ── Tab: Tool Requests ────────────────────────────── */}
         {activeTab === 'tools' && (
-          <div className="space-y-3 animate-slide-in">
+          <motion.div
+            key="tools-tab"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
             {/* Filter tabs + Search */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface/30 p-2 rounded border border-border/60">
-              <div className="flex items-center gap-1 text-[11px] font-medium flex-wrap">
+              <div className="flex items-center gap-1 text-sm font-medium flex-wrap">
                 {(['all', 'pending', 'approved', 'denied'] as const).map((f) => {
                   const count = f === 'all' ? toolReqs.length : toolReqs.filter((r) => r.status === f).length;
                   return (
@@ -692,7 +707,7 @@ export default function RequestsPage() {
                         toolFilter === f ? 'bg-surface-hover text-text-primary border border-border/80' : 'text-text-tertiary border border-transparent hover:text-text-secondary hover:bg-surface-hover/50'
                       }`}>
                       {f}
-                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
+                      <span className={`text-xs font-mono px-1 py-0.5 rounded leading-none ${toolFilter === f ? 'bg-background text-text-secondary' : 'bg-surface text-text-tertiary'}`}>
                         {count}
                       </span>
                     </button>
@@ -704,7 +719,7 @@ export default function RequestsPage() {
                 placeholder="Search tool requests..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-background border border-border rounded px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
+                className="bg-background border border-border rounded px-2.5 py-1 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-full sm:w-48 transition-colors"
               />
             </div>
 
@@ -734,24 +749,24 @@ export default function RequestsPage() {
                       {searchedTools.map((req, i) => (
                         <tr key={req.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                           <td className="py-2 px-3 font-medium text-text-primary whitespace-nowrap">{req.employeeName}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.department}</td>
+                          <td className="py-2 pr-3 text-xs font-mono text-text-tertiary whitespace-nowrap hidden sm:table-cell">{req.department}</td>
                           <td className="py-2 pr-3 font-medium text-text-primary">{req.toolRequested}</td>
-                          <td className="py-2 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="py-2 pr-3 text-xs font-mono text-text-tertiary whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
                           <td className="py-2 pr-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
                           <td className="py-2">
                             <div className="flex items-center gap-1.5">
                               <button id={`view-tool-${req.id}`} onClick={() => setSelectedTool(req)}
-                                className="text-[10px] font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
+                                className="text-xs font-mono text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-hover">
                                 View
                               </button>
                               {req.status === 'pending' && (
                                 <>
                                   <button id={`approve-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'approved')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    className="flex items-center gap-1 text-xs font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
                                     <CheckCircle size={10} /> Approve
                                   </button>
                                   <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
+                                    className="flex items-center gap-1 text-xs font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded px-2 py-0.5 transition-colors cursor-pointer">
                                     <XCircle size={10} /> Deny
                                   </button>
                                 </>
@@ -765,7 +780,7 @@ export default function RequestsPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -820,7 +835,7 @@ function TabButton({ active, onClick, label, badge, icon }: {
       {icon}
       {label}
       {badge > 0 && (
-        <span className="text-[9px] font-bold font-mono px-1 py-0.5 rounded leading-none"
+        <span className="text-xs font-bold font-mono px-1 py-0.5 rounded leading-none"
           style={{ color: 'var(--risk-medium)', background: 'rgba(245,158,11,0.12)' }}>
           {badge}
         </span>
