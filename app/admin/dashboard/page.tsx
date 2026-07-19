@@ -9,6 +9,8 @@ import {
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
 import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
+import { motion, animate } from 'framer-motion';
+import { useRef } from 'react';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -209,7 +211,7 @@ export default function DashboardPage() {
             <circle cx="12" cy="12" r="1.5" fill="currentColor" />
           </svg>
         </div>
-        <span className="text-xs text-text-tertiary font-mono">Initializing governance feed...</span>
+        <span className="text-sm text-text-tertiary font-mono">Initializing governance feed...</span>
       </div>
     );
   }
@@ -220,11 +222,11 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <h2 className="text-base font-serif font-semibold text-text-primary">Dashboard</h2>
-          <span className="text-[10px] font-mono text-text-tertiary">/ overview</span>
+          <h2 className="text-lg font-serif font-semibold text-text-primary">Dashboard</h2>
+          <span className="text-sm font-mono text-text-tertiary">/ overview</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono text-text-tertiary">
+          <span className="text-sm font-mono text-text-tertiary">
             updated {lastUpdated.toLocaleTimeString()}
           </span>
           <button onClick={fetchData} className="p-1.5 rounded border border-border hover:bg-surface-hover transition-colors cursor-pointer">
@@ -234,7 +236,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Row */}
-      <div className="grid grid-cols-7 gap-2">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+        className="grid grid-cols-7 gap-2"
+      >
         <StatCard label="Tools" value={tools.length} accent />
         <StatCard label="Scans" value={logs.length} />
         <StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} />
@@ -242,10 +249,15 @@ export default function DashboardPage() {
         <StatCard label="Low" value={tools.filter((t) => t.riskTier === 'Low').length} color={RISK.low} />
         <StatCard label="Med" value={tools.filter((t) => t.riskTier === 'Medium').length} color={RISK.medium} />
         <StatCard label="High" value={tools.filter((t) => t.riskTier === 'High').length} color={RISK.high} />
-      </div>
+      </motion.div>
 
       {/* Charts Row 1: Verdicts | Risk Distribution | Data Categories */}
-      <div className="grid grid-cols-3 gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.3 }}
+        className="grid grid-cols-3 gap-3"
+      >
         <ChartPanel title="Verdicts" subtitle={`${logs.length} total`}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={verdictCounts} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -288,21 +300,26 @@ export default function DashboardPage() {
           </div>
           <LegendRow items={dataCatCounts} />
         </ChartPanel>
-      </div>
+      </motion.div>
 
-      {/* Charts Row 2: Detection (compact) | NIST Coverage | Verdict Trend */}
-      <div className="grid grid-cols-12 gap-3">
+      {/* Row 2: Detection Method | NIST Functions | Verdict Timeline */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.3 }}
+        className="grid grid-cols-12 gap-3"
+      >
         {/* Detection Method — compact inset, 3 cols */}
         <div className="col-span-3 panel p-3">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Detection Method</span>
+          <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">Detection Method</span>
           <div className="flex items-center gap-4 mt-3">
             {detectionSplit.map((d) => {
               const pct = logs.length > 0 ? Math.round((d.value / logs.length) * 100) : 0;
               return (
                 <div key={d.name} className="flex-1 text-center">
-                  <div className="text-2xl font-bold font-mono" style={{ color: d.fill }}>{pct}%</div>
-                  <div className="text-[10px] text-text-tertiary mt-0.5">{d.name}</div>
-                  <div className="text-[10px] font-mono text-text-secondary">{d.value} scans</div>
+                  <div className="text-3xl font-bold font-mono" style={{ color: d.fill }}>{pct}%</div>
+                  <div className="text-sm text-text-tertiary mt-0.5">{d.name}</div>
+                  <div className="text-sm font-mono text-text-secondary">{d.value} scans</div>
                 </div>
               );
             })}
@@ -311,8 +328,8 @@ export default function DashboardPage() {
 
         {/* NIST RMF Coverage — 5 cols */}
         <div className="col-span-5 panel p-3">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">NIST RMF Coverage</span>
-          <span className="text-[10px] font-mono text-text-tertiary ml-2">approved tools</span>
+          <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">NIST RMF Coverage</span>
+          <span className="text-sm font-mono text-text-tertiary ml-2">approved tools</span>
           <div style={{ width: '100%', height: 140 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={nistCoverage} layout="vertical" margin={{ top: 4, right: 30, left: 8, bottom: 0 }}>
@@ -329,8 +346,8 @@ export default function DashboardPage() {
 
         {/* Verdict Trend — 4 cols */}
         <div className="col-span-4 panel p-3">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Verdict Trend</span>
-          <span className="text-[10px] font-mono text-text-tertiary ml-2">last 7 days</span>
+          <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">Verdict Trend</span>
+          <span className="text-sm font-mono text-text-tertiary ml-2">last 7 days</span>
           <div style={{ width: '100%', height: 140 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={verdictTrend} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -351,10 +368,15 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Charts Row 3: Department | Tool Registry */}
-      <div className="grid grid-cols-5 gap-3">
+      {/* Tables Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+        className="grid grid-cols-5 gap-3"
+      >
         <div className="col-span-2">
           <ChartPanel title="Requests by Department" subtitle={`${requests.length} total`}>
             <ResponsiveContainer width="100%" height={160}>
@@ -374,12 +396,12 @@ export default function DashboardPage() {
           {/* Tool Registry Table */}
           <div className="panel p-3 h-full flex flex-col">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+              <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
                 Tool Registry <span className="text-text-tertiary font-normal">({tools.length})</span>
               </span>
             </div>
             <div className="flex-1 overflow-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-text-secondary border-b border-border">
                     <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
@@ -397,16 +419,16 @@ export default function DashboardPage() {
                       <td className="py-1.5 pr-3 text-text-primary font-medium">{t.name}</td>
                       <td className="py-1.5 pr-3">
                         {t.riskTier
-                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-[10px] font-bold font-mono uppercase">{t.riskTier}</span>
+                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-sm font-bold font-mono uppercase">{t.riskTier}</span>
                           : <span className="text-text-muted">—</span>}
                       </td>
                       <td className="py-1.5 pr-3">
-                        <span className={`text-[10px] font-mono uppercase ${
+                        <span className={`text-sm font-mono uppercase ${
                           t.status === 'approved' ? 'text-risk-low' :
                           t.status === 'blocked' ? 'text-risk-high' : 'text-risk-medium'
                         }`}>{t.status}</span>
                       </td>
-                      <td className="py-1.5 pl-3 text-[10px] font-mono text-text-tertiary hidden lg:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
+                      <td className="py-1.5 pl-3 text-sm font-mono text-text-tertiary hidden lg:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -414,23 +436,23 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Log Table — slim summary (5 rows) with link to full logs */}
       <div className="panel p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+          <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
             Recent Detections <span className="text-text-tertiary font-normal">({logs.length})</span>
           </span>
           <Link
             href="/admin/logs"
-            className="text-[10px] font-mono text-accent hover:text-accent-hover transition-colors"
+            className="text-sm font-mono text-accent hover:text-accent-hover transition-colors"
           >
             View all logs →
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-text-secondary border-b border-border">
                 <th className="pb-1.5 pr-3 font-medium">Time</th>
@@ -444,20 +466,20 @@ export default function DashboardPage() {
             <tbody>
               {visibleLogs.map((l, i) => (
                 <tr key={l.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
-                  <td className="py-1.5 pr-3 text-[10px] font-mono text-text-tertiary whitespace-nowrap">{new Date(l.timestamp).toLocaleTimeString()}</td>
+                  <td className="py-1.5 pr-3 text-sm font-mono text-text-tertiary whitespace-nowrap">{new Date(l.timestamp).toLocaleTimeString()}</td>
                   <td className="py-1.5 pr-3">
-                    <span className={`text-[10px] font-bold font-mono uppercase ${
+                    <span className={`text-sm font-bold font-mono uppercase ${
                       l.verdict === 'allow' ? 'text-risk-low' : l.verdict === 'flag' ? 'text-risk-medium' : 'text-risk-high'
                     }`}>{l.verdict}</span>
                   </td>
                   <td className="py-1.5 pr-3 hidden sm:table-cell">
-                    <span style={{ color: riskColor(l.riskLevel === 'none' ? 'Low' : l.riskLevel) }} className="text-[10px] font-mono uppercase">{l.riskLevel}</span>
+                    <span style={{ color: riskColor(l.riskLevel === 'none' ? 'Low' : l.riskLevel) }} className="text-sm font-mono uppercase">{l.riskLevel}</span>
                   </td>
                   <td className="py-1.5 pr-3 hidden md:table-cell">
-                    <span className={`text-[10px] font-mono ${l.source === 'extension' ? 'text-accent' : 'text-text-tertiary'}`}>{l.source ?? 'manual'}</span>
+                    <span className={`text-sm font-mono ${l.source === 'extension' ? 'text-accent' : 'text-text-tertiary'}`}>{l.source ?? 'manual'}</span>
                   </td>
-                  <td className="py-1.5 pr-3 hidden md:table-cell text-[10px] font-mono text-text-tertiary">{(l as any).tool ?? '—'}</td>
-                  <td className="py-1.5 text-[10px] font-mono text-text-tertiary truncate max-w-[180px]">{l.promptSnippet}</td>
+                  <td className="py-1.5 pr-3 hidden md:table-cell text-sm font-mono text-text-tertiary">{(l as any).tool ?? '—'}</td>
+                  <td className="py-1.5 text-sm font-mono text-text-tertiary truncate max-w-[180px]">{l.promptSnippet}</td>
                 </tr>
               ))}
             </tbody>
@@ -471,6 +493,26 @@ export default function DashboardPage() {
 
 /* ── Sub-components ─────────────────────────────────────── */
 
+function AnimatedNumber({ value }: { value: number }) {
+  const nodeRef = useRef<HTMLSpanElement>(null);
+  
+  useEffect(() => {
+    const node = nodeRef.current;
+    if (node) {
+      const controls = animate(0, value, {
+        duration: 1.5,
+        ease: "easeOut",
+        onUpdate(v) {
+          node.textContent = Math.round(v).toString();
+        }
+      });
+      return () => controls.stop();
+    }
+  }, [value]);
+
+  return <span ref={nodeRef}>{value}</span>;
+}
+
 function StatCard({ label, value, color, icon, accent }: {
   label: string; value: string | number; color?: string; icon?: React.ReactNode; accent?: boolean;
 }) {
@@ -478,9 +520,11 @@ function StatCard({ label, value, color, icon, accent }: {
     <div className={`panel px-3 py-2 ${accent ? 'panel-accent' : ''}`}>
       <div className="flex items-center gap-1">
         {icon && <span className="text-text-tertiary">{icon}</span>}
-        <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{label}</p>
       </div>
-      <p className="text-lg font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>{value}</p>
+      <p className="text-xl font-bold font-mono mt-0.5" style={{ color: color ?? 'var(--text-primary)' }}>
+        {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
+      </p>
     </div>
   );
 }
@@ -489,8 +533,8 @@ function ChartPanel({ title, subtitle, children }: { title: string; subtitle?: s
   return (
     <div className="panel p-3">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">{title}</span>
-        {subtitle && <span className="text-[10px] font-mono text-text-tertiary">{subtitle}</span>}
+        <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">{title}</span>
+        {subtitle && <span className="text-sm font-mono text-text-tertiary">{subtitle}</span>}
       </div>
       {children}
     </div>
@@ -501,7 +545,7 @@ function LegendRow({ items }: { items: { name: string; value: number; fill: stri
   return (
     <div className="flex items-center gap-3 mt-1 pt-1 border-t border-border/50">
       {items.map((item) => (
-        <span key={item.name} className="flex items-center gap-1 text-[10px]">
+        <span key={item.name} className="flex items-center gap-1 text-sm">
           <span className="size-1.5 rounded-sm" style={{ background: item.fill }} />
           <span className="text-text-tertiary">{item.name}</span>
           <span className="font-mono text-text-secondary">{item.value}</span>

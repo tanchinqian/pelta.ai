@@ -10,7 +10,7 @@ export default function RequestsNavLink() {
   const pathname = usePathname();
 
   useEffect(() => {
-    setIsActive(pathname.startsWith('/admin/approvals') || pathname.startsWith('/admin/requests'));
+    setIsActive(pathname.startsWith('/admin/requests'));
   }, [pathname]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function RequestsNavLink() {
 
   return (
     <Link
-      href="/admin/approvals"
+      href="/admin/requests"
       className={`px-2.5 py-1 rounded hover:bg-surface-hover hover:text-text-primary transition-colors flex items-center gap-1 ${
         isActive ? 'text-text-primary bg-surface-hover' : ''
       }`}
