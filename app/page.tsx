@@ -180,7 +180,7 @@ export default function LandingPage() {
               Responsible AI Governance <br />
               <span className="italic text-text-secondary font-normal">for the modern enterprise.</span>
             </h2>
-            <p className="text-xs md:text-sm text-text-secondary leading-relaxed max-w-md">
+            <p className="text-sm md:text-base text-text-secondary leading-relaxed max-w-md">
               Pelta combines real-time prompt-risk proxy verification with compliance workflows to map, measure, and manage AI safety under the NIST AI RMF.
             </p>
           </div>
@@ -195,7 +195,7 @@ export default function LandingPage() {
             </div>
 
             <textarea
-              className="w-full bg-background border border-border rounded p-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none h-16 font-mono"
+              className="w-full bg-background border border-border rounded p-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none h-16 font-mono"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Type or paste any text to test local detection..."
@@ -247,14 +247,14 @@ export default function LandingPage() {
         <div className="lg:col-span-5 p-6 border border-border bg-surface rounded-lg space-y-6">
           <div className="space-y-1">
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-text-tertiary font-semibold">Workspace Access</h3>
-            <p className="text-xs text-text-secondary">Choose a perspective to explore the governance workflow.</p>
+            <p className="text-sm text-text-secondary">Choose a perspective to explore the governance workflow.</p>
           </div>
 
           {/* Toggle */}
           <div className="flex items-center bg-background border border-border rounded p-0.5">
             <button
               onClick={() => setView('employee')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer ${
                 view === 'employee'
                   ? 'bg-surface text-text-primary border border-border/80 shadow-sm'
                   : 'text-text-secondary hover:text-text-primary'
@@ -265,7 +265,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => setView('admin')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all cursor-pointer ${
                 view === 'admin'
                   ? 'bg-surface text-text-primary border border-border/80 shadow-sm'
                   : 'text-text-secondary hover:text-text-primary'
@@ -278,7 +278,7 @@ export default function LandingPage() {
 
           {/* View Description & Links */}
           <div className="space-y-4 animate-slide-in" key={view}>
-            <p className="text-xs text-text-secondary leading-relaxed">
+            <p className="text-sm text-text-secondary leading-relaxed">
               {active.description}
             </p>
 
@@ -294,7 +294,7 @@ export default function LandingPage() {
                       {link.icon}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors">
+                      <p className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">
                         {link.label}
                       </p>
                       <p className="text-[10px] text-text-tertiary mt-0.5 truncate">{link.desc}</p>
