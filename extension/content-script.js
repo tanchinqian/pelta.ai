@@ -117,6 +117,7 @@ async function extractTextFromImage(blob) {
 }
 
 async function runImageDlpCheck(blob) {
+  lockSendButton();
   const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
   console.log(`[pelta] Image detected — starting OCR with ${engine}`);
   showOcrScanning(engine);
@@ -134,11 +135,13 @@ async function runImageDlpCheck(blob) {
     }
     console.log(`[pelta] OCR extracted ${extractedText.length} chars:`, extractedText.slice(0, 80));
     if (!extractedText || !extractedText.trim()) {
+      unlockSendButton();
       showOcrNoText();
       return;
     }
     startCheck(extractedText, 'paste-image');
   } catch (err) {
+    unlockSendButton();
     console.error('[pelta] OCR pipeline failed:', err);
     showError('Image scan failed. Please type your prompt instead.');
   }
@@ -226,10 +229,22 @@ let pasteHandler = null;
 let dropHandler = null;
 let dragOverHandler = null;
 let fileInputHandler = null;
+let escapeHandler = null;
 
 function attachListeners() {
   if (keydownHandler || clickHandler || pasteHandler) return; // already attached
 
+  /* ── Escape to dismiss overlay ── */
+  escapeHandler = (e) => {
+    if (e.key !== 'Escape') return;
+    const overlay = document.getElementById('pelta-overlay');
+    if (!overlay) return;
+    e.preventDefault();
+    e.stopPropagation();
+    removeOverlay();
+    unlockSendButton();
+  };
+  window.addEventListener('keydown', escapeHandler, true);
   keydownHandler = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !replaying) {
       if (!inputEl || !inputEl.contains(e.target) && e.target !== inputEl) return;
@@ -348,6 +363,9 @@ function detachListeners() {
   if (fileInputHandler) {
     document.removeEventListener('change', fileInputHandler, true);
   }
+  if (escapeHandler) {
+    window.removeEventListener('keydown', escapeHandler, true);
+  }
   if (dragOverHandler) {
     document.removeEventListener('dragover', dragOverHandler, false);
     if (inputEl) inputEl.removeEventListener('dragover', dragOverHandler, false);
@@ -363,6 +381,7 @@ function detachListeners() {
   dropHandler = null;
   dragOverHandler = null;
   fileInputHandler = null;
+  escapeHandler = null;
   inputEl = null;
   sendEl = null;
   removeActiveBadge();
@@ -395,7 +414,7 @@ function clearPrompt() {
   inputEl.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
 }
 
-/* ── Re-dispatch the send action ────────────────────────── */
+/* ── Re-dispatch the send action ────────────────────────────────────── */
 function replaySend() {
   replaying = true;
   requestAnimationFrame(() => {
@@ -403,6 +422,44 @@ function replaySend() {
     if (btn) btn.click();
     replaying = false;
   });
+}
+
+/* ── Send button lock ────────────────────────────────────────── */
+function lockSendButton() {
+  const btn = document.querySelector(SELECTORS.sendButton);
+  if (!btn || btn.dataset.peltaLocked) return;
+  btn.dataset.peltaLocked = '1';
+  btn.style.opacity = '0.35';
+  btn.style.pointerEvents = 'none';
+  btn.style.transition = 'opacity 0.15s';
+}
+
+function unlockSendButton() {
+  const btn = document.querySelector(SELECTORS.sendButton);
+  if (!btn) return;
+  delete btn.dataset.peltaLocked;
+  btn.style.opacity = '';
+  btn.style.pointerEvents = '';
+}
+
+/* ── Safe ✓ allow toast ───────────────────────────────────────────── */
+function showAllowToast() {
+  let toast = document.getElementById('pelta-allow-toast');
+  if (toast) toast.remove();
+  toast = document.createElement('div');
+  toast.id = 'pelta-allow-toast';
+  toast.innerHTML = `
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>pelta.ai — no sensitive data detected</span>
+  `;
+  document.body.appendChild(toast);
+  // Animate in
+  requestAnimationFrame(() => toast.classList.add('pelta-toast-show'));
+  // Animate out after 1.8 s
+  setTimeout(() => {
+    toast.classList.remove('pelta-toast-show');
+    setTimeout(() => toast.remove(), 300);
+  }, 1800);
 }
 
 /* ── Overlay DOM helpers ────────────────────────────────── */
@@ -422,8 +479,10 @@ function removeOverlay() {
 
 /* ── Verification flow ──────────────────────────────────── */
 function startCheck(text, trigger) {
+  lockSendButton();
   showChecking(text);
-  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName() }, (response) => {
+  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
+    unlockSendButton();
     if (!response) {
       showError('No response from extension background — check console.');
       return;
@@ -435,6 +494,7 @@ function startCheck(text, trigger) {
     switch (response.verdict) {
       case 'allow':
         removeOverlay();
+        showAllowToast();
         replaySend();
         break;
       case 'flag':
@@ -567,7 +627,7 @@ function showFlag(response, promptText, trigger) {
     ? 'Extracted from image · OCR (highlighted)'
     : 'Submitted Prompt (highlighted)';
   const sourceBadge = isImage
-    ? `<span class="pelta-ocr-badge">🖼️ image-upload</span>`
+    ? `<span class="pelta-ocr-badge">image-upload</span>`
     : '';
   const sourceMetaExtra = isImage
     ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
