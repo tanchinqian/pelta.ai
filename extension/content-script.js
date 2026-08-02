@@ -548,9 +548,9 @@ function startCheck(text, trigger, meta = {}) {
   });
 }
 
-/* ── Redact sensitive spans and type clean text into chat input ── */
-function redactAndType(text, highlights) {
-  if (!highlights || highlights.length === 0 || !inputEl) return;
+/* ── Build redacted text string ── */
+function buildRedactedText(text, highlights) {
+  if (!highlights || highlights.length === 0) return text;
 
   // Sort descending by position so slice indices stay valid after each replacement
   const sorted = [...highlights].sort((a, b) => b.start - a.start);
@@ -563,12 +563,17 @@ function redactAndType(text, highlights) {
       : raw.slice(0, 3) + '█'.repeat(raw.length - 3);
     redacted = redacted.slice(0, h.start) + masked + redacted.slice(h.end);
   }
+  return redacted;
+}
 
+/* ── Type clean text into chat input ── */
+function typeIntoInput(text) {
+  if (!inputEl) return;
   if (inputEl.tagName === 'TEXTAREA') {
-    inputEl.value = redacted;
+    inputEl.value = text;
   } else {
     // ProseMirror / Quill / Gemini contenteditable
-    inputEl.innerText = redacted;
+    inputEl.innerText = text;
   }
   inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
   inputEl.dispatchEvent(new Event('change',    { bubbles: true, cancelable: true }));
@@ -671,6 +676,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
+  const redactedText = isImage ? buildRedactedText(promptText, response.highlights) : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -679,16 +685,22 @@ function showFlag(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    <div class="pelta-prompt-preview">${promptHtml}</div>
+    ${isImage ? `
+      <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before sending</div>
+      <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    ` : `
+      <div class="pelta-prompt-preview">${promptHtml}</div>
+    `}
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
-      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-redact-send">Redact &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
+      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-cancel">Cancel</button>
     </div>
   `;
   if (isImage) {
-    document.getElementById('pelta-redact-send').onclick = () => {
-      redactAndType(promptText, response.highlights);
+    document.getElementById('pelta-confirm-send').onclick = () => {
+      const finalVal = document.getElementById('pelta-edit-area').value;
+      typeIntoInput(finalVal);
       removeOverlay();
       replaySend();
     };
@@ -716,6 +728,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
+  const redactedText = isImage ? buildRedactedText(promptText, response.highlights) : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -724,18 +737,23 @@ function showBlock(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    <div class="pelta-prompt-preview">${promptHtml}</div>
+    ${isImage ? `
+      <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before typing</div>
+      <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    ` : `
+      <div class="pelta-prompt-preview">${promptHtml}</div>
+    `}
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
-      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-redact-type">Redact &amp; Type</button>' : ''}
+      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm &amp; Type</button>' : ''}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss">Dismiss</button>
     </div>
   `;
   if (isImage) {
-    document.getElementById('pelta-redact-type').onclick = () => {
-      redactAndType(promptText, response.highlights);
+    document.getElementById('pelta-confirm-type').onclick = () => {
+      const finalVal = document.getElementById('pelta-edit-area').value;
+      typeIntoInput(finalVal);
       removeOverlay();
-      // User reviews the redacted text in the input before sending manually
     };
   }
   document.getElementById('pelta-dismiss').onclick = () => {
