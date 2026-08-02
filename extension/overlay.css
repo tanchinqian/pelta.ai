@@ -310,3 +310,30 @@
 .pelta-btn-danger:hover {
   background: #ef444410;
 }
+
+/* Teal "Redact & …" action button */
+.pelta-btn-redact {
+  background: #0d9488;
+  color: #fff;
+  border-color: #0d9488;
+}
+
+.pelta-btn-redact:hover {
+  background: #0f766e;
+}
+
+/* Inline badge shown next to prompt label for image-sourced detections */
+.pelta-ocr-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

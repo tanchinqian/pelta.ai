@@ -438,16 +438,43 @@ function startCheck(text, trigger) {
         replaySend();
         break;
       case 'flag':
-        showFlag(response, text);
+        showFlag(response, text, trigger);
         break;
       case 'block':
-        showBlock(response, text);
+        showBlock(response, text, trigger);
         break;
       default:
         removeOverlay();
         replaySend();
     }
   });
+}
+
+/* ── Redact sensitive spans and type clean text into chat input ── */
+function redactAndType(text, highlights) {
+  if (!highlights || highlights.length === 0 || !inputEl) return;
+
+  // Sort descending by position so slice indices stay valid after each replacement
+  const sorted = [...highlights].sort((a, b) => b.start - a.start);
+  let redacted = text;
+  for (const h of sorted) {
+    const raw = redacted.slice(h.start, h.end);
+    // Keep first 3 chars visible so it’s recognisable; mask the rest
+    const masked = raw.length <= 4
+      ? '█'.repeat(raw.length)
+      : raw.slice(0, 3) + '█'.repeat(raw.length - 3);
+    redacted = redacted.slice(0, h.start) + masked + redacted.slice(h.end);
+  }
+
+  if (inputEl.tagName === 'TEXTAREA') {
+    inputEl.value = redacted;
+  } else {
+    // ProseMirror / Quill / Gemini contenteditable
+    inputEl.innerText = redacted;
+  }
+  inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+  inputEl.dispatchEvent(new Event('change',    { bubbles: true, cancelable: true }));
+  inputEl.focus();
 }
 
 /* ── Build highlighted prompt HTML from API highlights ─── */
@@ -531,48 +558,84 @@ function showOcrNoText() {
   }, 2500);
 }
 
-function showFlag(response, promptText) {
+function showFlag(response, promptText, trigger) {
+  const isImage = trigger === 'paste-image';
   const el = createOverlay();
   el.className = 'flag';
   const promptHtml = buildHighlightedPrompt(promptText, response.highlights);
+  const promptLabel = isImage
+    ? 'Extracted from image · OCR (highlighted)'
+    : 'Submitted Prompt (highlighted)';
+  const sourceBadge = isImage
+    ? `<span class="pelta-ocr-badge">🖼️ image-upload</span>`
+    : '';
+  const sourceMetaExtra = isImage
+    ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
+    : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
       Flagged — ${response.riskLevel} risk
     </div>
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
-    <div class="pelta-prompt-label">Submitted Prompt (highlighted)</div>
+    <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     <div class="pelta-prompt-preview">${promptHtml}</div>
-    <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> check with admin discretion</div>
+    <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
-      <button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>
+      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-redact-send">Redact &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-cancel">Cancel</button>
     </div>
   `;
-  document.getElementById('pelta-allow').onclick = () => {
-    removeOverlay();
-    replaySend();
-  };
+  if (isImage) {
+    document.getElementById('pelta-redact-send').onclick = () => {
+      redactAndType(promptText, response.highlights);
+      removeOverlay();
+      replaySend();
+    };
+  } else {
+    document.getElementById('pelta-allow').onclick = () => {
+      removeOverlay();
+      replaySend();
+    };
+  }
   document.getElementById('pelta-cancel').onclick = removeOverlay;
 }
 
-function showBlock(response, promptText) {
+function showBlock(response, promptText, trigger) {
+  const isImage = trigger === 'paste-image';
   const el = createOverlay();
   el.className = 'block';
   const promptHtml = buildHighlightedPrompt(promptText, response.highlights);
+  const promptLabel = isImage
+    ? 'Extracted from image · OCR (highlighted)'
+    : 'Submitted Prompt (highlighted)';
+  const sourceBadge = isImage
+    ? `<span class="pelta-ocr-badge">🖼️ image-upload</span>`
+    : '';
+  const sourceMetaExtra = isImage
+    ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
+    : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       Blocked by governance policy
     </div>
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
-    <div class="pelta-prompt-label">Submitted Prompt (highlighted)</div>
+    <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     <div class="pelta-prompt-preview">${promptHtml}</div>
-    <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> message not sent</div>
+    <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
+      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-redact-type">Redact &amp; Type</button>' : ''}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss">Dismiss</button>
     </div>
   `;
+  if (isImage) {
+    document.getElementById('pelta-redact-type').onclick = () => {
+      redactAndType(promptText, response.highlights);
+      removeOverlay();
+      // User reviews the redacted text in the input before sending manually
+    };
+  }
   document.getElementById('pelta-dismiss').onclick = () => {
     clearPrompt();
     removeOverlay();

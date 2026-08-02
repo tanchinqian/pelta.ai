@@ -242,5 +242,41 @@
     "source": "extension",
     "tool": "Gemini",
     "timestamp": "2026-08-02T15:05:56.335Z"
+  },
+  {
+    "id": "f43c557b-d315-4971-9b84-c005c370019e",
+    "promptSnippet": "Acme Corp - Developer Portal\nEnvironment: Production\n\nRegion: us-east-1\n\nStatus: Active\n\nAWS Credentials Please ensure you do not share these keys. They provide full admin access to our production S3 ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (high entropy token), API key (high entropy token).",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-02T15:14:09.995Z"
+  },
+  {
+    "id": "406a28ac-7413-407b-b343-22a6e3e3ec9e",
+    "promptSnippet": "Acme Corp - Developer Portal\nEnvironment: Production\n\nRegion: us-east-1\n\nStatus: Active\n\nAWS Credentials Please ensure you do not share these keys. They provide full admin access to\nour production S3 ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (high entropy token), API key (high entropy token).",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-02T15:15:08.702Z"
+  },
+  {
+    "id": "aa8421b8-2386-4312-8541-40d584b6497b",
+    "promptSnippet": "Acme Corp - Developer Portal\nEnvironment: Production\n\nRegion: us-east-1\n\nStatus: Active\n\nAWS Credentials Please ensure you do not share these keys. They provide full admin access to\nour production S3 ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (high entropy token), API key (high entropy token).",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-02T15:15:50.579Z"
   }
 ]
