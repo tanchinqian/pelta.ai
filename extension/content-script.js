@@ -1,6 +1,7 @@
 /* ── pelta.ai Prompt Guard — Content Script ────────────────
  *   Injected into chat.openai.com and chatgpt.com.
  *   Intercepts the send action, checks via local API, overlays result.
+ *   v2: Image OCR pipeline via Gemini Nano (Chrome) / Tesseract.js (fallback)
  * ─────────────────────────────────────────────────────────── */
 
 function getToolName() {
@@ -25,6 +26,123 @@ let reconnectObserver = null;
 
 /* ── Re-entrancy guard ────────────────────────────────── */
 let replaying = false;
+
+/* ── OCR engine state ────────────────────────────────────── */
+let nanoAvailable = false;
+
+async function detectOcrEngine() {
+  try {
+    if (window.ai?.languageModel) {
+      const caps = await window.ai.languageModel.capabilities();
+      nanoAvailable = caps.available !== 'no';
+    }
+  } catch {
+    nanoAvailable = false;
+  }
+  console.log(`[pelta] OCR engine: ${nanoAvailable ? 'Gemini Nano (on-device)' : 'Tesseract.js (WASM fallback)'}`);
+}
+
+/* ── OCR helpers ─────────────────────────────────────────── */
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function ocrWithNano(blob) {
+  const dataUrl = await blobToDataUrl(blob);
+  // Chrome Prompt API — try multimodal, fall back gracefully if model is text-only
+  const session = await window.ai.languageModel.create({
+    systemPrompt:
+      'You are an OCR tool. Extract ALL visible text from the image exactly as it appears. ' +
+      'Return only the raw extracted text with no commentary, formatting, or markdown.',
+  });
+  let result;
+  try {
+    // Multimodal format (Chrome 128+ with vision flag)
+    result = await session.prompt([
+      { role: 'user', content: [
+        { type: 'image', image: dataUrl },
+        { type: 'text', text: 'Extract all text from this image verbatim.' },
+      ]},
+    ]);
+  } catch {
+    // Fallback: describe image as text prompt — will likely be empty, triggers Tesseract below
+    console.warn('[pelta] Nano vision not available, falling back to Tesseract');
+    session.destroy();
+    throw new Error('nano-no-vision');
+  }
+  session.destroy();
+  return result.trim();
+}
+
+async function ocrWithTesseract(blob) {
+  // Send to our localhost backend — Node.js Tesseract, no WASM/Worker issues.
+  // Image stays on the user's machine (localhost = zero data leakage).
+  const dataUrl = await blobToDataUrl(blob);
+  const base64 = dataUrl.split(',')[1]; // strip "data:image/png;base64," prefix
+
+  // 15 s timeout — Gemini Vision API typically responds in 1-3 s
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch('http://localhost:3000/api/guard/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64, mimeType: blob.type }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`OCR backend error ${response.status}: ${err.detail || err.error || ''}`);
+    }
+
+    const { text } = await response.json();
+    return (text || '').trim();
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function extractTextFromImage(blob) {
+  if (nanoAvailable) {
+    return await ocrWithNano(blob);
+  }
+  return await ocrWithTesseract(blob);
+}
+
+async function runImageDlpCheck(blob) {
+  const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
+  console.log(`[pelta] Image detected — starting OCR with ${engine}`);
+  showOcrScanning(engine);
+  try {
+    let extractedText;
+    if (nanoAvailable) {
+      try {
+        extractedText = await ocrWithNano(blob);
+      } catch (nanoErr) {
+        console.warn('[pelta] Nano OCR failed, falling back to Tesseract:', nanoErr.message);
+        extractedText = await ocrWithTesseract(blob);
+      }
+    } else {
+      extractedText = await ocrWithTesseract(blob);
+    }
+    console.log(`[pelta] OCR extracted ${extractedText.length} chars:`, extractedText.slice(0, 80));
+    if (!extractedText || !extractedText.trim()) {
+      showOcrNoText();
+      return;
+    }
+    startCheck(extractedText, 'paste-image');
+  } catch (err) {
+    console.error('[pelta] OCR pipeline failed:', err);
+    showError('Image scan failed. Please type your prompt instead.');
+  }
+}
 
 /* ── Visual Active Badge ─────────────────────────────────── */
 function showActiveBadge() {
@@ -104,9 +222,13 @@ function watchForMount() {
 let keydownHandler = null;
 let keyupHandler = null;
 let clickHandler = null;
+let pasteHandler = null;
+let dropHandler = null;
+let dragOverHandler = null;
+let fileInputHandler = null;
 
 function attachListeners() {
-  if (keydownHandler || clickHandler) return; // already attached
+  if (keydownHandler || clickHandler || pasteHandler) return; // already attached
 
   keydownHandler = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !replaying) {
@@ -142,11 +264,70 @@ function attachListeners() {
     }
   };
 
+  pasteHandler = async (e) => {
+    if (replaying) return;
+    const items = Array.from(e.clipboardData?.items || []);
+    console.log('[pelta] paste event — items:', items.map(i => i.type));
+    const imageItem = items.find((i) => i.type.startsWith('image/'));
+    if (!imageItem) return;
+    console.log('[pelta] image paste intercepted:', imageItem.type);
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    const blob = imageItem.getAsFile();
+    await runImageDlpCheck(blob);
+  };
+
+  dragOverHandler = (e) => {
+    const hasImage = Array.from(e.dataTransfer?.items || [])
+      .some((i) => i.kind === 'file' && i.type.startsWith('image/'));
+    if (hasImage) e.preventDefault();
+  };
+
+  dropHandler = async (e) => {
+    if (replaying) return;
+    const files = Array.from(e.dataTransfer?.files || []);
+    const imageFile = files.find((f) => f.type.startsWith('image/'));
+    if (!imageFile) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    await runImageDlpCheck(imageFile);
+  };
+
+  fileInputHandler = async (e) => {
+    const target = e.target;
+    if (target.tagName !== 'INPUT' || target.type !== 'file') return;
+    const files = Array.from(target.files || []);
+    const imageFile = files.find((f) => f.type.startsWith('image/'));
+    if (!imageFile) return;
+
+    console.log('[pelta] file input upload intercepted:', imageFile.name, imageFile.type);
+
+    // Stop Gemini's own change handler from processing the file
+    e.stopImmediatePropagation();
+
+    // Clear the file input so Gemini can't read the file
+    try { target.value = ''; } catch (_) { /* read-only in some browsers */ }
+
+    await runImageDlpCheck(imageFile);
+  };
+
   window.addEventListener('keydown', keydownHandler, true);
   window.addEventListener('keyup', keyupHandler, true);
   document.addEventListener('click', clickHandler, true);
   document.addEventListener('mousedown', clickHandler, true);
   document.addEventListener('pointerdown', clickHandler, true);
+  window.addEventListener('paste', pasteHandler, true);
+  // File picker upload interception (capture phase — fires before Gemini's handlers)
+  document.addEventListener('change', fileInputHandler, true);
+  if (inputEl) {
+    inputEl.addEventListener('dragover', dragOverHandler, false);
+    inputEl.addEventListener('drop', dropHandler, false);
+  }
+  // Fallback: catch drops anywhere on the document
+  document.addEventListener('dragover', dragOverHandler, false);
+  document.addEventListener('drop', dropHandler, false);
 }
 
 function detachListeners() {
@@ -158,10 +339,30 @@ function detachListeners() {
   }
   if (clickHandler) {
     document.removeEventListener('click', clickHandler, true);
+    document.removeEventListener('mousedown', clickHandler, true);
+    document.removeEventListener('pointerdown', clickHandler, true);
+  }
+  if (pasteHandler) {
+    window.removeEventListener('paste', pasteHandler, true);
+  }
+  if (fileInputHandler) {
+    document.removeEventListener('change', fileInputHandler, true);
+  }
+  if (dragOverHandler) {
+    document.removeEventListener('dragover', dragOverHandler, false);
+    if (inputEl) inputEl.removeEventListener('dragover', dragOverHandler, false);
+  }
+  if (dropHandler) {
+    document.removeEventListener('drop', dropHandler, false);
+    if (inputEl) inputEl.removeEventListener('drop', dropHandler, false);
   }
   keydownHandler = null;
   keyupHandler = null;
   clickHandler = null;
+  pasteHandler = null;
+  dropHandler = null;
+  dragOverHandler = null;
+  fileInputHandler = null;
   inputEl = null;
   sendEl = null;
   removeActiveBadge();
@@ -301,6 +502,35 @@ function showChecking(text) {
   `;
 }
 
+function showOcrScanning(engine) {
+  const el = createOverlay();
+  el.className = 'ocr-scanning';
+  el.innerHTML = `
+    <div class="pelta-label">
+      <span class="pelta-scan-bar"></span>
+      <span>pelta.ai — reading image with ${engine}...</span>
+    </div>
+    <div class="pelta-ocr-sub">Processing locally · no data leaves your device · first scan may take a few seconds</div>
+  `;
+}
+
+function showOcrNoText() {
+  const el = createOverlay();
+  el.className = 'ocr-no-text';
+  el.innerHTML = `
+    <div class="pelta-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>No sensitive text detected in image</span>
+    </div>
+    <div class="pelta-ocr-sub">Image scanned locally — safe to paste</div>
+  `;
+  // Auto-dismiss after 2.5 s
+  setTimeout(() => {
+    const overlay = document.getElementById('pelta-overlay');
+    if (overlay && overlay.className === 'ocr-no-text') removeOverlay();
+  }, 2500);
+}
+
 function showFlag(response, promptText) {
   const el = createOverlay();
   el.className = 'flag';
@@ -366,6 +596,8 @@ function showError(reason) {
 }
 
 /* ── Init ───────────────────────────────────────────────── */
+detectOcrEngine(); // async, runs in background — result cached before any paste
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (!acquire()) {

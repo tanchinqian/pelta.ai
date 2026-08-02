@@ -3,7 +3,7 @@
   "name": "pelta.ai Prompt Guard",
   "version": "1.0",
   "description": "Intercepts ChatGPT prompts and checks them against pelta.ai's governance API before they are sent.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "clipboardRead"],
   "host_permissions": [
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
@@ -32,5 +32,11 @@
   ],
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["tesseract.esm.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

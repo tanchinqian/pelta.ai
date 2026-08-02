@@ -218,5 +218,29 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-19T08:52:57.635Z"
+  },
+  {
+    "id": "ba237ae9-2876-40f7-8bec-09ebc3bffbdc",
+    "promptSnippet": "Acme Corp - Developer Portal\nEnvironment: Production\nRegion: us-east-1\nStatus: Active\n\nAWS Credentials Please ensure you do not share these keys. They provide full admin access to our production S3 bu...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (high entropy token), API key (high entropy token).",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-02T15:04:49.954Z"
+  },
+  {
+    "id": "8e3685e7-f811-4f19-b125-d3001a1972e6",
+    "promptSnippet": "Acme Corp - Developer Portal\nEnvironment: Production\n\nRegion: us-east-1\n\nStatus: Active\n\nAWS Credentials Please ensure you do not share these keys. They provide full admin access to our production S3 ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: API key (high entropy token), API key (high entropy token).",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-02T15:05:56.335Z"
   }
 ]

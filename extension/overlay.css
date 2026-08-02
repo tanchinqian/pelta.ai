@@ -99,6 +99,78 @@
   color: #9e9b94;
 }
 
+/* ── OCR Scanning state ──────────────────────────────── */
+@keyframes pelta-scan {
+  0%   { transform: scaleX(0); transform-origin: left; }
+  50%  { transform: scaleX(1); transform-origin: left; }
+  51%  { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+#pelta-overlay.ocr-scanning {
+  background: #111113;
+  border: 1px solid #6366f1;
+  color: #9e9b94;
+  box-shadow: 0 0 16px rgba(99,102,241,0.12), 0 8px 28px rgba(0,0,0,0.5);
+}
+
+#pelta-overlay.ocr-scanning .pelta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #a5b4fc;
+}
+
+#pelta-overlay.ocr-scanning .pelta-scan-bar {
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: #6366f1;
+  animation: pelta-scan 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+#pelta-overlay.ocr-scanning .pelta-ocr-sub {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #3f3f5a;
+  margin-top: 5px;
+  letter-spacing: 0.02em;
+}
+
+/* ── OCR No-text state (success / safe) ──────────────── */
+#pelta-overlay.ocr-no-text {
+  background: #111113;
+  border: 1px solid #22c55e;
+  color: #9e9b94;
+  box-shadow: 0 0 16px rgba(34,197,94,0.10), 0 8px 28px rgba(0,0,0,0.5);
+  animation: pelta-slide-in 0.2s ease-out;
+}
+
+#pelta-overlay.ocr-no-text .pelta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #4ade80;
+}
+
+#pelta-overlay.ocr-no-text .pelta-label svg {
+  flex-shrink: 0;
+  stroke: #22c55e;
+}
+
+#pelta-overlay.ocr-no-text .pelta-ocr-sub {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #1f4a2a;
+  margin-top: 5px;
+}
+
 /* ── Flag state ─────────────────────────────────────── */
 #pelta-overlay.flag {
   background: #111113;
