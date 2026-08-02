@@ -83,14 +83,27 @@
     .stat.scanned  .stat-value { color: #818cf8; }
 
     /* ── Feed ── */
-    .feed-header {
+    .feed-header-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 10px 16px 6px;
+    }
+    .feed-header {
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: #475569;
       font-weight: 600;
     }
+    .feed-clear {
+      font-size: 9px;
+      color: #6366f1;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .feed-clear:hover { color: #818cf8; }
 
     .feed { max-height: 280px; overflow-y: auto; }
     .feed::-webkit-scrollbar { width: 4px; }
@@ -212,7 +225,10 @@
     </div>
   </div>
 
-  <div class="feed-header">Recent activity</div>
+  <div class="feed-header-wrap">
+    <div class="feed-header">Recent activity</div>
+    <div class="feed-clear" id="clear-history">Clear</div>
+  </div>
   <div class="feed" id="event-feed">
     <div class="empty">No activity yet — start a conversation to begin scanning</div>
   </div>

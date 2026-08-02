@@ -61,6 +61,14 @@ chrome.storage.local.get({ pelta_events: [] }, ({ pelta_events }) => {
   renderFeed(pelta_events);
 });
 
+// Clear history
+document.getElementById('clear-history').addEventListener('click', () => {
+  chrome.storage.local.set({ pelta_events: [] }, () => {
+    renderStats([]);
+    renderFeed([]);
+  });
+});
+
 // Open dashboard in new tab
 document.getElementById('open-dashboard').addEventListener('click', (e) => {
   e.preventDefault();

@@ -116,7 +116,7 @@ async function extractTextFromImage(blob) {
   return await ocrWithTesseract(blob);
 }
 
-async function runImageDlpCheck(blob) {
+async function runImageDlpCheck(blob, filename) {
   lockSendButton();
   const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
   console.log(`[pelta] Image detected — starting OCR with ${engine}`);
@@ -139,10 +139,44 @@ async function runImageDlpCheck(blob) {
       showOcrNoText();
       return;
     }
-    startCheck(extractedText, 'paste-image');
+    startCheck(extractedText, 'paste-image', { filename: filename || null });
   } catch (err) {
     unlockSendButton();
     console.error('[pelta] OCR pipeline failed:', err);
+    showError('Image scan failed. Please type your prompt instead.');
+  }
+}
+
+async function runBatchImageDlpCheck(blobs) {
+  lockSendButton();
+  const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
+  console.log(`[pelta] Batch images detected (${blobs.length}) — starting OCR with ${engine}`);
+  showOcrScanning(engine);
+  try {
+    const texts = [];
+    for (const blob of blobs) {
+      let text;
+      if (nanoAvailable) {
+        try {
+          text = await ocrWithNano(blob);
+        } catch (err) {
+          text = await ocrWithTesseract(blob);
+        }
+      } else {
+        text = await ocrWithTesseract(blob);
+      }
+      if (text && text.trim()) texts.push(text.trim());
+    }
+    const combined = texts.join('\n\n---\n\n').trim();
+    if (!combined) {
+      unlockSendButton();
+      showOcrNoText();
+      return;
+    }
+    startCheck(combined, 'paste-image', { filename: `${blobs.length} images` });
+  } catch (err) {
+    unlockSendButton();
+    console.error('[pelta] OCR batch pipeline failed:', err);
     showError('Image scan failed. Please type your prompt instead.');
   }
 }
@@ -283,14 +317,18 @@ function attachListeners() {
     if (replaying) return;
     const items = Array.from(e.clipboardData?.items || []);
     console.log('[pelta] paste event — items:', items.map(i => i.type));
-    const imageItem = items.find((i) => i.type.startsWith('image/'));
-    if (!imageItem) return;
-    console.log('[pelta] image paste intercepted:', imageItem.type);
+    const imageItems = items.filter((i) => i.type.startsWith('image/'));
+    if (!imageItems.length) return;
+    console.log(`[pelta] ${imageItems.length} image(s) paste intercepted`);
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    const blob = imageItem.getAsFile();
-    await runImageDlpCheck(blob);
+    const blobs = imageItems.map(i => i.getAsFile());
+    if (blobs.length === 1) {
+      await runImageDlpCheck(blobs[0], null);
+    } else {
+      await runBatchImageDlpCheck(blobs);
+    }
   };
 
   dragOverHandler = (e) => {
@@ -307,7 +345,7 @@ function attachListeners() {
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    await runImageDlpCheck(imageFile);
+    await runImageDlpCheck(imageFile, imageFile.name);
   };
 
   fileInputHandler = async (e) => {
@@ -323,9 +361,9 @@ function attachListeners() {
     e.stopImmediatePropagation();
 
     // Clear the file input so Gemini can't read the file
-    try { target.value = ''; } catch (_) { /* read-only in some browsers */ }
+    target.value = '';
 
-    await runImageDlpCheck(imageFile);
+    await runImageDlpCheck(imageFile, imageFile.name);
   };
 
   window.addEventListener('keydown', keydownHandler, true);
@@ -478,7 +516,7 @@ function removeOverlay() {
 }
 
 /* ── Verification flow ──────────────────────────────────── */
-function startCheck(text, trigger) {
+function startCheck(text, trigger, meta = {}) {
   lockSendButton();
   showChecking(text);
   chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
@@ -498,10 +536,10 @@ function startCheck(text, trigger) {
         replaySend();
         break;
       case 'flag':
-        showFlag(response, text, trigger);
+        showFlag(response, text, trigger, meta);
         break;
       case 'block':
-        showBlock(response, text, trigger);
+        showBlock(response, text, trigger, meta);
         break;
       default:
         removeOverlay();
@@ -618,7 +656,7 @@ function showOcrNoText() {
   }, 2500);
 }
 
-function showFlag(response, promptText, trigger) {
+function showFlag(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
   const el = createOverlay();
   el.className = 'flag';
@@ -632,6 +670,7 @@ function showFlag(response, promptText, trigger) {
   const sourceMetaExtra = isImage
     ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
     : '';
+  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -639,6 +678,7 @@ function showFlag(response, promptText, trigger) {
     </div>
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
+    ${fileBadge}
     <div class="pelta-prompt-preview">${promptHtml}</div>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
@@ -661,7 +701,7 @@ function showFlag(response, promptText, trigger) {
   document.getElementById('pelta-cancel').onclick = removeOverlay;
 }
 
-function showBlock(response, promptText, trigger) {
+function showBlock(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
   const el = createOverlay();
   el.className = 'block';
@@ -675,6 +715,7 @@ function showBlock(response, promptText, trigger) {
   const sourceMetaExtra = isImage
     ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
     : '';
+  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -682,6 +723,7 @@ function showBlock(response, promptText, trigger) {
     </div>
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
+    ${fileBadge}
     <div class="pelta-prompt-preview">${promptHtml}</div>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
