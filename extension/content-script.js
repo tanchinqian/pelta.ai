@@ -181,6 +181,43 @@ async function runBatchImageDlpCheck(blobs) {
   }
 }
 
+}
+
+async function runPdfDlpCheck(file) {
+  lockSendButton();
+  showOcrScanning('pdf.js'); 
+  try {
+    const base64 = await toBase64(file);
+    const res = await fetch('http://localhost:3000/api/guard/pdf-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdf: base64.split(',')[1], filename: file.name })
+    });
+    if (!res.ok) throw new Error('PDF extraction failed');
+    const { text, pageCount, filename } = await res.json();
+    
+    if (!text || !text.trim()) {
+      unlockSendButton();
+      showOcrNoText(true);
+      return;
+    }
+    startCheck(text, 'paste-pdf', { filename: filename || null, pageCount });
+  } catch (err) {
+    unlockSendButton();
+    console.error('[pelta] PDF pipeline failed:', err);
+    showError('PDF scan failed. Please type your prompt instead.');
+  }
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ── Visual Active Badge ─────────────────────────────────── */
 function showActiveBadge() {
   let badge = document.getElementById('pelta-active-badge');
@@ -340,22 +377,28 @@ function attachListeners() {
   dropHandler = async (e) => {
     if (replaying) return;
     const files = Array.from(e.dataTransfer?.files || []);
-    const imageFile = files.find((f) => f.type.startsWith('image/'));
-    if (!imageFile) return;
+    const pdfFile = files.find(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+    const imageFile = files.find(f => f.type.startsWith('image/'));
+    if (!pdfFile && !imageFile) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    await runImageDlpCheck(imageFile, imageFile.name);
+    if (pdfFile) {
+      await runPdfDlpCheck(pdfFile);
+    } else {
+      await runImageDlpCheck(imageFile, imageFile.name);
+    }
   };
 
   fileInputHandler = async (e) => {
     const target = e.target;
     if (target.tagName !== 'INPUT' || target.type !== 'file') return;
     const files = Array.from(target.files || []);
-    const imageFile = files.find((f) => f.type.startsWith('image/'));
-    if (!imageFile) return;
+    const pdfFile = files.find(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+    const imageFile = files.find(f => f.type.startsWith('image/'));
+    if (!pdfFile && !imageFile) return;
 
-    console.log('[pelta] file input upload intercepted:', imageFile.name, imageFile.type);
+    console.log('[pelta] file input upload intercepted:', (pdfFile || imageFile).name, (pdfFile || imageFile).type);
 
     // Stop Gemini's own change handler from processing the file
     e.stopImmediatePropagation();
@@ -363,7 +406,11 @@ function attachListeners() {
     // Clear the file input so Gemini can't read the file
     target.value = '';
 
-    await runImageDlpCheck(imageFile, imageFile.name);
+    if (pdfFile) {
+      await runPdfDlpCheck(pdfFile);
+    } else {
+      await runImageDlpCheck(imageFile, imageFile.name);
+    }
   };
 
   window.addEventListener('keydown', keydownHandler, true);
@@ -635,24 +682,27 @@ function showChecking(text) {
 function showOcrScanning(engine) {
   const el = createOverlay();
   el.className = 'ocr-scanning';
+  const isPdf = engine === 'pdf.js';
+  const actionText = isPdf ? 'reading PDF' : 'reading image';
   el.innerHTML = `
     <div class="pelta-label">
       <span class="pelta-scan-bar"></span>
-      <span>pelta.ai — reading image with ${engine}...</span>
+      <span>pelta.ai — ${actionText} with ${engine}...</span>
     </div>
     <div class="pelta-ocr-sub">Processing locally · no data leaves your device · first scan may take a few seconds</div>
   `;
 }
 
-function showOcrNoText() {
+function showOcrNoText(isPdf = false) {
   const el = createOverlay();
   el.className = 'ocr-no-text';
+  const itemText = isPdf ? 'PDF' : 'image';
   el.innerHTML = `
     <div class="pelta-label">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      <span>No sensitive text detected in image</span>
+      <span>No sensitive text detected in ${itemText}</span>
     </div>
-    <div class="pelta-ocr-sub">Image scanned locally — safe to paste</div>
+    <div class="pelta-ocr-sub">${itemText.charAt(0).toUpperCase() + itemText.slice(1)} scanned locally — safe to paste</div>
   `;
   // Auto-dismiss after 2.5 s
   setTimeout(() => {
@@ -663,20 +713,22 @@ function showOcrNoText() {
 
 function showFlag(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
+  const isPdf = trigger === 'paste-pdf';
+  const isUpload = isImage || isPdf;
   const el = createOverlay();
   el.className = 'flag';
   const promptHtml = buildHighlightedPrompt(promptText, response.highlights);
-  const promptLabel = isImage
-    ? 'Extracted from image · OCR (highlighted)'
+  const promptLabel = isUpload
+    ? (isPdf ? 'Extracted from PDF (highlighted)' : 'Extracted from image · OCR (highlighted)')
     : 'Submitted Prompt (highlighted)';
-  const sourceBadge = isImage
-    ? `<span class="pelta-ocr-badge">image-upload</span>`
+  const sourceBadge = isUpload
+    ? `<span class="pelta-ocr-badge">${isPdf ? '📄 pdf-upload' : '🖼️ image-upload'}</span>`
     : '';
-  const sourceMetaExtra = isImage
-    ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
+  const sourceMetaExtra = isUpload
+    ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
-  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
-  const redactedText = isImage ? buildRedactedText(promptText, response.highlights) : '';
+  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
+  const redactedText = isUpload ? buildRedactedText(promptText, response.highlights) : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -685,7 +737,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    ${isImage ? `
+    ${isUpload ? `
       <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before sending</div>
       <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
     ` : `
@@ -693,11 +745,11 @@ function showFlag(response, promptText, trigger, meta = {}) {
     `}
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
-      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
+      ${isUpload ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-cancel">Cancel</button>
     </div>
   `;
-  if (isImage) {
+  if (isUpload) {
     document.getElementById('pelta-confirm-send').onclick = () => {
       const finalVal = document.getElementById('pelta-edit-area').value;
       typeIntoInput(finalVal);
@@ -715,20 +767,22 @@ function showFlag(response, promptText, trigger, meta = {}) {
 
 function showBlock(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
+  const isPdf = trigger === 'paste-pdf';
+  const isUpload = isImage || isPdf;
   const el = createOverlay();
   el.className = 'block';
   const promptHtml = buildHighlightedPrompt(promptText, response.highlights);
-  const promptLabel = isImage
-    ? 'Extracted from image · OCR (highlighted)'
+  const promptLabel = isUpload
+    ? (isPdf ? 'Extracted from PDF (highlighted)' : 'Extracted from image · OCR (highlighted)')
     : 'Submitted Prompt (highlighted)';
-  const sourceBadge = isImage
-    ? `<span class="pelta-ocr-badge">🖼️ image-upload</span>`
+  const sourceBadge = isUpload
+    ? `<span class="pelta-ocr-badge">${isPdf ? '📄 pdf-upload' : '🖼️ image-upload'}</span>`
     : '';
-  const sourceMetaExtra = isImage
-    ? `source: image-upload <span>·</span> engine: gemini-vision <span>·</span> `
+  const sourceMetaExtra = isUpload
+    ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
-  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}</div>` : '';
-  const redactedText = isImage ? buildRedactedText(promptText, response.highlights) : '';
+  const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
+  const redactedText = isUpload ? buildRedactedText(promptText, response.highlights) : '';
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -737,7 +791,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    ${isImage ? `
+    ${isUpload ? `
       <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before typing</div>
       <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
     ` : `
@@ -745,11 +799,11 @@ function showBlock(response, promptText, trigger, meta = {}) {
     `}
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
-      ${isImage ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm &amp; Type</button>' : ''}
+      ${isUpload ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm &amp; Type</button>' : ''}
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss">Dismiss</button>
     </div>
   `;
-  if (isImage) {
+  if (isUpload) {
     document.getElementById('pelta-confirm-type').onclick = () => {
       const finalVal = document.getElementById('pelta-edit-area').value;
       typeIntoInput(finalVal);
