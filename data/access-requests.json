@@ -56,5 +56,101 @@
     "type": "appeal",
     "requestedAt": "2026-07-17T10:00:00.000Z",
     "decidedAt": null
+  },
+  {
+    "id": "299f5b72-2ee9-4ae6-9dd3-4cf6f0dfb129",
+    "employeeName": "CurrentUser",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:46:48.243Z",
+    "decidedAt": "2026-08-03T15:47:06.072Z"
+  },
+  {
+    "id": "cb05d00b-2eb9-46e3-ad9e-875700fc9d5c",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:48:49.410Z",
+    "decidedAt": "2026-08-03T15:49:10.885Z"
+  },
+  {
+    "id": "b00eca21-cedb-4c7b-989a-e9439550912a",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:49:35.108Z",
+    "decidedAt": "2026-08-03T15:49:41.194Z"
+  },
+  {
+    "id": "d2dfd367-7dcf-4ef8-8840-31bd698623f9",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:51:12.338Z",
+    "decidedAt": "2026-08-03T15:51:18.609Z"
+  },
+  {
+    "id": "82513e6d-0f63-4b74-8eb8-8d7832a16b08",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:56:30.681Z",
+    "decidedAt": "2026-08-03T15:56:37.060Z"
+  },
+  {
+    "id": "8484508a-d78c-4156-9a13-703091785a32",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt: Please analyze these server logs for the outage. T...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-03T15:58:36.539Z",
+    "decidedAt": "2026-08-03T15:58:40.991Z"
   }
 ]

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readStore, addItem, updateItem } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 interface AccessRequest {
   id: string;
   employeeName: string;
@@ -31,7 +41,7 @@ interface AuditEntry {
 
 export async function GET() {
   const data = readStore<AccessRequest>('access-requests');
-  return NextResponse.json(data);
+  return NextResponse.json(data, { headers: CORS_HEADERS });
 }
 
 export async function POST(req: NextRequest) {
@@ -40,11 +50,11 @@ export async function POST(req: NextRequest) {
     if (!employeeName || !sections || !reason) {
       return NextResponse.json(
         { error: 'employeeName, sections, and reason are required' },
-        { status: 400 },
+        { status: 400, headers: CORS_HEADERS },
       );
     }
     if (typeof reason !== 'string' || reason.length > 2000) {
-      return NextResponse.json({ error: 'reason must be a string under 2000 chars' }, { status: 400 });
+      return NextResponse.json({ error: 'reason must be a string under 2000 chars' }, { status: 400, headers: CORS_HEADERS });
     }
     const record: AccessRequest = {
       id: uuid(),
@@ -61,11 +71,11 @@ export async function POST(req: NextRequest) {
       decidedAt: null,
     };
     addItem('access-requests', record);
-    return NextResponse.json(record);
+    return NextResponse.json(record, { headers: CORS_HEADERS });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message ?? 'Failed to create request' },
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }
@@ -74,10 +84,10 @@ export async function PATCH(req: NextRequest) {
   try {
     const { id, status, adminComment, reviewerName } = await req.json();
     if (!id || !status) {
-      return NextResponse.json({ error: 'id and status are required' }, { status: 400 });
+      return NextResponse.json({ error: 'id and status are required' }, { status: 400, headers: CORS_HEADERS });
     }
     if (!['approved', 'rejected', 'pending'].includes(status)) {
-      return NextResponse.json({ error: 'status must be approved, rejected, or pending' }, { status: 400 });
+      return NextResponse.json({ error: 'status must be approved, rejected, or pending' }, { status: 400, headers: CORS_HEADERS });
     }
 
     const decidedAt = status === 'pending' ? null : new Date().toISOString();
@@ -105,11 +115,11 @@ export async function PATCH(req: NextRequest) {
       addItem('audit-log', auditEntry);
     }
 
-    return NextResponse.json(updated ?? { error: 'Not found' });
+    return NextResponse.json(updated ?? { error: 'Not found' }, { headers: CORS_HEADERS });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message ?? 'Failed to update request' },
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }
