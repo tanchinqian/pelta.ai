@@ -108,21 +108,21 @@ export default function NewRequestPage() {
 
   if (done) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="panel p-6 max-w-sm w-full text-center space-y-3">
+      <div className="flex-1 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl p-8 max-w-sm w-full text-center space-y-4">
           <RadarIcon size={32} className="text-accent mx-auto" />
-          <p className="text-base font-semibold text-text-primary">Request Submitted</p>
-          <p className="text-sm text-text-secondary">
-            Your request for <span className="font-medium text-text-primary">{name}</span> is pending admin review.
+          <p className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Request Submitted</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Your request for <span className="font-medium text-zinc-900 dark:text-zinc-100">{name}</span> is pending admin review.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => { setDone(false); setName(''); setDescription(''); setDepartment(''); }}
-              className="text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+              className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
             >
               Submit Another
             </button>
-            <span className="text-text-muted">·</span>
+            <span className="text-zinc-400 dark:text-zinc-500">·</span>
             <button
               onClick={() => router.push('/employee/redress')}
               className="text-sm text-accent hover:text-accent-hover transition-colors cursor-pointer"
@@ -138,39 +138,39 @@ export default function NewRequestPage() {
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
 
   return (
-    <div className="flex-1 p-4 max-w-6xl mx-auto w-full bg-[#09090b] min-h-screen text-zinc-100">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-2 text-sm font-mono text-zinc-400">
+    <div className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 text-sm font-mono text-zinc-500 dark:text-zinc-400">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
           <span>·</span>
           <span className="px-1.5 py-0.5 rounded bg-risk-medium/10 text-risk-medium">{pendingCount} pending</span>
           <span>·</span>
-          <span className="bg-zinc-800/80 text-zinc-300 text-xs px-2 py-0.5 rounded border border-zinc-700/50">{myRequests.length} total</span>
+          <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">{myRequests.length} total</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)] gap-3 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)] gap-4 items-start">
         {/* Left column: form + history */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Form */}
-          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl p-6 space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <RadarIcon size={16} className="text-accent" />
-                <h2 className="font-serif text-zinc-100 text-2xl font-bold tracking-tight">Request a New AI Tool</h2>
+                <h2 className="font-serif text-zinc-900 dark:text-zinc-100 text-2xl font-bold tracking-tight">Request a New AI Tool</h2>
               </div>
-              <p className="text-zinc-500 text-sm">
+              <p className="text-zinc-600 dark:text-zinc-400 text-sm">
                 Submit corporate AI tool requests and track approval statuses.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-2.5">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
-                  <Wrench size={10} /> TOOL NAME
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold flex items-center gap-1">
+                  <Wrench size={10} /> Tool Name
                 </label>
                 <input
-                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:border-accent focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors"
                   placeholder="e.g. NotebookLM, Copilot"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -185,12 +185,12 @@ export default function NewRequestPage() {
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
-                  <FileText size={10} /> INTENDED USE CASE
+              <div className="space-y-1.5">
+                <label className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold flex items-center gap-1">
+                  <FileText size={10} /> Intended Use Case
                 </label>
                 <input
-                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:border-accent focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors"
                   placeholder="e.g. AI note-taking for meeting summaries"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -199,12 +199,12 @@ export default function NewRequestPage() {
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold tracking-wider text-zinc-400 uppercase flex items-center gap-1">
-                  <Building size={10} /> DEPARTMENT
+              <div className="space-y-1.5">
+                <label className="text-sm font-mono uppercase tracking-widest text-zinc-700 dark:text-zinc-200 font-semibold flex items-center gap-1">
+                  <Building size={10} /> Department
                 </label>
                 <select
-                  className="w-full bg-[#09090b] border border-zinc-800 text-zinc-100 placeholder-zinc-600 focus:border-amber-600 focus:outline-none rounded-lg px-3 py-1.5 text-sm transition-colors"
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:border-accent focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   required
@@ -224,13 +224,13 @@ export default function NewRequestPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 text-sm bg-[#a17a26] hover:bg-[#8e6b20] text-zinc-950 font-semibold rounded-lg py-2.5 transition-colors duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-1.5 text-sm text-white bg-accent hover:bg-accent-hover font-semibold rounded-lg py-2.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <span className="flex items-center gap-1.5 text-text-tertiary text-sm font-mono">
+                  <span className="flex items-center gap-1.5 text-sm font-mono text-white/70">
                     <span className="relative inline-flex size-2">
-                      <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-40" />
-                      <span className="relative inline-block size-2 rounded-full bg-accent" />
+                      <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-40" />
+                      <span className="relative inline-block size-2 rounded-full bg-white" />
                     </span>
                     Submitting
                   </span>
@@ -242,25 +242,25 @@ export default function NewRequestPage() {
           </div>
 
           {/* Your Request History */}
-          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-3">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">
-              <History size={12} className="text-zinc-400" />
-              <span className="font-serif text-zinc-100 text-lg font-bold tracking-tight">
+              <History size={13} className="text-zinc-500 dark:text-zinc-400" />
+              <span className="font-serif text-zinc-900 dark:text-zinc-100 text-lg font-bold tracking-tight">
                 Your Request History
               </span>
-              <span className="text-sm font-mono text-zinc-500 ml-auto">{myRequests.length}</span>
+              <span className="text-sm font-mono text-zinc-500 dark:text-zinc-400 ml-auto">{myRequests.length}</span>
             </div>
 
             {myRequests.length === 0 ? (
-              <p className="text-base text-text-tertiary text-center py-4">No previous requests.</p>
+              <p className="text-base text-zinc-500 dark:text-zinc-400 text-center py-4">No previous requests.</p>
             ) : (
               <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
                 {[...myRequests]
                   .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
                   .map((req) => (
-                    <div key={req.id} className="bg-[#09090b] border border-zinc-800 rounded-lg p-2.5">
+                    <div key={req.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-text-primary font-medium truncate">{req.toolRequested}</span>
+                        <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{req.toolRequested}</span>
                         <span
                           className={`text-sm font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
                             req.status === 'approved' ? 'text-risk-low' :
@@ -273,12 +273,12 @@ export default function NewRequestPage() {
                           {req.status}
                         </span>
                       </div>
-                      <p className="text-zinc-400 text-sm font-mono mt-0.5">
+                      <p className="text-zinc-500 dark:text-zinc-400 text-sm font-mono mt-1">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {req.department && ` · ${req.department}`}
                       </p>
                       {req.status === 'denied' && req.denialReason && (
-                        <p className="text-zinc-400 text-sm italic mt-1 leading-relaxed">
+                        <p className="text-zinc-500 dark:text-zinc-400 text-sm italic mt-1 leading-relaxed">
                           Reason: {req.denialReason}
                         </p>
                       )}
@@ -290,26 +290,26 @@ export default function NewRequestPage() {
         </div>
 
         {/* Right column: approved tools */}
-        <div className="space-y-3">
-          <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 space-y-3">
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck size={12} className="text-risk-low" />
-              <span className="font-serif text-zinc-100 text-lg font-bold tracking-tight">
+              <ShieldCheck size={13} className="text-risk-low" />
+              <span className="font-serif text-zinc-900 dark:text-zinc-100 text-lg font-bold tracking-tight">
                 Already Approved Tools
               </span>
-              <span className="text-sm font-mono text-zinc-500 ml-auto">{approvedTools.length}</span>
+              <span className="text-sm font-mono text-zinc-500 dark:text-zinc-400 ml-auto">{approvedTools.length}</span>
             </div>
 
             {approvedTools.length === 0 ? (
-              <p className="text-base text-text-tertiary text-center py-4">No approved tools yet.</p>
+              <p className="text-base text-zinc-500 dark:text-zinc-400 text-center py-4">No approved tools yet.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[420px] overflow-y-auto">
                 {approvedTools
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((tool) => (
-                    <div key={tool.id} className="bg-[#09090b] border border-zinc-800 rounded-lg p-2.5">
+                    <div key={tool.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-text-primary font-medium truncate">{tool.name}</span>
+                        <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
                           <span
                             className="text-sm font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
@@ -319,7 +319,7 @@ export default function NewRequestPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-zinc-400 text-sm mt-0.5 line-clamp-2 leading-relaxed">{tool.description}</p>
+                      <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 line-clamp-2 leading-relaxed">{tool.description}</p>
                     </div>
                   ))}
               </div>

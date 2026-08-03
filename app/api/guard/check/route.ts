@@ -37,6 +37,41 @@ function inferDataCategory(prompt: string): string {
   return 'None';
 }
 
+function expandBase64(prompt: string): string {
+  // Match base64 blobs ≥ 32 chars (long enough to hide a real secret)
+  const B64 = /\b([A-Za-z0-9+/]{32,}={0,2})\b/g;
+  let expanded = prompt;
+  let m: RegExpExecArray | null;
+  while ((m = B64.exec(prompt)) !== null) {
+    try {
+      const decoded = Buffer.from(m[1], 'base64').toString('utf8');
+      // Only include if decoded text is printable ASCII (not binary garbage)
+      if (/^[\x20-\x7E\n\r\t]{10,}$/.test(decoded)) {
+        expanded += `\n[base64 decoded]: ${decoded}`;
+      }
+    } catch { /* not valid base64 — skip */ }
+  }
+  return expanded;
+}
+
+function extractUrlParams(prompt: string): string {
+  const URL_RE = /https?:\/\/[^\s"']+/g;
+  const extras: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = URL_RE.exec(prompt)) !== null) {
+    try {
+      const url = new URL(m[0]);
+      url.searchParams.forEach((value, key) => {
+        // Only flag values that look like secrets (long, high entropy)
+        if (value.length >= 16) {
+          extras.push(`url_param:${key}=${value}`);
+        }
+      });
+    } catch { /* malformed URL */ }
+  }
+  return extras.length > 0 ? `${prompt}\n[url params]: ${extras.join(' ')}` : prompt;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, source, tool } = await req.json();
@@ -46,14 +81,17 @@ export async function POST(req: NextRequest) {
 
     const truncated = prompt.length > 200 ? prompt.slice(0, 200) + '...' : prompt;
 
-    // Step 1: Regex pass
-    const regexResult = scanWithRegex(prompt);
+    // Step 1: Regex pass (on enriched prompt)
+    const enrichedPrompt = extractUrlParams(expandBase64(prompt));
+    const regexResult = scanWithRegex(enrichedPrompt);
 
     const dataCategory = inferDataCategory(prompt);
 
-    // Build highlights from regex hits (positions in original prompt text)
+    // Build highlights from regex hits
+    // Filter out hits that occurred in the appended enriched text to avoid out-of-bounds on client
     const highlights: HighlightSpan[] = regexResult.hits
-      .map((h) => ({ start: h.index, end: h.end, pattern: h.label, severity: h.severity }))
+      .filter((h) => h.index < prompt.length)
+      .map((h) => ({ start: h.index, end: Math.min(h.end, prompt.length), pattern: h.label, severity: h.severity }))
       .sort((a, b) => a.start - b.start);
 
     const respond = (log: GuardLog): NextResponse => {

@@ -6,7 +6,7 @@ import {
   PieChart, Pie,
   LineChart, Line, CartesianGrid, Legend,
 } from 'recharts';
-import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
 import { motion, animate } from 'framer-motion';
@@ -94,6 +94,7 @@ export default function DashboardPage() {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [tipStyle, setTipStyle] = useState<React.CSSProperties>({});
+  const [showToolRegistry, setShowToolRegistry] = useState(false);
 
 
   const fetchData = useCallback(async () => {
@@ -395,11 +396,15 @@ export default function DashboardPage() {
         <div className="col-span-3">
           {/* Tool Registry Table */}
           <div className="panel p-3 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setShowToolRegistry((v) => !v)}
+              className="flex items-center justify-between mb-2 w-full text-left hover:text-text-primary transition-colors cursor-pointer"
+            >
               <span className="text-base font-semibold text-text-secondary uppercase tracking-wider">
                 Tool Registry <span className="text-text-tertiary font-normal">({tools.length})</span>
               </span>
-            </div>
+              {showToolRegistry ? <ChevronUp size={13} className="text-text-tertiary shrink-0" /> : <ChevronDown size={13} className="text-text-tertiary shrink-0" />}
+            </button>
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -414,7 +419,7 @@ export default function DashboardPage() {
                   {sortedTools.length === 0 && (
                     <tr><td colSpan={4} className="py-4 text-center text-text-tertiary">No tools.</td></tr>
                   )}
-                  {sortedTools.map((t, i) => (
+                  {(showToolRegistry ? sortedTools : sortedTools.slice(0, 5)).map((t, i) => (
                     <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-1.5 pr-3 text-text-primary font-medium">{t.name}</td>
                       <td className="py-1.5 pr-3">
@@ -431,6 +436,15 @@ export default function DashboardPage() {
                       <td className="py-1.5 pl-3 text-sm font-mono text-text-tertiary hidden lg:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                     </tr>
                   ))}
+                  {!showToolRegistry && sortedTools.length > 5 && (
+                    <tr>
+                      <td colSpan={4} className="py-2 text-center">
+                        <span className="text-xs font-mono text-text-tertiary">
+                          +{sortedTools.length - 5} more entries — expand to view all
+                        </span>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
