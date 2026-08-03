@@ -31,7 +31,7 @@
       ],
       "js": ["content-script.js"],
       "css": ["overlay.css"],
-      "run_at": "document_end"
+      "run_at": "document_start"
     }
   ],
   "background": {

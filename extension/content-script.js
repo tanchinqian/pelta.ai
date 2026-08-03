@@ -16,7 +16,7 @@ function getToolName() {
 /* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
   input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
-  sendButton: '#composer-submit-button, button.send-button, [data-testid="send-button"], [aria-label*="Send message"], [aria-label*="Send prompt"], [aria-label*="Send"], [aria-label*="submit"], button[class*="send"]',
+  sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button',
 };
 
 /* ── State ───────────────────────────────────────────────── */
@@ -181,8 +181,6 @@ async function runBatchImageDlpCheck(blobs) {
   }
 }
 
-}
-
 async function runPdfDlpCheck(file) {
   lockSendButton();
   showOcrScanning('pdf.js'); 
@@ -301,6 +299,32 @@ let dropHandler = null;
 let dragOverHandler = null;
 let fileInputHandler = null;
 let escapeHandler = null;
+let keypressHandler = null;
+
+let interceptedEnter = false;
+
+const globalKeydownHandler = (e) => {
+  if (keydownHandler) keydownHandler(e);
+};
+const globalKeyupHandler = (e) => {
+  if (keyupHandler) keyupHandler(e);
+};
+const globalKeypressHandler = (e) => {
+  if (keypressHandler) keypressHandler(e);
+};
+const globalOtherHandler = (e) => {
+  if (interceptedEnter || document.getElementById('pelta-overlay')) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+};
+
+window.addEventListener('keydown', globalKeydownHandler, true);
+window.addEventListener('keyup', globalKeyupHandler, true);
+window.addEventListener('keypress', globalKeypressHandler, true);
+window.addEventListener('beforeinput', globalOtherHandler, true);
+window.addEventListener('submit', globalOtherHandler, true);
 
 function attachListeners() {
   if (keydownHandler || clickHandler || pasteHandler) return; // already attached
@@ -316,14 +340,42 @@ function attachListeners() {
     unlockSendButton();
   };
   window.addEventListener('keydown', escapeHandler, true);
+  
   keydownHandler = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !replaying) {
-      if (!inputEl || !inputEl.contains(e.target) && e.target !== inputEl) return;
+    // Block Enter key if overlay is open (unless typing inside the overlay's textarea)
+    const overlay = document.getElementById('pelta-overlay');
+    if (overlay && e.key === 'Enter') {
+      if (!overlay.contains(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        interceptedEnter = true;
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
+      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) return;
       const text = getPromptText();
       if (!text || !text.trim()) return;
+      
+      // Aggressively rip focus away
+      if (e.target && typeof e.target.blur === 'function') {
+        e.target.blur();
+      }
+      
+      // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
+      if (inputEl.tagName === 'TEXTAREA') {
+        inputEl.value = '';
+      } else {
+        inputEl.innerText = '';
+      }
+      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+      
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
+      interceptedEnter = true;
       startCheck(text, 'keydown');
     }
   };
@@ -335,6 +387,15 @@ function attachListeners() {
 
     const text = getPromptText();
     if (!text || !text.trim()) return;
+
+    // Definitively prevent the host app from sending the prompt by deleting it
+    if (inputEl.tagName === 'TEXTAREA') {
+      inputEl.value = '';
+    } else {
+      inputEl.innerText = '';
+    }
+    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -342,7 +403,29 @@ function attachListeners() {
   };
 
   keyupHandler = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !replaying) {
+    if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
+      if (interceptedEnter) {
+        interceptedEnter = false;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return;
+      }
+      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }
+  };
+
+  keypressHandler = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
+      if (interceptedEnter) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return;
+      }
       if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) return;
       e.preventDefault();
       e.stopPropagation();
@@ -413,8 +496,6 @@ function attachListeners() {
     }
   };
 
-  window.addEventListener('keydown', keydownHandler, true);
-  window.addEventListener('keyup', keyupHandler, true);
   document.addEventListener('click', clickHandler, true);
   document.addEventListener('mousedown', clickHandler, true);
   document.addEventListener('pointerdown', clickHandler, true);
@@ -431,12 +512,6 @@ function attachListeners() {
 }
 
 function detachListeners() {
-  if (keydownHandler) {
-    window.removeEventListener('keydown', keydownHandler, true);
-  }
-  if (keyupHandler) {
-    window.removeEventListener('keyup', keyupHandler, true);
-  }
   if (clickHandler) {
     document.removeEventListener('click', clickHandler, true);
     document.removeEventListener('mousedown', clickHandler, true);
@@ -450,6 +525,9 @@ function detachListeners() {
   }
   if (escapeHandler) {
     window.removeEventListener('keydown', escapeHandler, true);
+  }
+  if (keypressHandler) {
+    window.removeEventListener('keypress', keypressHandler, true);
   }
   if (dragOverHandler) {
     document.removeEventListener('dragover', dragOverHandler, false);
@@ -569,17 +647,21 @@ function startCheck(text, trigger, meta = {}) {
   chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
     unlockSendButton();
     if (!response) {
-      showError('No response from extension background — check console.');
+      showError('No response from backend.');
+      typeIntoInput(text); // Restore original
       return;
     }
     if (response.error) {
-      showError(response.reason || 'Governance check failed.');
+      showError(response.error);
+      typeIntoInput(text); // Restore original
       return;
     }
+
     switch (response.verdict) {
       case 'allow':
         removeOverlay();
         showAllowToast();
+        typeIntoInput(text); // Restore original
         replaySend();
         break;
       case 'flag':
@@ -599,16 +681,28 @@ function startCheck(text, trigger, meta = {}) {
 function buildRedactedText(text, highlights) {
   if (!highlights || highlights.length === 0) return text;
 
-  // Sort descending by position so slice indices stay valid after each replacement
+  const aliasMap = new Map();
+  const labelCounts = new Map();
+
+  // First pass: assign aliases in order of appearance (left-to-right)
+  const ascending = [...highlights].sort((a, b) => a.start - b.start);
+  for (const h of ascending) {
+    const raw = text.slice(h.start, h.end);
+    if (!aliasMap.has(raw)) {
+      const label = h.pattern || 'Secret';
+      const count = (labelCounts.get(label) || 0) + 1;
+      labelCounts.set(label, count);
+      aliasMap.set(raw, `[${label} ${count}]`);
+    }
+  }
+
+  // Second pass: replace text from right-to-left to keep indices valid
   const sorted = [...highlights].sort((a, b) => b.start - a.start);
   let redacted = text;
   for (const h of sorted) {
-    const raw = redacted.slice(h.start, h.end);
-    // Keep first 3 chars visible so it’s recognisable; mask the rest
-    const masked = raw.length <= 4
-      ? '█'.repeat(raw.length)
-      : raw.slice(0, 3) + '█'.repeat(raw.length - 3);
-    redacted = redacted.slice(0, h.start) + masked + redacted.slice(h.end);
+    const raw = text.slice(h.start, h.end); // Use original text to lookup map
+    const alias = aliasMap.get(raw);
+    redacted = redacted.slice(0, h.start) + alias + redacted.slice(h.end);
   }
   return redacted;
 }
@@ -728,7 +822,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = isUpload ? buildRedactedText(promptText, response.highlights) : '';
+  const redactedText = buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -737,32 +831,32 @@ function showFlag(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    ${isUpload ? `
-      <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before sending</div>
-      <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
-    ` : `
-      <div class="pelta-prompt-preview">${promptHtml}</div>
-    `}
+    ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
+    <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
-      ${isUpload ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm &amp; Send</button>' : '<button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Anyway</button>'}
+      <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm Anonymized &amp; Send</button>
+      <button class="pelta-btn pelta-btn-primary" id="pelta-allow">Send Original</button>
       <button class="pelta-btn pelta-btn-secondary" id="pelta-cancel">Cancel</button>
     </div>
   `;
-  if (isUpload) {
-    document.getElementById('pelta-confirm-send').onclick = () => {
-      const finalVal = document.getElementById('pelta-edit-area').value;
-      typeIntoInput(finalVal);
-      removeOverlay();
-      replaySend();
-    };
-  } else {
-    document.getElementById('pelta-allow').onclick = () => {
-      removeOverlay();
-      replaySend();
-    };
-  }
-  document.getElementById('pelta-cancel').onclick = removeOverlay;
+
+  document.getElementById('pelta-confirm-send').onclick = () => {
+    const finalVal = document.getElementById('pelta-edit-area').value;
+    typeIntoInput(finalVal);
+    removeOverlay();
+    replaySend();
+  };
+
+  document.getElementById('pelta-allow').onclick = () => {
+    removeOverlay();
+    replaySend();
+  };
+  document.getElementById('pelta-cancel').onclick = () => {
+    typeIntoInput(promptText); // Restore original so they don't lose work
+    removeOverlay();
+  };
 }
 
 function showBlock(response, promptText, trigger, meta = {}) {
@@ -782,7 +876,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = isUpload ? buildRedactedText(promptText, response.highlights) : '';
+  const redactedText = buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -791,26 +885,23 @@ function showBlock(response, promptText, trigger, meta = {}) {
     <div class="pelta-reason">${response.reason || 'No reason provided.'}</div>
     <div class="pelta-prompt-label">${promptLabel} ${sourceBadge}</div>
     ${fileBadge}
-    ${isUpload ? `
-      <div class="pelta-prompt-label" style="margin-top:12px; color:#c7d2fe;">Edit before typing</div>
-      <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
-    ` : `
-      <div class="pelta-prompt-preview">${promptHtml}</div>
-    `}
+    ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
+    <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
-      ${isUpload ? '<button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm &amp; Type</button>' : ''}
+      <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm Anonymized &amp; Type</button>
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss">Dismiss</button>
     </div>
   `;
-  if (isUpload) {
-    document.getElementById('pelta-confirm-type').onclick = () => {
-      const finalVal = document.getElementById('pelta-edit-area').value;
-      typeIntoInput(finalVal);
-      removeOverlay();
-    };
-  }
+
+  document.getElementById('pelta-confirm-type').onclick = () => {
+    const finalVal = document.getElementById('pelta-edit-area').value;
+    typeIntoInput(finalVal);
+    removeOverlay();
+  };
   document.getElementById('pelta-dismiss').onclick = () => {
+    typeIntoInput(promptText); // Restore original
     clearPrompt();
     removeOverlay();
   };
