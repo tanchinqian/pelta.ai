@@ -269,8 +269,16 @@ function removeActiveBadge() {
 }
 
 /* ── Bootstrap ─────────────────────────────────────────── */
+function getPromptText() {
+  if (!inputEl) return '';
+  if (inputEl.tagName === 'TEXTAREA') return inputEl.value;
+  return inputEl.innerText || inputEl.textContent || '';
+}
+
 function acquire() {
-  inputEl = document.querySelector(SELECTORS.input);
+  const inputs = Array.from(document.querySelectorAll(SELECTORS.input));
+  inputEl = inputs.find(el => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
+
   if (inputEl) {
     attachListeners();
     showActiveBadge();
@@ -355,7 +363,15 @@ function attachListeners() {
     }
 
     if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
-      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) return;
+      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
+        // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
+        const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
+        if (isEditable) {
+          inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
+        } else {
+          return;
+        }
+      }
       const text = getPromptText();
       if (!text || !text.trim()) return;
       

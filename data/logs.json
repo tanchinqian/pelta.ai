@@ -350,5 +350,29 @@
     "source": "extension",
     "tool": "Gemini",
     "timestamp": "2026-08-03T02:35:56.136Z"
+  },
+  {
+    "id": "c8b6bb42-5e82-40fd-8bbc-28feab38d128",
+    "promptSnippet": "Hello, please draft an email to john.doe@example.com and jane.smith@example.com discussing the contract details. CC john.doe@example.com so he has a record.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address, Email address, Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-08-03T02:44:57.832Z"
+  },
+  {
+    "id": "bedd5406-0687-459e-83f3-e39d8969722a",
+    "promptSnippet": "Hello, please draft an email to john.doe@example.com and jane.smith@example.com discussing the contract details. CC john.doe@example.com so he has a record.",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address, Email address, Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-08-03T02:45:02.867Z"
   }
 ]
