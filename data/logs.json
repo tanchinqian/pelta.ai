@@ -374,5 +374,41 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-08-03T02:45:02.867Z"
+  },
+  {
+    "id": "eafc19f8-7df8-4fe3-a6d4-b3a490fb2a90",
+    "promptSnippet": "Can you help me optimize this authentication logic? function verifyAdminAccess(userToken, sessionID) {  const secretKey = process.env.JWT_SECRET;  const decoded = jwt.verify(userToken, secretKey);  if...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Source code (function/class).",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-08-03T02:50:21.565Z"
+  },
+  {
+    "id": "3ae94f04-fd68-4a8f-a207-3da1ff6c5e94",
+    "promptSnippet": "Can you help me optimize this authentication logic? function verifyAdminAccess(userToken, sessionID) {  const secretKey = process.env.JWT_SECRET;  const decoded = jwt.verify(userToken, secretKey);  if...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Source code (function/class).",
+    "detectionMethod": "regex",
+    "dataCategory": "Source Code",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-03T02:51:25.304Z"
+  },
+  {
+    "id": "b20349bd-9f45-4135-80f5-d61f6eceedc4",
+    "promptSnippet": "Why is this query running so slowly on our production database?SELECT users.id, users.email, payment_methods.card_last_four FROM users INNER JOIN payment_methods ON users.id = payment_methods.user_id ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: SQL Query.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-03T02:51:50.147Z"
   }
 ]

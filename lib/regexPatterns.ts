@@ -30,6 +30,11 @@ const PATTERNS: { label: string; pattern: RegExp; severity: 'high' | 'medium' | 
   { label: 'JWT token', pattern: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, severity: 'high' },
   { label: 'Date of birth', pattern: /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g, severity: 'medium' },
   { label: 'API key (high entropy token)', pattern: /\b[A-Za-z0-9_.~+/=-]{40,}\b/gi, severity: 'high' },
+  
+  // Source Code and Database Queries
+  { label: 'Source code (function/class)', pattern: /\b(function|class|def|public class|interface|struct|enum)\s+[A-Za-z0-9_]+\s*[({\:]/g, severity: 'high' },
+  { label: 'Source code (imports)', pattern: /\b(import\s+.*?\s+from\s+['"].*?['"]|require\s*\(\s*['"].*?['"]\s*\)|#include\s*[<"].*?[>"])/g, severity: 'high' },
+  { label: 'SQL Query', pattern: /\b(SELECT\s+.*?\s+FROM|INSERT\s+INTO|UPDATE\s+.*?\s+SET|DELETE\s+FROM)\s/gi, severity: 'high' },
 ];
 
 const SUSPICIOUS_KEYWORDS = [
