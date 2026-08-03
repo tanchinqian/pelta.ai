@@ -27,16 +27,16 @@ interface NavItem {
 /* ── Static nav items ──────────────────────────────────── */
 
 const EMPLOYEE_ITEMS: NavItem[] = [
-  { href: '/employee/requests/new', label: 'Request Tool', icon: <Send size={15} />, matchPaths: ['/employee/requests'] },
-  { href: '/employee/redress', label: 'Redress', icon: <ShieldAlert size={15} />, matchPaths: ['/employee/redress'] },
+  { href: '/employee/requests/new', label: 'Request Tool', icon: <Send size={18} />, matchPaths: ['/employee/requests'] },
+  { href: '/employee/redress', label: 'Redress', icon: <ShieldAlert size={18} />, matchPaths: ['/employee/redress'] },
 ];
 
 const ADMIN_ITEMS: NavItem[] = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: <BarChart3 size={15} />, matchPaths: ['/admin/dashboard'] },
-  { href: '/admin/tools/new', label: 'Classify', icon: <Search size={15} />, matchPaths: ['/admin/tools/new'] },
-  { href: '/admin/tools', label: 'Tools', icon: <Layers size={15} />, matchPaths: ['/admin/tools'], exact: true },
-  { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={15} />, matchPaths: ['/admin/requests'] },
-  { href: '/admin/logs', label: 'Logs', icon: <FileText size={15} />, matchPaths: ['/admin/logs'] },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: <BarChart3 size={18} />, matchPaths: ['/admin/dashboard'] },
+  { href: '/admin/tools/new', label: 'Classify', icon: <Search size={18} />, matchPaths: ['/admin/tools/new'] },
+  { href: '/admin/tools', label: 'Tools', icon: <Layers size={18} />, matchPaths: ['/admin/tools'], exact: true },
+  { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={18} />, matchPaths: ['/admin/requests'] },
+  { href: '/admin/logs', label: 'Logs', icon: <FileText size={18} />, matchPaths: ['/admin/logs'] },
 ];
 
 /* ── Page title map ────────────────────────────────────── */
@@ -87,7 +87,7 @@ function ThemeToggleMini() {
   return (
     <button
       onClick={toggle}
-      className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors cursor-pointer"
+      className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors cursor-pointer"
     >
       {theme === 'dark' ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -121,10 +121,10 @@ function SeedButtonSidebar() {
     <button
       onClick={handleSeed}
       disabled={seeding}
-      className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-text-tertiary hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer disabled:opacity-40"
+      className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-tertiary hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer disabled:opacity-40"
       title="Reset all data to seed state"
     >
-      <RefreshCw size={12} className={seeding ? 'animate-spin' : ''} />
+      <RefreshCw size={14} className={seeding ? 'animate-spin' : ''} />
       Reset
     </button>
   );
@@ -169,7 +169,7 @@ function RequestBadge() {
 function NavGroup({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
   return (
     <div className="space-y-1">
-      <p className="px-3 py-1 text-[9px] font-semibold uppercase tracking-widest text-text-muted">{label}</p>
+      <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-text-muted">{label}</p>
       {items.map((item) => {
         const active = item.exact
           ? pathname === item.href
@@ -179,7 +179,7 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-l-none rounded-r text-[12px] transition-all border-l ${
+            className={`flex items-center gap-3 px-4 py-2 rounded-l-none rounded-r text-sm transition-all border-l ${
               active
                 ? 'text-text-primary font-medium border-accent bg-accent-dim/60'
                 : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary border-transparent'
@@ -201,16 +201,16 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[210px] shrink-0 h-screen flex flex-col border-r border-border bg-surface/30 sticky top-0">
+    <aside className="w-[280px] shrink-0 h-screen flex flex-col border-r border-border bg-surface/30 sticky top-0">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 px-4 h-12 border-b border-border shrink-0 hover:bg-surface-hover/50 transition-colors">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent shrink-0">
+      <Link href="/" className="flex items-center gap-3 px-6 h-16 border-b border-border shrink-0 hover:bg-surface-hover/50 transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-accent shrink-0">
           <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
           <path d="M12 7a5 5 0 0 1 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
           <path d="M12 11a1 1 0 0 1 1 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
           <circle cx="12" cy="12" r="1.5" fill="currentColor" />
         </svg>
-        <span className="text-sm tracking-tight font-serif">
+        <span className="text-lg tracking-tight font-serif">
           <span className="font-semibold text-text-primary">pelta</span>
           <span className="text-accent font-bold">.</span>
           <span className="font-light text-text-secondary">ai</span>
@@ -249,12 +249,12 @@ function SlimTopBarInner() {
   }
 
   return (
-    <div className="flex items-center gap-2 px-4 h-9 border-b border-border bg-surface/20 shrink-0">
-      <span className="text-[11px] font-semibold text-text-primary">{best.title}</span>
+    <div className="flex items-center gap-3 px-6 h-16 border-b border-border bg-surface/20 shrink-0">
+      <span className="text-base font-semibold text-text-primary">{best.title}</span>
       {best.crumb && (
         <>
-          <span className="text-text-muted text-[10px]">/</span>
-          <span className="text-[10px] font-mono text-text-tertiary">{best.crumb}</span>
+          <span className="text-text-muted text-sm">/</span>
+          <span className="text-sm font-mono text-text-tertiary">{best.crumb}</span>
         </>
       )}
     </div>

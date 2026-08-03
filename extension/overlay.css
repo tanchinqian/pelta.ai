@@ -72,6 +72,13 @@
   margin-bottom: 4px;
 }
 
+.pelta-file-name {
+  font-size: 10px;
+  color: #64748b;
+  margin-bottom: 6px;
+  font-style: italic;
+}
+
 /* ── Checking state ─────────────────────────────────── */
 #pelta-overlay.checking {
   background: #111113;
@@ -97,6 +104,78 @@
   font-size: 11px;
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   color: #9e9b94;
+}
+
+/* ── OCR Scanning state ──────────────────────────────── */
+@keyframes pelta-scan {
+  0%   { transform: scaleX(0); transform-origin: left; }
+  50%  { transform: scaleX(1); transform-origin: left; }
+  51%  { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+#pelta-overlay.ocr-scanning {
+  background: #111113;
+  border: 1px solid #6366f1;
+  color: #9e9b94;
+  box-shadow: 0 0 16px rgba(99,102,241,0.12), 0 8px 28px rgba(0,0,0,0.5);
+}
+
+#pelta-overlay.ocr-scanning .pelta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #a5b4fc;
+}
+
+#pelta-overlay.ocr-scanning .pelta-scan-bar {
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: #6366f1;
+  animation: pelta-scan 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+#pelta-overlay.ocr-scanning .pelta-ocr-sub {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #3f3f5a;
+  margin-top: 5px;
+  letter-spacing: 0.02em;
+}
+
+/* ── OCR No-text state (success / safe) ──────────────── */
+#pelta-overlay.ocr-no-text {
+  background: #111113;
+  border: 1px solid #22c55e;
+  color: #9e9b94;
+  box-shadow: 0 0 16px rgba(34,197,94,0.10), 0 8px 28px rgba(0,0,0,0.5);
+  animation: pelta-slide-in 0.2s ease-out;
+}
+
+#pelta-overlay.ocr-no-text .pelta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #4ade80;
+}
+
+#pelta-overlay.ocr-no-text .pelta-label svg {
+  flex-shrink: 0;
+  stroke: #22c55e;
+}
+
+#pelta-overlay.ocr-no-text .pelta-ocr-sub {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: #1f4a2a;
+  margin-top: 5px;
 }
 
 /* ── Flag state ─────────────────────────────────────── */
@@ -237,4 +316,82 @@
 
 .pelta-btn-danger:hover {
   background: #ef444410;
+}
+
+/* Teal "Redact & …" action button */
+.pelta-btn-redact {
+  background: #0d9488;
+  color: #fff;
+  border-color: #0d9488;
+}
+
+.pelta-btn-redact:hover {
+  background: #0f766e;
+}
+
+/* Inline badge shown next to prompt label for image-sourced detections */
+.pelta-ocr-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Allow toast — green slide-up confirmation ─────────── */
+#pelta-allow-toast {
+  position: fixed;
+  bottom: 48px; /* sits above the pelta-active-badge */
+  right: 12px;
+  z-index: 999999;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  background: #052e16;
+  border: 1px solid #22c55e;
+  border-radius: 6px;
+  color: #4ade80;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+#pelta-allow-toast.pelta-toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Inline Edit Textarea ──────────────────────────────── */
+.pelta-edit-area {
+  width: 100%;
+  min-height: 80px;
+  max-height: 160px;
+  background: #0f172a;
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  margin: 6px 0 10px;
+}
+.pelta-edit-area:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
 }

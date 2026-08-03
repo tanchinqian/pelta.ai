@@ -11,6 +11,23 @@ const API_BASE = 'http://localhost:3000';
  * ─────────────────────────────────────────────────────────── */
 const FAIL_CLOSED = true;
 
+function storeEvent(msg, data) {
+  const event = {
+    id: Date.now().toString(),
+    timestamp: new Date().toISOString(),
+    verdict: data.verdict,
+    riskLevel: data.riskLevel || 'none',
+    reason: data.reason || '',
+    tool: msg.tool || 'Unknown',
+    source: msg.trigger === 'paste-image' ? 'image-upload' : 'text',
+    promptSnippet: (msg.text || '').slice(0, 90),
+  };
+  chrome.storage.local.get({ pelta_events: [] }, ({ pelta_events }) => {
+    const updated = [event, ...pelta_events].slice(0, 50);
+    chrome.storage.local.set({ pelta_events: updated });
+  });
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'CHECK_PROMPT') return;
 
@@ -31,10 +48,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       return r.json();
     })
-    .then((data) => sendResponse(data))
+    .then((data) => {
+      storeEvent(msg, data);
+      sendResponse(data);
+    })
     .catch((err) => {
       console.warn('[pelta] API call failed:', err.message);
-      sendResponse({
+      const fallback = {
         error: true,
         verdict: FAIL_CLOSED ? 'block' : 'allow',
         riskLevel: FAIL_CLOSED ? 'high' : 'none',
@@ -43,7 +63,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           : 'pelta.ai governance server unreachable — message sent without check.',
         detectionMethod: 'extension',
         dataCategory: 'None',
-      });
+      };
+      storeEvent(msg, fallback);
+      sendResponse(fallback);
     });
 
   return true; // keep message channel open for async response
