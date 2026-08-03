@@ -410,5 +410,29 @@
     "source": "extension",
     "tool": "Gemini",
     "timestamp": "2026-08-03T02:51:50.147Z"
+  },
+  {
+    "id": "d16d6034-77c3-40e9-8fa7-3af378d39ba0",
+    "promptSnippet": "i would like generate video which can help me to demonstrate my project (demo), which website can i use to generate it",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-03T04:39:26.819Z"
+  },
+  {
+    "id": "8f69abbe-09f9-40f3-b952-f7645959c490",
+    "promptSnippet": "i would like generate video which can help me to demonstrate my project (demo), which website can i use to generate it",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-03T04:41:50.575Z"
   }
 ]
