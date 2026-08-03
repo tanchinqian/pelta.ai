@@ -157,7 +157,7 @@
   --color-data-financial: var(--data-financial);
   --color-data-source-code: var(--data-source-code);
   --color-data-none: var(--data-none);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-lora);
 }
@@ -250,20 +250,43 @@ h1, h2, h3, .font-serif {
 
 /* ── Panel variants ──────────────────────────────────── */
 .panel {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 .panel-accent {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-left: 2px solid var(--accent);
   border-radius: 8px;
 }
 .panel-primary {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-left: 2px solid var(--accent);
   background-image: linear-gradient(135deg, var(--accent-dim) 0%, transparent 40%);
   border-radius: 8px;
+}
+
+/* ── Interactive Elements Micro-Animations ───────────── */
+button, a.button {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+button:active:not(:disabled), a.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+button:hover:not(:disabled), a.button:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+tr {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+tr:hover {
+  transform: translateX(2px);
 }
