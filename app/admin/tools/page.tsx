@@ -150,6 +150,7 @@ export default function ToolsRegistryPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status }),
     });
+    window.dispatchEvent(new CustomEvent('pelta:refetch-requests'));
   };
 
   const handleDeleteTool = async (id: string) => {

@@ -37,21 +37,29 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const fetchData = async () => {
       try {
         const [reqRes, toolRes] = await Promise.all([
-          fetch('/api/requests').then((r) => r.json()),
-          fetch('/api/tools').then((r) => r.json()),
+          fetch('/api/requests', { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/tools', { cache: 'no-store' }).then((r) => r.json()),
         ]);
+        if (!mounted) return;
         setMyRequests((reqRes as RequestRecord[]).filter((r) => r.employeeName === DEMO_EMPLOYEE));
         setApprovedTools((toolRes as ToolRecord[]).filter((t) => (t as any).status === 'approved'));
       } catch {}
-      setLoading(false);
+      if (mounted) setLoading(false);
     };
     fetchData();
-    const h = () => { if (document.visibilityState === 'visible') fetchData(); };
-    document.addEventListener('visibilitychange', h);
-    return () => document.removeEventListener('visibilitychange', h);
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchData(); };
+    const onRefetch = () => fetchData();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pelta:refetch-requests', onRefetch);
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pelta:refetch-requests', onRefetch);
+    };
   }, []);
 
   const pending = myRequests.filter((r) => r.status === 'pending');

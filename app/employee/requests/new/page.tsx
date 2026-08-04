@@ -55,20 +55,28 @@ export default function NewRequestPage() {
   const [approvedTools, setApprovedTools] = useState<ToolRecord[]>([]);
 
   useEffect(() => {
+    let mounted = true;
     const fetchData = async () => {
       try {
         const [reqRes, toolRes] = await Promise.all([
-          fetch('/api/requests').then((r) => r.json()) as Promise<RequestRecord[]>,
-          fetch('/api/tools').then((r) => r.json()) as Promise<ToolRecord[]>,
+          fetch('/api/requests', { cache: 'no-store' }).then((r) => r.json()) as Promise<RequestRecord[]>,
+          fetch('/api/tools', { cache: 'no-store' }).then((r) => r.json()) as Promise<ToolRecord[]>,
         ]);
+        if (!mounted) return;
         setMyRequests(reqRes.filter((r) => r.employeeName === DEMO_EMPLOYEE));
         setApprovedTools(toolRes.filter((t) => t.status === 'approved'));
       } catch {}
     };
     fetchData();
-    const h = () => { if (document.visibilityState === 'visible') fetchData(); };
-    document.addEventListener('visibilitychange', h);
-    return () => document.removeEventListener('visibilitychange', h);
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchData(); };
+    const onRefetch = () => fetchData();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pelta:refetch-requests', onRefetch);
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pelta:refetch-requests', onRefetch);
+    };
   }, []);
 
   // Inline hint: if the user types a name that matches an approved tool

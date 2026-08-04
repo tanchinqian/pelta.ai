@@ -128,6 +128,7 @@ export default function ClassifyToolPage() {
       if (!res.ok) {
         throw new Error('Failed to update status');
       }
+      window.dispatchEvent(new CustomEvent('pelta:refetch-requests'));
       fetchTools();
     } catch (err) {
       console.error(err);
