@@ -6,6 +6,7 @@ import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History
 import RadarIcon from '@/components/RadarIcon';
 import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
@@ -141,7 +142,11 @@ export default function NewRequestPage() {
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
 
   return (
-    <div className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+      className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
       <div className="flex items-center gap-3 mb-4">
         <div className="flex items-center gap-2 text-sm font-mono text-zinc-500 dark:text-zinc-400">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
@@ -319,6 +324,6 @@ export default function NewRequestPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

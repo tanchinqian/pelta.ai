@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Search, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown, Shield,
   RefreshCw, Clock, CheckCircle2, XCircle, Layers, Edit3, Save, Trash2, RotateCw, Download
@@ -312,11 +313,15 @@ export default function ToolsRegistryPage() {
         <RadarIcon size={32} className="text-accent animate-radar-pulse" />
         <span className="text-sm text-text-tertiary font-mono">Loading tool registry...</span>
       </div>
-    );
-  }
+      );
+    }
 
   return (
-    <div className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-3">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+      className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -735,7 +740,7 @@ export default function ToolsRegistryPage() {
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, Fragment } from 'react';
 import { Filter, Search, ChevronDown, ChevronUp, Download, RefreshCw } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
 import { VerdictBadge, DataCategoryBadge } from '@/components/Badge';
+import { motion } from 'framer-motion';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
 
 interface GuardLog {
@@ -102,11 +103,15 @@ export default function LogsPage() {
         <RadarIcon size={32} className="text-accent animate-radar-pulse" />
         <span className="text-sm text-text-tertiary font-mono">Loading audit trail...</span>
       </div>
-    );
+      );
   }
 
   return (
-    <div className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full space-y-4 text-zinc-900 dark:text-zinc-100">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+      className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full space-y-4 text-zinc-900 dark:text-zinc-100">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-3">
         <div className="space-y-0.5">
@@ -288,7 +293,7 @@ export default function LogsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
