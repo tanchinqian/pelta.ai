@@ -103,5 +103,18 @@
     ],
     "riskLevel": "medium",
     "timestamp": "2026-08-03T15:58:40.991Z"
+  },
+  {
+    "id": "07b98999-c101-4bb2-a3b3-5614b2192c49",
+    "requestId": "93e6cba2-75cd-432b-8cde-306e9e607f49",
+    "employeeName": "Demo Employee",
+    "action": "approved",
+    "reviewerName": "Admin",
+    "adminComment": null,
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "high",
+    "timestamp": "2026-08-04T02:31:21.186Z"
   }
 ]

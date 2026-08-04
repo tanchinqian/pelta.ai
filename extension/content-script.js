@@ -959,6 +959,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
       <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm Anonymized &amp; Type</button>
+      <button class="pelta-btn pelta-btn-primary" id="pelta-report">Report False Positive</button>
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss">Dismiss</button>
     </div>
   `;
@@ -967,6 +968,57 @@ function showBlock(response, promptText, trigger, meta = {}) {
     const finalVal = document.getElementById('pelta-edit-area').value;
     typeIntoInput(finalVal);
     removeOverlay();
+  };
+
+  document.getElementById('pelta-report').onclick = async (e) => {
+    const btn = e.target;
+    btn.textContent = "Reporting...";
+    btn.disabled = true;
+    btn.className = "pelta-btn pelta-btn-secondary";
+    try {
+      const res = await fetch('http://localhost:3000/api/access-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employeeName: "Demo Employee",
+          sections: ["Prompt Approval"],
+          riskLevel: "high",
+          reason: "User reported false positive for blocked prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
+        })
+      });
+      const data = await res.json();
+      if (data.id) {
+        btn.textContent = "Waiting for Admin...";
+        const interval = setInterval(async () => {
+          try {
+            const checkRes = await fetch('http://localhost:3000/api/access-requests');
+            const allReqs = await checkRes.json();
+            const myReq = allReqs.find(r => r.id === data.id);
+            if (myReq) {
+              if (myReq.status === 'approved') {
+                approvedPrompts.add(promptText.trim());
+                clearInterval(interval);
+                btn.textContent = "Approved by Admin \u2713";
+                btn.style.background = "#10b981";
+                btn.style.borderColor = "#10b981";
+                btn.style.color = "white";
+                setTimeout(() => {
+                  typeIntoInput(promptText);
+                  removeOverlay();
+                  // No auto-send; user can manually send now.
+                }, 1500);
+              } else if (myReq.status === 'rejected') {
+                clearInterval(interval);
+                btn.textContent = "Report Denied";
+                btn.className = "pelta-btn pelta-btn-redact";
+              }
+            }
+          } catch (err) {}
+        }, 2000);
+      }
+    } catch(err) {
+      btn.textContent = "Error reporting";
+    }
   };
   document.getElementById('pelta-dismiss').onclick = () => {
     typeIntoInput(promptText); // Restore original

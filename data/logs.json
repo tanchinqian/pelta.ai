@@ -302,5 +302,17 @@
     "source": "extension",
     "tool": "Gemini",
     "timestamp": "2026-08-03T15:58:35.483Z"
+  },
+  {
+    "id": "cb37748f-5cef-4f74-800c-7bb947eb3273",
+    "promptSnippet": "👤 User (Employee) Features1. Real-Time Chrome Extension (The Shield)Zero-Latency Prompt Scanning: When a user types a prompt into a GenAI app (like Gemini) and presses Enter, the extension instantly ...",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: SQL Query.",
+    "detectionMethod": "regex",
+    "dataCategory": "Financial",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-04T02:30:54.702Z"
   }
 ]

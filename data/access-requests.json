@@ -152,5 +152,21 @@
     "type": "access",
     "requestedAt": "2026-08-03T15:58:36.539Z",
     "decidedAt": "2026-08-03T15:58:40.991Z"
+  },
+  {
+    "id": "93e6cba2-75cd-432b-8cde-306e9e607f49",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "high",
+    "reason": "User reported false positive for blocked prompt:\n\n👤 User (Employee) Features1. Real-Time Chrome Extension (The Shield)Zero-Latency Prompt Scanning: When a user types a prompt into a GenAI app (like Gemini) and presses Enter, the extension instantly intercepts the keystroke and removes the text from the screen before it leaves the browser.On-Device Risk Analysis: It scans the prompt locally for sensitive data (PII, Financial Data, Source Code) and classifies the risk (Low, Medium, High).In-Page Safety Overlays: If a risk is detected, it injects a beautiful, native-looking warning overlay directly into the webpage, explaining why the prompt was flagged.One-Click Admin Appeals: Users can click \"Request Admin Approval\" directly from the warning overlay. This sends the full prompt (up to 1,500 characters) to the security team for review.Seamless Auto-Replay: Once an admin approves the prompt, the extension caches the approval. The next time the user types that exact prompt, it instantly bypasses the scanner, pastes the text back in, and auto-submits it.2. Employee Web PortalAI Tool Requests (/request-tool): A dedicated form where employees can request access to new, unvetted AI tools (e.g., Synthesia, Harvey AI). They must provide a business justification and select their department.Redress & Tracking (/redress): A portal where users can track the real-time status (Pending, Approved, Rejected) of both their Prompt Appeals and Tool Requests.🛡️ Admin (Security / Governance) Features1. Command Center Dashboard (/admin/dashboard)Se...",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T02:30:59.818Z",
+    "decidedAt": "2026-08-04T02:31:21.186Z"
   }
 ]
