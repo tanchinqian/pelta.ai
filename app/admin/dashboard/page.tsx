@@ -6,7 +6,7 @@ import {
   PieChart, Pie,
   LineChart, Line, CartesianGrid, Legend,
 } from 'recharts';
-import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock, ChevronDown, ChevronUp, ShieldAlert, ShieldCheck, Globe } from 'lucide-react';
 import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
 import { motion, animate } from 'framer-motion';
@@ -201,6 +201,14 @@ export default function DashboardPage() {
 
   const visibleLogs = [...logs].reverse().slice(0, 5);
 
+  /* ── Business impact derived data ─────────────────────── */
+  const blockedLogs = logs.filter((l) => l.verdict === 'block');
+  const piiBlocked = blockedLogs.filter((l) => l.dataCategory === 'PII').length;
+  const financialBlocked = blockedLogs.filter((l) => l.dataCategory === 'Financial').length;
+  const sourceBlocked = blockedLogs.filter((l) => l.dataCategory === 'Source Code').length;
+  const extensionScans = logs.filter((l) => l.source === 'extension').length;
+  const extensionPct = logs.length > 0 ? Math.round((extensionScans / logs.length) * 100) : 0;
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -249,6 +257,79 @@ export default function DashboardPage() {
         <Link href="/admin/tools" className="block hover:opacity-80 transition-opacity"><StatCard label="Total Tools" value={tools.length} color="var(--text-primary)" /></Link>
         <Link href="/admin/requests" className="block hover:opacity-80 transition-opacity"><StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} /></Link>
         <StatCard label="High Risk Tools" value={tools.filter((t) => t.riskTier === 'High').length} color={RISK.high} />
+      </motion.div>
+
+      {/* ── Governance Impact ──────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3 }}
+        className="panel p-4 space-y-3"
+      >
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={12} className="text-accent" />
+          <span className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Governance Impact</span>
+          <span className="text-[10px] font-mono text-text-tertiary ml-auto">since Prompt Guard adoption</span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--risk-high)' }}>
+                <AnimatedNumber value={blockedLogs.length} />
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Incidents Caught</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              Prompts blocked before reaching third‑party AI APIs — preventing data leakage of sensitive enterprise content.
+            </p>
+            <div className="flex items-center gap-3 text-[10px] font-mono text-text-tertiary pt-1">
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-pii)' }} />
+                PII · {piiBlocked}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-financial)' }} />
+                Financial · {financialBlocked}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-source-code)' }} />
+                Source · {sourceBlocked}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--data-pii)' }}>
+                <AnimatedNumber value={piiBlocked} />
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">PII Exposures Averted</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              HIPAA / GDPR compliance risk mitigated — employee PII, customer data, and personal credentials intercepted before transmission.
+            </p>
+            <div className="flex items-center gap-1.5 text-[10px] font-mono pt-1">
+              <ShieldCheck size={10} className="text-risk-low" />
+              <span className="text-risk-low">compliance-safe</span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--accent)' }}>
+                {extensionPct}<span className="text-sm">%</span>
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Shadow IT Coverage</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              {extensionScans} of {logs.length} scans originated from the browser extension — protecting ChatGPT, Gemini, Claude, Copilot, and DeepSeek outside the corporate portal.
+            </p>
+            <div className="flex items-center gap-1.5 text-[10px] font-mono pt-1">
+              <Globe size={10} className="text-accent" />
+              <span className="text-accent">multi‑platform guard</span>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Section 1: Prompt Security ───────────────────────────────── */}
