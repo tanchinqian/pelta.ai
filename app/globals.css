@@ -252,18 +252,21 @@ h1, h2, h3, .font-serif {
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }
 .panel-accent {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 2px solid var(--accent);
-  border-radius: 8px;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }
 .panel-primary {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 2px solid var(--accent);
   background-image: linear-gradient(135deg, var(--accent-dim) 0%, transparent 40%);
-  border-radius: 8px;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }

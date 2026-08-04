@@ -232,7 +232,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <h2 className="text-lg font-serif font-semibold text-text-primary">Dashboard</h2>
+          <h1 className="text-xl font-serif font-semibold text-text-primary">Dashboard</h1>
           <span className="text-sm font-mono text-text-tertiary">/ overview</span>
         </div>
         <div className="flex items-center gap-3">
@@ -512,8 +512,8 @@ export default function DashboardPage() {
             </button>
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
+                  <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800">
                     <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                     <SortTh label="Risk" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                     <SortTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} />
@@ -567,8 +567,8 @@ export default function DashboardPage() {
             </div>
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
+                  <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800">
                     <th className="pb-1.5 pr-3 font-medium">Verdict</th>
                     <th className="pb-1.5 pr-3 font-medium hidden sm:table-cell">Risk</th>
                     <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Source</th>
@@ -610,7 +610,7 @@ function AnimatedNumber({ value }: { value: number }) {
     const node = nodeRef.current;
     if (node) {
       const controls = animate(0, value, {
-        duration: 1.5,
+        duration: 0.6,
         ease: "easeOut",
         onUpdate(v) {
           node.textContent = Math.round(v).toString();

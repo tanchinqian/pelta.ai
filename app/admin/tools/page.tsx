@@ -357,7 +357,7 @@ export default function ToolsRegistryPage() {
       </div>
 
       {/* Risk Distribution Bar Widget */}
-      <div className="bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 p-3.5 space-y-2 rounded-lg shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3.5 space-y-2 rounded-lg shadow-sm">
         <div className="flex items-center justify-between text-[10px] font-mono text-text-secondary">
           <span className="font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-50">Audit Risk Spectrum</span>
           <span className="text-zinc-600 dark:text-zinc-400">High: {riskDistribution.highCount} · Med: {riskDistribution.mediumCount} · Low: {riskDistribution.lowCount}</span>
@@ -381,14 +381,14 @@ export default function ToolsRegistryPage() {
       </div>
 
       {/* Filters */}
-      <div className="panel p-2 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1 text-sm font-mono text-text-tertiary">
-          <Filter size={11} /> Filters:
+      <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-lg p-3">
+        <div className="flex items-center gap-1 text-sm font-mono text-zinc-500 dark:text-zinc-400">
+          <Filter size={12} /> Filters:
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 focus:outline-none focus:border-accent cursor-pointer transition-colors"
         >
           <option value="all">All statuses</option>
           <option value="approved">Approved</option>
@@ -398,7 +398,7 @@ export default function ToolsRegistryPage() {
         <select
           value={riskFilter}
           onChange={(e) => setRiskFilter(e.target.value)}
-          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 focus:outline-none focus:border-accent cursor-pointer transition-colors"
         >
           <option value="all">All risk tiers</option>
           <option value="High">High</option>
@@ -408,25 +408,25 @@ export default function ToolsRegistryPage() {
         <select
           value={nistFilter}
           onChange={(e) => setNistFilter(e.target.value)}
-          className="text-sm font-mono bg-background border border-border rounded px-2 py-1 text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+          className="text-sm font-mono bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 focus:outline-none focus:border-accent cursor-pointer transition-colors"
         >
           <option value="all">All NIST functions</option>
           {NIST_FUNCTIONS.map((fn) => <option key={fn} value={fn}>{fn}</option>)}
         </select>
-        <div className="flex items-center gap-1 ml-auto">
-          <Search size={11} className="text-text-muted" />
+        <div className="flex items-center gap-1.5 ml-auto">
+          <Search size={12} className="text-zinc-400 dark:text-zinc-500" />
           <input
             type="text"
             placeholder="Search tools, policies, justification..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="text-base bg-background border border-border rounded px-2 py-1 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent w-56"
+            className="text-sm bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:border-accent w-56 transition-colors"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 p-0 overflow-hidden rounded-lg shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-0 overflow-hidden rounded-lg shadow-sm">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <RadarIcon size={24} className="text-accent animate-radar-pulse" />

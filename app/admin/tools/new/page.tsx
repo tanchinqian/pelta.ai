@@ -406,9 +406,9 @@ export default function ClassifyToolPage() {
   };
 
   return (
-    <div className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full text-text-primary">
+    <div className="flex-1 p-4 space-y-4 max-w-7xl mx-auto w-full text-text-primary">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-border dark:border-[#27272a] gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-200 dark:border-zinc-800 gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <RadarIcon size={16} className="text-accent" />
@@ -467,7 +467,7 @@ export default function ClassifyToolPage() {
 
                   {/* Autocomplete suggestions dropdown */}
                   {showSuggestions && autocompleteSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-surface border border-border dark:border-[#27272a] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm max-h-48 overflow-y-auto">
                       {autocompleteSuggestions.map((t) => (
                         <button
                           key={t.id}
@@ -799,18 +799,14 @@ export default function ClassifyToolPage() {
 
                         {/* Risk Tier column */}
                         <td className="py-3 px-4">
-                          {t.riskTier ? (
-                            <span
-                              title={`Why: ${(t.justification ?? '').slice(0, 150)}${(t.justification ?? '').length > 150 ? '…' : ''}`}
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider cursor-help ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
-                                t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
-                                  'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
-                              }`}>
-                              {t.riskTier}
-                            </span>
-                          ) : (
-                            <span className="text-text-muted">—</span>
-                          )}
+                          <span
+                            title={`Why: ${(t.justification ?? '').slice(0, 150)}${(t.justification ?? '').length > 150 ? '…' : ''}`}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider cursor-help ${t.riskTier === 'High' ? 'bg-risk-high-bg text-risk-high border border-risk-high/15' :
+                              t.riskTier === 'Medium' ? 'bg-risk-medium-bg text-risk-medium border border-risk-medium/15' :
+                                'bg-risk-low-bg text-risk-low border border-risk-low/15'
+                            }`}>
+                            {t.riskTier ?? '—'}
+                          </span>
                         </td>
 
                         {/* NIST functions list */}
@@ -837,10 +833,10 @@ export default function ClassifyToolPage() {
                                 }}
                                 className={`rounded-lg px-2 py-1 text-sm font-mono font-bold uppercase focus:outline-none focus:border-accent transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-950 border ${
                                   t.status === 'approved'
-                                    ? 'text-risk-low dark:text-emerald-400 border-risk-low/30 dark:border-emerald-500/30'
+                                    ? 'text-risk-low border-risk-low/30'
                                     : t.status === 'blocked'
-                                    ? 'text-risk-high dark:text-rose-400 border-risk-high/30 dark:border-rose-500/30'
-                                    : 'text-risk-medium dark:text-amber-400 border-risk-medium/30 dark:border-amber-400/30'
+                                    ? 'text-risk-high border-risk-high/30'
+                                    : 'text-risk-medium border-risk-medium/30'
                                 }`}
                               >
                                 <option value="pending" className="text-risk-medium bg-background">Pending</option>

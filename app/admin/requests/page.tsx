@@ -161,7 +161,7 @@ function AppealDetailModal({
                   </button>
                   <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
                     className="flex items-center gap-1.5 text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer">
-                    <XCircle size={12} /> Decline
+                    <XCircle size={12} /> Deny
                   </button>
                 </div>
               ) : (
@@ -175,7 +175,7 @@ function AppealDetailModal({
                   <div className="flex items-center gap-2">
                     <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
                       className="text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
-                      Confirm Decline
+                      Confirm Deny
                     </button>
                     <button onClick={onCancelReject} className="text-base text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer">Cancel</button>
                   </div>
@@ -590,7 +590,7 @@ export default function RequestsPage() {
                                   </button>
                                   <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
-                                    <XCircle size={10} /> Decline
+                                    <XCircle size={10} /> Deny
                                   </button>
                                 </>
                               )}
