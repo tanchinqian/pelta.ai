@@ -13,6 +13,23 @@ function getToolName() {
   return 'ChatGPT';
 }
 
+/* ── API Base resolver ─────────────────────────────────── */
+const STORAGE_KEY = 'pelta_api_base';
+const LOCAL_URL = 'http://localhost:3000';
+
+let API_BASE = LOCAL_URL;
+
+async function resolveApiBase() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      const stored = await new Promise((resolve) => {
+        chrome.storage.sync.get(STORAGE_KEY, resolve);
+      });
+      API_BASE = stored[STORAGE_KEY] || LOCAL_URL;
+    }
+  } catch {}
+}
+
 /* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
   input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
@@ -93,7 +110,7 @@ async function ocrWithTesseract(blob) {
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const response = await fetch('http://localhost:3000/api/guard/ocr', {
+    const response = await fetch(`${API_BASE}/api/guard/ocr`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64, mimeType: blob.type }),
@@ -189,7 +206,7 @@ async function runPdfDlpCheck(file) {
   showOcrScanning('pdf.js'); 
   try {
     const base64 = await toBase64(file);
-    const res = await fetch('http://localhost:3000/api/guard/pdf-extract', {
+    const res = await fetch(`${API_BASE}/api/guard/pdf-extract`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pdf: base64.split(',')[1], filename: file.name })
@@ -885,7 +902,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     btn.disabled = true;
     btn.className = "pelta-btn pelta-btn-secondary";
     try {
-      const res = await fetch('http://localhost:3000/api/access-requests', {
+      const res = await fetch(`${API_BASE}/api/access-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -900,7 +917,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
         btn.textContent = "Waiting for Admin...";
         const interval = setInterval(async () => {
           try {
-            const checkRes = await fetch('http://localhost:3000/api/access-requests');
+            const checkRes = await fetch(`${API_BASE}/api/access-requests`);
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
@@ -985,7 +1002,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     btn.disabled = true;
     btn.className = "pelta-btn pelta-btn-secondary";
     try {
-      const res = await fetch('http://localhost:3000/api/access-requests', {
+      const res = await fetch(`${API_BASE}/api/access-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1000,7 +1017,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
         btn.textContent = "Waiting for Admin...";
         const interval = setInterval(async () => {
           try {
-            const checkRes = await fetch('http://localhost:3000/api/access-requests');
+            const checkRes = await fetch(`${API_BASE}/api/access-requests`);
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
@@ -1063,6 +1080,7 @@ function showError(reason) {
 
 /* ── Init ───────────────────────────────────────────────── */
 detectOcrEngine(); // async, runs in background — result cached before any paste
+resolveApiBase();  // async, resolves the API base URL from storage before first use
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
