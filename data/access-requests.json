@@ -168,5 +168,85 @@
     "type": "access",
     "requestedAt": "2026-08-04T02:30:59.818Z",
     "decidedAt": "2026-08-04T02:31:21.186Z"
+  },
+  {
+    "id": "2b7d0cf2-89e8-4156-a600-1041c40b5c2a",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt:\n\nMy date of birth is 12/05/1990 and I need help analyzing this data.",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T06:31:57.518Z",
+    "decidedAt": "2026-08-04T06:32:14.858Z"
+  },
+  {
+    "id": "0e63e6b0-c45b-4e12-b8ec-6ebf6e985145",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt:\n\nMy date of birth is 12/05/1990 and I need help analyzing this data.",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T06:33:22.797Z",
+    "decidedAt": "2026-08-04T06:33:32.539Z"
+  },
+  {
+    "id": "57c1b809-f928-4945-a7e3-a4491c7dba79",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt:\n\nMy date of birth is 12/05/1990 and I need help analyzing this data.",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T06:34:30.376Z",
+    "decidedAt": "2026-08-04T06:34:45.208Z"
+  },
+  {
+    "id": "227c196a-cc32-4145-9e8b-e54379b12799",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt:\n\nMy date of birth is 12/05/1990 and I need help analyzing this data.",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T06:47:23.594Z",
+    "decidedAt": "2026-08-04T06:47:34.431Z"
+  },
+  {
+    "id": "3b48f480-bbfe-4706-968b-254d5cb6fd51",
+    "employeeName": "Demo Employee",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "medium",
+    "reason": "User requested bypass for prompt:\n\nMy date of birth is 12/05/1990 and I need help analyzing this data.",
+    "status": "approved",
+    "adminComment": null,
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-04T06:50:41.776Z",
+    "decidedAt": "2026-08-04T06:50:47.816Z"
   }
 ]

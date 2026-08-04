@@ -25,6 +25,7 @@ const views = {
       { href: '/admin/tools/new', label: 'Classify Tool', desc: 'Classify a tool and assess risks using Gemini LLM', icon: <Search size={14} /> },
       { href: '/admin/tools', label: 'Tool Registry', desc: 'Registry of classified corporate AI tools', icon: <Layers size={14} /> },
       { href: '/admin/requests', label: 'Access Requests', desc: 'Approve or deny employee requests with full audit trail', icon: <Users size={14} /> },
+      { href: '/admin/dlp-rules', label: 'DLP Rules', desc: 'Manage custom regex patterns to detect sensitive keywords', icon: <ShieldCheck size={14} /> },
       { href: '/admin/logs', label: 'Security Audit Logs', desc: 'Historical stream of detected prompts and verdicts', icon: <FileText size={14} /> },
     ],
   },

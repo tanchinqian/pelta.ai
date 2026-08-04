@@ -70,3 +70,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   return true; // keep message channel open for async response
 });
+
+/* ── Desktop Notification Handler ─────────────────────────
+ *   Fired by content-script when an admin approves/rejects
+ *   a request, even if the overlay has already been dismissed.
+ * ─────────────────────────────────────────────────────────── */
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== 'NOTIFY_USER') return;
+
+  const isApproved = msg.status === 'approved';
+  // Minimal valid 1x1 PNG (Chrome requires a local/data URL for notifications)
+  const iconDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  chrome.notifications.create(`pelta-${Date.now()}`, {
+    type: 'basic',
+    iconUrl: iconDataUrl,
+    title: isApproved ? 'pelta.ai — Request Approved ✓' : 'pelta.ai — Request Denied',
+    message: isApproved
+      ? 'Your prompt has been unblocked by an admin. Go back to the tab to send it.'
+      : `Denied: ${msg.reason || 'No reason provided.'}`,
+    priority: 2,
+  }, (notifId) => {
+    if (chrome.runtime.lastError) {
+      console.warn('[pelta] Notification failed:', chrome.runtime.lastError.message);
+    }
+  });
+  sendResponse({ ok: true });
+});

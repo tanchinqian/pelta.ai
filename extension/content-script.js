@@ -907,13 +907,22 @@ function showFlag(response, promptText, trigger, meta = {}) {
               if (myReq.status === 'approved') {
                 approvedPrompts.add(promptText.trim());
                 clearInterval(interval);
-                typeIntoInput(promptText);
-                removeOverlay();
-                replaySend();
+                // Fire desktop notification in case overlay was already dismissed
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  typeIntoInput(promptText);
+                  removeOverlay();
+                  replaySend();
+                }
               } else if (myReq.status === 'rejected') {
                 clearInterval(interval);
-                btn.textContent = "Request Denied";
-                btn.className = "pelta-btn pelta-btn-redact";
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Request Denied";
+                  btn.className = "pelta-btn pelta-btn-redact";
+                }
               }
             }
           } catch (err) {}
@@ -998,19 +1007,28 @@ function showBlock(response, promptText, trigger, meta = {}) {
               if (myReq.status === 'approved') {
                 approvedPrompts.add(promptText.trim());
                 clearInterval(interval);
-                btn.textContent = "Approved by Admin \u2713";
-                btn.style.background = "#10b981";
-                btn.style.borderColor = "#10b981";
-                btn.style.color = "white";
-                setTimeout(() => {
-                  typeIntoInput(promptText);
-                  removeOverlay();
-                  // No auto-send; user can manually send now.
-                }, 1500);
+                // Fire desktop notification in case overlay was already dismissed
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Approved by Admin \u2713";
+                  btn.style.background = "#10b981";
+                  btn.style.borderColor = "#10b981";
+                  btn.style.color = "white";
+                  setTimeout(() => {
+                    typeIntoInput(promptText);
+                    removeOverlay();
+                    // No auto-send; user can manually send now.
+                  }, 1500);
+                }
               } else if (myReq.status === 'rejected') {
                 clearInterval(interval);
-                btn.textContent = "Report Denied";
-                btn.className = "pelta-btn pelta-btn-redact";
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Report Denied";
+                  btn.className = "pelta-btn pelta-btn-redact";
+                }
               }
             }
           } catch (err) {}
