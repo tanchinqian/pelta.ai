@@ -487,7 +487,7 @@ export default function RequestsPage() {
 
   return (
     <>
-      <div className="flex-1 p-4 max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-3">
           <div className="space-y-0.5">
