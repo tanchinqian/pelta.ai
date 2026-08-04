@@ -800,7 +800,9 @@ export default function ClassifyToolPage() {
                         {/* Risk Tier column */}
                         <td className="py-3 px-4">
                           {t.riskTier ? (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
+                            <span
+                              title={`Why: ${(t.justification ?? '').slice(0, 150)}${(t.justification ?? '').length > 150 ? '…' : ''}`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-mono font-bold uppercase tracking-wider cursor-help ${t.riskTier === 'High' ? 'bg-risk-high-bg dark:bg-rose-950/20 text-risk-high dark:text-rose-400 border border-risk-high/15 dark:border-rose-500/25' :
                                 t.riskTier === 'Medium' ? 'bg-risk-medium-bg dark:bg-amber-950/20 text-risk-medium dark:text-amber-400 border border-risk-medium/15 dark:border-amber-500/25' :
                                   'bg-risk-low-bg dark:bg-emerald-950/20 text-risk-low dark:text-emerald-400 border border-risk-low/15 dark:border-emerald-500/25'
                               }`}>

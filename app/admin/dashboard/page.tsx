@@ -243,11 +243,11 @@ export default function DashboardPage() {
         transition={{ delay: 0.1, duration: 0.3 }}
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2"
       >
-        <StatCard label="Total Scans" value={logs.length} color="var(--text-primary)" />
+        <Link href="/admin/logs" className="block hover:opacity-80 transition-opacity"><StatCard label="Total Scans" value={logs.length} color="var(--text-primary)" /></Link>
         <StatCard label="Scans Flagged" value={logs.filter(l => l.verdict === 'flag').length} color={VERDICT.flag} />
         <StatCard label="Scans Blocked" value={logs.filter(l => l.verdict === 'block').length} color={VERDICT.block} />
-        <StatCard label="Total Tools" value={tools.length} color="var(--text-primary)" />
-        <StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} />
+        <Link href="/admin/tools" className="block hover:opacity-80 transition-opacity"><StatCard label="Total Tools" value={tools.length} color="var(--text-primary)" /></Link>
+        <Link href="/admin/requests" className="block hover:opacity-80 transition-opacity"><StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} /></Link>
         <StatCard label="High Risk Tools" value={tools.filter((t) => t.riskTier === 'High').length} color={RISK.high} />
       </motion.div>
 
@@ -445,9 +445,9 @@ export default function DashboardPage() {
                   {(showToolRegistry ? sortedTools : sortedTools.slice(0, 5)).map((t, i) => (
                     <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-2 pr-3 text-text-primary font-medium">{t.name}</td>
-                      <td className="py-2 pr-3">
+                       <td className="py-2 pr-3">
                         {t.riskTier
-                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-sm font-bold font-mono uppercase">{t.riskTier}</span>
+                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-sm font-bold font-mono uppercase cursor-help" title={`Why: ${(t.justification ?? '').slice(0, 150)}${(t.justification ?? '').length > 150 ? '…' : ''}`}>{t.riskTier}</span>
                           : <span className="text-text-muted">—</span>}
                       </td>
                       <td className="py-2 pr-3">

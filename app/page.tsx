@@ -12,6 +12,7 @@ const views = {
     title: 'Employee View',
     description: 'Request access to AI tools or check decisions. Prompt guard proxy monitors compliance automatically.',
     links: [
+      { href: '/employee', label: 'My Workspace', desc: 'Track your requests and view approved tools', icon: <ShieldCheck size={14} /> },
       { href: '/employee/requests/new', label: 'Request Tool', desc: 'Submit a new AI tool for security approval', icon: <Send size={14} /> },
       { href: '/employee/redress', label: 'Right to Explanation', desc: 'EU AI Act Article 86 — understand why a request was decided', icon: <FileText size={14} /> },
     ],
@@ -19,7 +20,7 @@ const views = {
   admin: {
     icon: <Shield size={16} className="text-text-secondary" />,
     title: 'Admin View',
-    description: 'Classify tools, monitor usage, and manage approvals. Every logged event is explainable and auditable.',
+    description: 'Classify tools, monitor usage, and manage approvals. Logged events are explainable and auditable.',
     links: [
       { href: '/admin/dashboard', label: 'System Dashboard', desc: 'Usage metrics, risk breakdowns, and trend charts', icon: <BarChart3 size={14} /> },
       { href: '/admin/tools/new', label: 'Classify Tool', desc: 'Classify a tool and assess risks using Gemini LLM', icon: <Search size={14} /> },
@@ -238,7 +239,7 @@ export default function LandingPage() {
             {[
               { val: '24/7', label: 'Real-time Scanning' },
               { val: '<50ms', label: 'Proxy Latency' },
-              { val: '100%', label: 'Audit Traceability' },
+              { val: 'Full', label: 'Audit Trail · (Demo)' },
               { val: 'EU AI Act', label: 'Compliance Ready' },
             ].map((m, i) => (
               <motion.div 
@@ -273,7 +274,7 @@ export default function LandingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-risk-low opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-risk-low"></span>
               </span>
-              System Status: All Systems Operational
+              System Status: Operational
             </div>
           </div>
           

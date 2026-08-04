@@ -77,11 +77,15 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function RiskBadge({ tier }: { tier: string | null }) {
+function RiskBadge({ tier, justification }: { tier: string | null; justification?: string }) {
   if (!tier) return <span className="text-sm text-text-muted">—</span>;
   const s = RISK_STYLE[tier] ?? RISK_STYLE.Low;
+  const tooltip = justification
+    ? `Why: ${justification.slice(0, 150)}${justification.length > 150 ? '…' : ''}`
+    : undefined;
   return (
     <span
+      title={tooltip}
       className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded"
       style={{ color: s.color, background: s.bg }}
     >
@@ -489,7 +493,7 @@ export default function ToolsRegistryPage() {
                       <p className="text-base text-text-secondary leading-relaxed max-w-[240px] line-clamp-2">{t.description}</p>
                     </td>
                     <td className="px-4 py-3 align-top whitespace-nowrap">
-                      <RiskBadge tier={t.riskTier} />
+                      <RiskBadge tier={t.riskTier} justification={t.justification} />
                     </td>
                     <td className="px-4 py-3 align-top whitespace-nowrap">
                       <StatusBadge status={t.status} />
