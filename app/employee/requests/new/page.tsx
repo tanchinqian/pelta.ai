@@ -6,11 +6,9 @@ import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History
 import RadarIcon from '@/components/RadarIcon';
 import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
+import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
-
-// Demo employee — single implicit user (no real auth in this app)
-const DEMO_EMPLOYEE = 'Alice Chen';
 
 interface RequestRecord {
   id: string;

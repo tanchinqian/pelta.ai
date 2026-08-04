@@ -738,7 +738,7 @@ export default function RequestsPage() {
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <CheckCircle size={10} /> Approve
                                   </button>
-                                  <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
+                                  <button id={`deny-tool-${req.id}`} onClick={() => { setDenyingToolId(req.id); setSelectedTool(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <XCircle size={10} /> Deny
                                   </button>

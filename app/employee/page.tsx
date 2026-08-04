@@ -6,6 +6,7 @@ import { Send, FileText, ShieldCheck, CheckCircle2, XCircle, Clock, History, Wre
 import RadarIcon from '@/components/RadarIcon';
 import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { motion } from 'framer-motion';
+import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 interface RequestRecord {
   id: string;
@@ -23,8 +24,6 @@ interface ToolRecord {
   name: string;
   riskTier: 'Low' | 'Medium' | 'High' | null;
 }
-
-const DEMO_EMPLOYEE = 'Alice Chen';
 
 const RISK_COLOR: Record<string, string> = {
   Low: 'var(--risk-low)',

@@ -11,6 +11,7 @@ import { VerdictBadge } from '@/components/Badge';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -202,7 +203,7 @@ export default function RedressPage() {
     try {
       const res = await fetch('/api/access-requests', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeName: 'Demo Employee', sections: selectedSections, reason: reason.trim(), logRef: selectedLog.id, type: 'appeal' }),
+        body: JSON.stringify({ employeeName: DEMO_EMPLOYEE, sections: selectedSections, reason: reason.trim(), logRef: selectedLog.id, type: 'appeal' }),
       });
       const data = await res.json();
       setSubmitSuccess(true);

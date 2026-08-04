@@ -2,7 +2,7 @@
   {
     "id": "audit-0001-0000-0000-000000000001",
     "requestId": "cc110002-ac00-0000-0000-000000000002",
-    "employeeName": "Demo Employee",
+    "employeeName": "Alice Chen",
     "action": "approved",
     "reviewerName": "Admin",
     "adminComment": null,
@@ -15,7 +15,7 @@
   {
     "id": "audit-0002-0000-0000-000000000002",
     "requestId": "cc110003-ac00-0000-0000-000000000003",
-    "employeeName": "Demo Employee",
+    "employeeName": "Alice Chen",
     "action": "rejected",
     "reviewerName": "Admin",
     "adminComment": "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",
@@ -25,96 +25,5 @@
     ],
     "riskLevel": "high",
     "timestamp": "2026-07-14T14:00:00.000Z"
-  },
-  {
-    "id": "d6b4f8f4-531d-4bc8-a672-f8d9596dae13",
-    "requestId": "299f5b72-2ee9-4ae6-9dd3-4cf6f0dfb129",
-    "employeeName": "CurrentUser",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:47:06.072Z"
-  },
-  {
-    "id": "b91235b1-59b1-4f16-99ce-75d0607aa197",
-    "requestId": "cb05d00b-2eb9-46e3-ad9e-875700fc9d5c",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:49:10.885Z"
-  },
-  {
-    "id": "47ee60c1-fede-4114-b43c-6c863ca7c9c2",
-    "requestId": "b00eca21-cedb-4c7b-989a-e9439550912a",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:49:41.194Z"
-  },
-  {
-    "id": "251b232e-f9e6-4315-903b-f9104a534e06",
-    "requestId": "d2dfd367-7dcf-4ef8-8840-31bd698623f9",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:51:18.609Z"
-  },
-  {
-    "id": "3cf0e61d-9460-4ab0-8a72-21ea58d40a56",
-    "requestId": "82513e6d-0f63-4b74-8eb8-8d7832a16b08",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:56:37.060Z"
-  },
-  {
-    "id": "d6c20a4b-655c-4e85-b8cf-987d299259bd",
-    "requestId": "8484508a-d78c-4156-9a13-703091785a32",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "medium",
-    "timestamp": "2026-08-03T15:58:40.991Z"
-  },
-  {
-    "id": "07b98999-c101-4bb2-a3b3-5614b2192c49",
-    "requestId": "93e6cba2-75cd-432b-8cde-306e9e607f49",
-    "employeeName": "Demo Employee",
-    "action": "approved",
-    "reviewerName": "Admin",
-    "adminComment": null,
-    "sections": [
-      "Prompt Approval"
-    ],
-    "riskLevel": "high",
-    "timestamp": "2026-08-04T02:31:21.186Z"
   }
 ]

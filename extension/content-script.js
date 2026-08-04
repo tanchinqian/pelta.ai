@@ -889,7 +889,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeName: "Demo Employee",
+          employeeName: "Alice Chen",
           sections: ["Prompt Approval"],
           riskLevel: "medium",
           reason: "User requested bypass for prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
@@ -980,7 +980,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeName: "Demo Employee",
+          employeeName: "Alice Chen",
           sections: ["Prompt Approval"],
           riskLevel: "high",
           reason: "User reported false positive for blocked prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
