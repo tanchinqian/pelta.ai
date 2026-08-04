@@ -38,6 +38,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { href: '/admin/tools/new', label: 'Classify', icon: <Search size={18} />, matchPaths: ['/admin/tools/new'] },
   { href: '/admin/tools', label: 'Tools', icon: <Layers size={18} />, matchPaths: ['/admin/tools'], exact: true },
   { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={18} />, matchPaths: ['/admin/requests'] },
+  { href: '/admin/dlp-rules', label: 'DLP Rules', icon: <ShieldCheck size={18} />, matchPaths: ['/admin/dlp-rules'] },
   { href: '/admin/logs', label: 'Logs', icon: <FileText size={18} />, matchPaths: ['/admin/logs'] },
 ];
 
@@ -52,6 +53,7 @@ const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/admin/tools/new': { title: 'Classify', crumb: 'LLM-powered risk assessment' },
   '/admin/tools': { title: 'Tools', crumb: 'AI tool registry' },
   '/admin/requests': { title: 'Requests', crumb: 'Approve or deny submissions' },
+  '/admin/dlp-rules': { title: 'DLP Rules', crumb: 'Custom regex-based detection patterns' },
   '/admin/logs': { title: 'Logs', crumb: 'Detection audit trail' },
 };
 
