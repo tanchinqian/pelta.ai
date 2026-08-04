@@ -54,7 +54,7 @@ export default function NewRequestPage() {
   const [approvedTools, setApprovedTools] = useState<ToolRecord[]>([]);
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       try {
         const [reqRes, toolRes] = await Promise.all([
           fetch('/api/requests').then((r) => r.json()) as Promise<RequestRecord[]>,
@@ -63,7 +63,11 @@ export default function NewRequestPage() {
         setMyRequests(reqRes.filter((r) => r.employeeName === DEMO_EMPLOYEE));
         setApprovedTools(toolRes.filter((t) => t.status === 'approved'));
       } catch {}
-    })();
+    };
+    fetchData();
+    const h = () => { if (document.visibilityState === 'visible') fetchData(); };
+    document.addEventListener('visibilitychange', h);
+    return () => document.removeEventListener('visibilitychange', h);
   }, []);
 
   // Inline hint: if the user types a name that matches an approved tool

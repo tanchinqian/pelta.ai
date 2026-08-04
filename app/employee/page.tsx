@@ -37,7 +37,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       try {
         const [reqRes, toolRes] = await Promise.all([
           fetch('/api/requests').then((r) => r.json()),
@@ -47,7 +47,11 @@ export default function EmployeeDashboard() {
         setApprovedTools((toolRes as ToolRecord[]).filter((t) => (t as any).status === 'approved'));
       } catch {}
       setLoading(false);
-    })();
+    };
+    fetchData();
+    const h = () => { if (document.visibilityState === 'visible') fetchData(); };
+    document.addEventListener('visibilitychange', h);
+    return () => document.removeEventListener('visibilitychange', h);
   }, []);
 
   const pending = myRequests.filter((r) => r.status === 'pending');
