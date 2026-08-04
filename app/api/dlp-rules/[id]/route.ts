@@ -11,11 +11,11 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const updates = await req.json();
 
-    // If updating pattern, validate it's a valid regex
     if (updates.pattern !== undefined) {
       try {
         new RegExp(updates.pattern, 'gi');
@@ -27,8 +27,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       }
     }
 
-    const updated = updateItem('dlp-rules', params.id, updates);
-    const rule = updated.find((r: any) => r.id === params.id);
+    const updated = updateItem('dlp-rules', id, updates);
+    const rule = updated.find((r: any) => r.id === id);
     if (!rule) {
       return NextResponse.json({ error: 'Rule not found' }, { status: 404, headers: CORS_HEADERS });
     }
@@ -41,9 +41,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    deleteItem('dlp-rules', params.id);
+    const { id } = await params;
+    deleteItem('dlp-rules', id);
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err: any) {
     return NextResponse.json(
