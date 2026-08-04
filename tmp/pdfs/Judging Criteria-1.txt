@@ -1,0 +1,271 @@
+
+===== PAGE 1 =====
+Judging  Rubric  
+ The  Judging  Rubric  consists  of  2  rounds:  
+ ●  Preliminary  Round  (All  teams)  ○  Evaluated  based  on  Core  Criteria  focusing  on  the  Business  and  Solution.   ■  Pre-recorded  video  (submit  it  through  the  YouTube  link)  ■  Proposal  
+***  Please  set  the  video  as  public  or  unlisted  to  ensure  that  the  video  is  accessible  by  the  
+organising
+ 
+committee.
+ 
+●  Final  Round  ○  Core  Criteria  from  the  Preliminary  Round  are  re-evaluated ,  along  with  additional  
+Secondary
+ 
+Criteria
+ 
+and
+ 
+criteria
+ 
+are
+ 
+broken
+ 
+down
+ 
+to
+ 
+advance
+ 
+the
+ 
+judging
+ 
+session,
+ 
+this
+ 
+evaluation
+ 
+will
+ 
+include
+ 
+more
+ 
+criteria
+ 
+to
+ 
+further
+ 
+evaluate
+ 
+the
+ 
+project.
+ 
+—
+ 
+Pitching
+ ○  All  finalists  are  required  to  perform  a  live  demonstration  of  their  project,  where  the  
+judges
+ 
+will
+ 
+assess
+ 
+each
+ 
+team's
+ 
+project
+ 
+functionality
+.
+ 
+Team
+ 
+members
+ 
+must
+ 
+demonstrate
+ 
+the
+ 
+execution
+ 
+of
+ 
+their
+ 
+project
+ 
+and
+ 
+be
+ 
+prepared
+ 
+to
+ 
+answer
+ 
+any
+ 
+questions
+ 
+from
+ 
+the
+ 
+judges.
+ 
+—
+ 
+Live
+ 
+Demo 
+ 
+===== PAGE 2 =====
+Preliminary  Round  
+Overview  
+ ●  Total  weightage:  100%  
+ ○  Solution  to  counter  the  problem:  85%  
+ ○  Business  Strategy:  15%    
+Category  Criteria   Weightage  (%)  Mark  Description   
+Solution   
+Formulation  of  Concept  
+30  25  -  30  marks  
+Exceptional  (Highly  Feasible  &  Innovative):  ●  The  execution  plan  is  very  clear  and  well-defined,  addressing  a  major  problem  or  opportunity.   ●  The  concept  is  highly  feasible  for  the  hackathon  case  study  
+19  -  24  marks  
+Strong  (Feasible  and  Well-Developed):   ●  The  execution  plan  is  clear  and  well-defined,  tackling  a  relevant  problem  or  opportunity.  ●  The  concept  is  achievable  for  the  hackathon  case  study  
+13  -  18  marks  
+Adequate  (Needs  Refinement):   ●  The  execution  plan  is  somewhat  unclear  or  lacks  detail,  but  the  general  concept  is  understandable.  ●  The  concept  of  completing  the  concept  for  the  hackathon  case  study  is  uncertain.  
+7  -  12  marks  
+Limited  (Needs  Significant  Work):   ●  The  execution  plan  is  unclear  or  poorly  defined,  making  it  difficult  to  understand  the  problem  or  solution.  ●  It  seems  unlikely  that  the  concept  can  be  completed  for  the  hackathon  case  study  
+===== PAGE 3 =====
+1  -  6  mark(s)  
+Unclear  or  Unfeasible:   ●  The  execution  plan  is  completely  unclear  or  not  presented  at  all.  ●  The  concept  seems  unfeasible  within  the  for  the  hackathon  case  study   
+Innovativeness  20  17  -   20  marks  
+Breakthrough  Innovation:  ●  The  project  brings  a  totally  new  idea  or  solution  that  could  greatly  impact  an  industry  or  tackle  a  major  challenge.   ●  The  solution  shows  a  high  level  of  originality  and  inventiveness,  unlike  anything  that  exists  currently.  
+13  -  16  marks  
+Highly  Innovative:  ●  The  project  offers  a  new  and  creative  way  to  deal  with  an  existing  problem  or  technology.   ●  The  solution  stands  out  with  its  originality  and  uniqueness  compared  to  what's  already  out  there.   ●  This  innovation  could  make  a  big  difference.  
+9  -  12  marks  
+Innovative  Application:  ●  The  project  applies  existing  technologies  or  concepts  in  a  fresh  and  imaginative  way.  ●  The  solution  offers  a  unique  twist  or  improvement  on  existing  methods.  ●  While  the  level  of  innovation  is  moderate,  it  still  reflects  a  creative  approach.  
+5  -  8  marks  Limited  Innovation:  ●  The  project  offers  a  minor  improvement  or  refinement  on  existing  solutions.  ●  The  solution  doesn't  bring  much  originality  and  might  resemble  existing  concepts.   ●  The  level  of  innovation  is  minimal.  
+1  -  4  mark(s)  
+No  Innovation:  ●  The  project  solely  depends  on  existing  technologies  or  concepts  without  introducing  anything  new  or  innovative.   ●  There's  no  sign  of  originality  in  the  solution.  
+===== PAGE 4 =====
+Appropriateness  of  Methodology  
+20  17  -   20  marks  
+Exceptional  Methodology:  ●  The  technical  approach  is  exceptionally  well-defined,  innovative,  and  demonstrates  a  deep  understanding  of  project  goals.  ●  Perfect  alignment  between  methodology  and  project  objectives.  
+13  -  16  marks  
+Effective  Methodology:  ●  The  technical  approach  is  well-defined,  detailed,  and  effectively  supports  project  goals.  ●  Clear  alignment  between  methodology  and  project  objectives.  
+9  -  12  marks  
+Competent  Methodology:  ●  The  technical  approach  is  clearly  defined  and  demonstrates  understanding  of  project  goals.  ●  Methodology  aligns  well  with  project  objectives.  
+5  -  8  marks  Basic  Methodology:  ●  The  technical  approach  is  present  but  lacks  depth  or  detail.  ●  Some  alignment  with  project  goals,  but  not  fully  articulated.  
+1  -  4  mark(s)  
+Minimal  Methodology:  ●  The  technical  approach  lacks  clear  methodology  or  is  poorly  defined.  ●  Methodology  does  not  align  with  project  goals  or  objectives.  
+Design  15  13  -  15  marks  
+Exceptional  (Intuitive  &  User-Centric):  ●  The  design  focuses  on  what  users  need  most  and  offers  an  easy-to-use  and  smooth  experience.   ●  The  user  interface  looks  great,  is  easy  to  navigate,  and  stays  the  same  throughout  the  project.   ●  Functions  are  easily  accessible  and  designed  for  straightforward  use.  ●  The  design  works  well  with  the  project's  functions  and  main  idea.  
+===== PAGE 5 =====
+10  -  12  marks  
+Strong  (Usable  and  Well-Designed):  ●  The  design  makes  usability  a  priority,  ensuring  a  straightforward  and  easy-to-understand  user  experience.   ●  The  user  interface  looks  attractive  and  stays  consistent,  paying  attention  to  small  details.   ●  Fundamental  accessibility  features  are  integrated  into  the  design.  ●  The  design  fits  well  with  the  project's  functions  and  aims.  
+7  -  9  marks  Adequate  (Needs  Improvement):  ●  The  design  works  to  some  extent,  but  it  could  be  more  user-friendly  with  clearer  navigation.   ●  The  user  interface  might  not  look  very  polished  and  could  have  inconsistencies  in  its  design.   ●  Accessibility  isn't  a  big  priority,  or  it's  only  given  minimal  attention  or  inconsistently  applied.  ●  The  design  could  be  more  closely  linked  with  the  project's  functions.  
+4  -  6  marks  Limited  (Difficult  to  Use):  ●  The  design  creates  challenges  for  users  in  understanding  or  navigating  the  project.   ●  The  user  interface  might  be  confusing  or  not  visually  attractive.   ●  Accessibility  considerations  are  minimal  or  absent.  ●  The  design  undermines  the  project's  functionality  and  overall  effectiveness.  
+1-3  mark(s)  Poor  Design:  ●  The  design  is  so  bad  that  it  makes  it  nearly  impossible  for  users  to  interact  with  the  project.   ●  The  user  interface  looks  unprofessional  and  doesn't  follow  basic  design  rules.   ●  The  design  completely  ignores  accessibility  considerations.  ●  There's  no  thought  given  to  making  the  project  accessible.  The  design  really  holds  back  the  project's  potential.  
+Business   
+Market  Potential  and  Demand   
+15  13  -  15  marks  
+Excellent  (Compelling  Market  Opportunity):  ●  The  team  demonstrates  a  deep  understanding  of  the  target  market  and  its  needs  ●  The  solution  tackles  a  big  problem  or  need  that  many  customers  have.   ●  There's  solid  proof,  like  market  research  or  data,  showing  that  this  opportunity  exists  and  is  sizable.  
+===== PAGE 6 =====
+10  -  12  marks  
+Strong  (Clear  Market  Potential):  ●  The  team  shows  a  good  understanding  of  the  target  market  and  its  needs.  ●  The  solution  addresses  a  relevant  pain  point  or  unmet  need  with  a  defined  customer  base.  ●  While  there's  evidence  supporting  the  market  opportunity,  it  may  not  be  as  thorough  as  the  highest-tier  evidence.  
+7  -  9  marks  Adequate  (Needs  Refinement):  ●  The  team's  understanding  of  the  target  market  is  somewhat  limited  or  lacks  specifics.  ●  The  solution  addresses  a  potential  need,  but  the  customer  base  or  market  size  is  unclear.  ●  There's  evidence  supporting  the  market  opportunity,  though  it  might  not  be  as  thorough  as  the  top-tier  evidence.  
+4  -  6  marks  Limited  (Needs  Significant  Work):  ●  The  team  shows  minimal  understanding  of  the  target  market  or  its  needs.  ●  The  solution's  market  fit  is  unclear  or  not  well-defined.  ●  There  is  no  evidence  or  weak  evidence  to  support  the  market  demand.  
+1-3  mark(s)  Not  Addressed:  ●  The  team  does  not  consider  market  demand  or  target  audience  in  their  presentation.  
+ 
+ 
+===== PAGE 7 =====
+Final  Round  
+Overview  
+ ●  Total  weightage:  100%  
+ ○  Pitching  Session:  60%  
+ ■  Solution  to  counter  the  problem:  40%  
+ ■  Business  Strategy:  20%  
+ ○  Live  Demonstration:  40%    Pitching  Session   
+Category  Criteria  breakdown  Weightage  (%)  Mark  Description   
+Solution  Formulation  of  Concept  
+15  13  -  15  marks  
+Exceptional  (Highly  Feasible  &  Innovative):  ●  The  execution  plan  is  very  clear  and  well-defined,  addressing  a  major  problem  or  opportunity.   ●  The  concept  is  highly  feasible  for  the  hackathon  case  study  
+10  -  12  marks  
+Strong  (Feasible  and  Well-Developed):   ●  The  execution  plan  is  clear  and  well-defined,  tackling  a  relevant  problem  or  opportunity.  ●  The  concept  is  achievable  for  the  hackathon  case  study  
+7  -  9  marks  Adequate  (Needs  Refinement):   ●  The  execution  plan  is  somewhat  unclear  or  lacks  detail,  but  the  general  concept  is  understandable.  ●  The  concept  of  completing  the  concept  for  the  hackathon  case  study  is  uncertain.  
+===== PAGE 8 =====
+4  -  6  marks  Limited  (Needs  Significant  Work):   ●  The  execution  plan  is  unclear  or  poorly  defined,  making  it  difficult  to  understand  the  problem  or  solution.  ●  It  seems  unlikely  that  the  concept  can  be  completed   for  the  hackathon  case  study  
+1-3  mark(s)  Unclear  or  Unfeasible:   ●  The  execution  plan  is  completely  unclear  or  not  presented  at  all.  ●  The  concept  seems  unfeasible  within  the  for  the  hackathon  case  study   
+Innovativeness  15  13  -  15  marks  
+Breakthrough  Innovation:  ●  The  project  brings  a  totally  new  idea  or  solution   ●  The  solution  shows  a  high  level  of  originality  and  inventiveness,  unlike  anything  that  exists  currently.  
+10  -  12  marks  
+Highly  Innovative:  ●  The  project  offers  a  new  and  creative  way  to  deal  with  an  existing  problem  or  technology.   ●  The  solution  stands  out  with  its  originality  and  uniqueness  compared  to  what's  already  out  there.   
+7  -  9  marks  Innovative  Application:  ●  The  project  applies  existing  technologies  or  concepts  in  a  fresh  and  imaginative  way.  ●  The  solution  offers  a  unique  twist  or  improvement  on  existing  methods.  ●  While  the  level  of  innovation  is  moderate,  it  still  reflects  a  creative  approach.  
+4  -  6  marks  Limited  Innovation:  ●  The  project  offers  a  minor  improvement  or  refinement  on  existing  solutions.  ●  The  solution  doesn't  bring  much  originality  and  might  resemble  existing  concepts.   ●  The  level  of  innovation  is  minimal.  
+1-3  mark(s)  No  Innovation:  
+===== PAGE 9 =====
+●  The  project  solely  depends  on  existing  technologies  or  concepts  without  introducing  anything  new  or  innovative.   ●  There's  no  sign  of  originality  in  the  solution.  
+Appropriateness  of  Methodology  
+10  9  -  10  marks  
+Exceptional  Methodology:  ●  The  technical  approach  is  exceptionally  well-defined,  innovative,  and  demonstrates  a  deep  understanding  of  project  goals.  ●  Perfect  alignment  between  methodology  and  project  objectives.  
+7  -  8  marks  Effective  Methodology:  ●  The  technical  approach  is  well-defined,  detailed,  and  effectively  supports  project  goals.  ●  Clear  alignment  between  methodology  and  project  objectives.  
+5  -  6  marks  Competent  Methodology:  ●  The  methodology  is  clearly  defined  and  demonstrates  understanding  of  project  goals.  ●  Methodology  aligns  well  with  project  objectives.  
+3  -  4  marks  Basic  Methodology:  ●  The  methodology  is  present  but  lacks  depth  or  detail.  ●  Some  alignment  with  project  goals,  but  not  fully  articulated.  
+1  -  2  mark(s)  
+Minimal  Methodology:  ●  The  approach  lacks  clear  methodology  or  is  poorly  defined.  ●  Methodology  does  not  align  with  project  goals  or  objectives.  
+Business    
+Vision  and  future  plan  5  5  marks  Excellent  (Compelling  Market  Opportunity):  ●  The  vision  is  exceptionally  clear  and  inspiring,  supported  by  a  comprehensive,  detailed,  and  highly  feasible  future  plan.  
+===== PAGE 10 =====
+4  marks  Strong  (Clear  Market  Potential):  ●  The  vision  is  clear  and  compelling,  with  a  detailed  and  realistic  future  plan.  
+3  marks  Adequate  (Needs  Refinement):  ●  The  vision  is  clear  and  realistic,  and  the  future  plan  is  satisfactory  but  lacks  some  detail  or  feasibility.  
+2  marks  Limited  (Needs  Significant  Work):  ●  The  vision  is  somewhat  clear  but  lacks  detail,  and  the  future  plan  is  vague  and  not  well  thought  out.  
+1  mark  Not  Addressed:  ●  The  vision  is  unclear  or  unrealistic,  with  no  coherent  plan  for  the  future.  
+Competitive  Advantages   
+5  5  marks  Distinct  and  Unmatched  Advantage:  ●  The  solution  has  a  clear  and  well-defined  competitive  advantage  that  sets  it  apart  from  all  other  products  in  the  market.   ●  This  advantage  provides  a  substantial  benefit  and  makes  it  difficult  for  others  to  compete  effectively.  
+4  marks  Strong  Competitive  Advantage:   ●  The  solution  offers  a  clear  competitive  advantage  that  provides  a  noticeable  benefit  over  many  other  products  in  the  market.   ●  This  advantage  is  likely  to  be  difficult  for  others  to  replicate  within  a  reasonable  timeframe,  ensuring  a  strong  market  position.  
+3  marks  Adequate  Competitive  Advantage:   ●  The  solution  provides  a  certain  degree  of  competitive  advantage,  but  it  might  be  comparable  to  advantages  seen  in  other  products  in  the  market.   
+===== PAGE 11 =====
+●  Others  might  be  able  to  achieve  similar  results  with  some  adjustments  or  additional  development,  making  the  advantage  less  sustainable.  
+2  marks  Limited  Competitive  Advantage:   ●  The  solution's  competitive  advantage  is  weak  or  unclear,  providing  little  differentiation  from  other  products  in  the  market.  Others  probably  have  solutions  with  similar  capabilities.   ●  The  team  shows  a  limited  understanding  of  the  competitive  environment  within  the  industry.  
+1  mark  No  Competitive  Advantage:   ●  The  solution  doesn't  have  a  distinct  competitive  advantage  and  seems  similar  to  many  other  products  in  the  market.   ●  The  team  doesn't  show  a  clear  understanding  of  how  their  solution  stands  out  from  others,  indicating  a  lack  of  strategic  differentiation.  
+Sustainability   
+5  5  marks  Highly  Sustainable:  ●  The  project's  sustainability  plan  is  strong,  ensuring  its  long-term  viability  and  impact.  ●  It  demonstrates  innovative  and  effective  practices  that  are  likely  to  be  maintained  and  scaled  over  time.  
+4  marks  Strong  Sustainability  Focus:   ●  The  project  shows  a  clear  commitment  to  sustainability  in  its  operations  and  practices.  ●  There  are  well-integrated  features  aimed  at  ensuring  the  project's  continuity.  
+3  marks  Adequate  Sustainability  Considerations:  |  ●  The  project  considers  sustainability  aspects  to  a  reasonable  extent,  though  there  is  room  for  further  development.  ●  It  incorporates  some  sustainable  practices  that  contribute  to  its  ongoing  success  and  future  prospects.  
+2  marks  Limited  Sustainability  Integration:  |  ●  Sustainability  considerations  are  minimal  and  not  fully  integrated  into  the  project's  long-term  strategy.  
+===== PAGE 12 =====
+●  Basic  sustainable  practices  are  present  but  may  not  be  sufficient  to  sustain  the  project's  impact  over  time.  
+1  mark  No  Consideration  for  Sustainability:   ●  The  project  lacks  any  sustainability  planning  or  practices  aimed  at  ensuring  its  continuity.  ●  There  are  no  efforts  to  address  the  long-term  viability  or  impact  of  the  project.  
+Business  model  5  5  marks  Compelling  and  Feasible  Business  Model:  ●  The  team  introduces  a  clear,  well-defined,  and  creative  business  plan  that  turns  the  project's  value  into  a  sustainable  source  of  income.   ●  The  model  considers  target  market,  pricing  strategy,  cost,  and  important  partners/resources.  ●  The  business  model  is  realistic,  achievable  within  the  project's  scope,  and  has  high  growth  potential.   
+4  marks  Strong  Business  Model:   ●  The  team  presents  a  well-developed  business  model  that  outlines  how  the  project  will  generate  commercial  value  and  be  successful  in  the  long  run.  ●  The  model  clearly  defines  target  customers,  value  proposition,  and  commercial  value  behind  it.  ●  There  is  a  clear  understanding  of  costs  and  potential  challenges,  but  some  aspects  might  require  further  refinement.   
+3  marks  Adequate  Business  Model:   ●  The  team  shares  a  simple  business  idea,  outlining  how  they  might  bring  in  commercial  value.   ●  The  model  may  have  some  inconsistencies  or  lack  details  on  specific  aspects  like  pricing  or  market  strategy.  ●  The  feasibility  and  potential  for  growth  might  need  further  development. 
+2  marks  Limited  Business  Model:   ●  The  team's  business  model  is  not  very  clear  and  has  big  gaps  or  issues.   ●  The  value  of  the  project  isn't  shown  clearly  in  how  it  will  bring  in  income  or  the  target  market  isn't  well  defined.  ●  The  long-term  viability  of  the  model  is  questionable.   
+1  mark  No  Clear  Business  Model:   ●  The  team  does  not  present  a  business  model  or  the  presented  model  lacks  any  substantial  detail.  ●  The  team  shows  a  limited  understanding  of  how  the  project  could  be  commercially  feasible.    Live  Demonstration   
+===== PAGE 13 =====
+Criteria  breakdown  Weightage  (%)  Mark  Description   
+Live  Demo  Performance  
+15  13-15  marks  
+Exceptional  (Highly  Effective  &  Engaging):  ●  The  live  demo  is  executed  flawlessly,  showcasing  the  project’s  functionality  and  impact.  ●  The  demonstration  is  interactive,  engaging,  and  effectively  communicates  the  project’s  key  features  and  benefits.  ●  The  team  confidently  handles  technical  aspects  and  any  potential  issues  that  arise  during  the  demo.  
+10-12  marks  
+Strong  (Well-Executed  &  Clear):   ●  The  live  demo  is  well-structured  and  demonstrates  the  project  effectively.  ●  There  is  good  engagement,  and  the  audience  can  clearly  understand  the  project’s  capabilities.  ●  Minor  technical  issues  may  be  present  but  do  not  detract  from  the  overall  demonstration.  
+7-9  marks  Adequate  (Needs  Refinement):   ●  The  demo  conveys  the  project’s  functionality  but  lacks  clarity  or  engagement.  ●  Some  technical  issues  may  occur,  impacting  the  audience’s  ability  to  fully  grasp  the  project’s  potential.  ●  The  team  may  struggle  slightly  in  delivering  a  confident  and  smooth  demo.  
+4-6  marks  Limited  (Needs  Significant  Work):   ●  The  demo  is  disorganized  or  unclear,  making  it  difficult  for  the  audience  to  understand  the  project’s  value.  ●  Technical  issues  significantly  affect  the  presentation.  ●  The  team  lacks  confidence  in  presenting  and  explaining  their  project.  
+1-3  mark  Poor  (Unclear  or  Ineffective):   ●  The  demo  fails  to  effectively  showcase  the  project.  ●  Major  technical  issues  prevent  a  clear  understanding  of  the  project’s  functionality.  ●  The  team  is  unprepared  or  unable  to  explain  their  project  during  the  live  demonstration.  
+===== PAGE 14 =====
+Completeness   
+15  13-15  marks  
+Exceptional  (Comprehensive  &  Fully  Developed):   ●  The  project  is  fully  developed  with  all  necessary  components  in  place.  ●  The  solution  is  well-integrated,  and  all  features  function  as  intended.  ●  The  documentation  and  supporting  materials  are  complete  and  well-prepared.  
+10-12  marks  
+Strong  (Mostly  Complete  &  Functional):   ●  The  project  is  mostly  complete,  with  only  minor  gaps  in  functionality  or  documentation.  ●  All  major  features  work  as  expected.  
+7-9  marks  Adequate  (Functional  but  Needs  Refinement):   ●  The  project  is  functional  but  may  be  missing  key  features  or  require  further  development.  ●  Some  elements  of  the  project  may  not  work  smoothly.  
+4-6  marks  Limited  (Incomplete  &  Lacking  Key  Features):  ●  The  project  is  only  partially  complete,  with  several  missing  or  non-functional  components.  ●  The  documentation  or  supporting  materials  are  lacking.  
+1-3  mark  Poor  (Not  Functional  or  Missing  Major  Components):  ●  The  project  is  largely  incomplete  or  non-functional.  ●  Key  features  are  missing  or  do  not  work  as  intended.  
+UI/UX  (User  Interface  &  User  Experience)   
+10  9-10  marks  Exceptional  (Highly  User-Friendly  &  Visually  Appealing):  ●  The  design  is  intuitive,  visually  appealing,  and  enhances  usability.  ●  The  user  experience  is  smooth,  with  clear  navigation  and  accessibility  features.  ●  Strong  attention  to  detail  in  typography,  color  schemes,  and  overall  aesthetics.  
+7-8  marks  Strong  (Well-Designed  &  Usable):  ●  The  design  is  attractive  and  functional,  with  a  good  balance  between  aesthetics  and  usability.  
+===== PAGE 15 =====
+●  The  user  interface  is  easy  to  navigate  with  minor  areas  for  improvement.  
+5-6  marks  Adequate  (Usable  but  Needs  Refinement):  ●  The  design  is  functional  but  may  lack  polish  or  consistency.  ●  The  user  experience  is  somewhat  intuitive  but  could  be  improved  in  clarity  and  navigation.  
+3-4  marks  Limited  (Difficult  to  Use  or  Visually  Inconsistent):  ●  The  design  is  cluttered,  inconsistent,  or  hard  to  navigate.  ●  The  user  experience  is  not  smooth,  and  accessibility  considerations  are  minimal.  
+1-2  mark  No  Consideration  for  Sustainability:   ●  The  design  is  unappealing  and  difficult  to  use.  ●  The  interface  lacks  usability  and  makes  it  hard  for  users  to  interact  with  the  project.  
+  

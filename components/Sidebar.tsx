@@ -28,6 +28,7 @@ interface NavItem {
 /* ── Static nav items ──────────────────────────────────── */
 
 const EMPLOYEE_ITEMS: NavItem[] = [
+  { href: '/employee', label: 'Workspace', icon: <ShieldCheck size={18} />, matchPaths: ['/employee'], exact: true },
   { href: '/employee/requests/new', label: 'Request Tool', icon: <Send size={18} />, matchPaths: ['/employee/requests'] },
   { href: '/employee/redress', label: 'Redress', icon: <ShieldAlert size={18} />, matchPaths: ['/employee/redress'] },
 ];
@@ -45,6 +46,7 @@ const ADMIN_ITEMS: NavItem[] = [
 
 const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/': { title: 'pelta.ai', crumb: 'AI Governance Platform' },
+  '/employee': { title: 'Workspace', crumb: 'Employee dashboard' },
   '/employee/requests/new': { title: 'Request Tool', crumb: 'Request a new AI tool' },
   '/employee/redress': { title: 'Redress', crumb: 'Right to Explanation · EU AI Act' },
   '/admin/dashboard': { title: 'Dashboard', crumb: 'Overview' },

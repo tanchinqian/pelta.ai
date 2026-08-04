@@ -6,6 +6,7 @@ import {
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -73,33 +74,6 @@ function fmt(iso: string) {
   });
 }
 
-function RiskBadge({ level }: { level: string | null }) {
-  const l = (level ?? 'low').toLowerCase();
-  return (
-    <span
-      className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded"
-      style={{ color: RISK_COLOR[l] ?? RISK_COLOR.low, background: RISK_BG[l] ?? RISK_BG.low }}
-    >
-      {l}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span
-      className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
-      style={{
-        color: STATUS_COLOR[status] ?? 'var(--text-secondary)',
-        borderColor: `${STATUS_COLOR[status] ?? 'var(--border)'}40`,
-        background: `${STATUS_COLOR[status] ?? 'transparent'}0d`,
-      }}
-    >
-      {status}
-    </span>
-  );
-}
-
 function SectionTag({ label }: { label: string }) {
   return (
     <span className="text-sm font-medium font-mono px-1.5 py-0.5 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300">
@@ -144,7 +118,7 @@ function AppealDetailModal({
             </div>
             <div className="flex flex-col items-end gap-1">
               <StatusBadge status={req.status} />
-              {req.riskLevel && <RiskBadge level={req.riskLevel} />}
+              {req.riskLevel && <RiskBadge tier={req.riskLevel} />}
             </div>
           </div>
           <div>
@@ -187,7 +161,7 @@ function AppealDetailModal({
                   </button>
                   <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
                     className="flex items-center gap-1.5 text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer">
-                    <XCircle size={12} /> Decline
+                    <XCircle size={12} /> Deny
                   </button>
                 </div>
               ) : (
@@ -201,7 +175,7 @@ function AppealDetailModal({
                   <div className="flex items-center gap-2">
                     <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
                       className="text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
-                      Confirm Decline
+                      Confirm Deny
                     </button>
                     <button onClick={onCancelReject} className="text-base text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer">Cancel</button>
                   </div>
@@ -598,7 +572,7 @@ export default function RequestsPage() {
                           <td className="px-3 py-3 hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap"><RiskBadge level={req.riskLevel} /></td>
+                          <td className="px-3 py-3 whitespace-nowrap"><RiskBadge tier={req.riskLevel} /></td>
                           <td className="px-3 py-3 text-sm text-zinc-500 dark:text-zinc-400 max-w-[140px] truncate hidden lg:table-cell">{req.reason}</td>
                           <td className="px-3 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
                           <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
@@ -616,7 +590,7 @@ export default function RequestsPage() {
                                   </button>
                                   <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
-                                    <XCircle size={10} /> Decline
+                                    <XCircle size={10} /> Deny
                                   </button>
                                 </>
                               )}
@@ -665,16 +639,13 @@ export default function RequestsPage() {
                               <td className="py-2 px-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap">{fmt(entry.timestamp)}</td>
                               <td className="py-2 pr-3 text-base font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{entry.employeeName}</td>
                               <td className="py-2 pr-3 whitespace-nowrap">
-                                <span className="text-sm font-bold font-mono uppercase"
-                                  style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}>
-                                  {entry.action}
-                                </span>
+                                <StatusBadge status={entry.action} />
                               </td>
                               <td className="py-2 pr-3 text-sm font-mono text-zinc-600 dark:text-zinc-300 hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
                               <td className="py-2 pr-3 hidden md:table-cell">
                                 <div className="flex flex-wrap gap-1">{entry.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                               </td>
-                              <td className="py-2 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge level={entry.riskLevel} /></td>
+                              <td className="py-2 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge tier={entry.riskLevel} /></td>
                               <td className="py-2 text-sm text-zinc-500 dark:text-zinc-400 truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
                             </tr>
                           ))}
@@ -767,7 +738,7 @@ export default function RequestsPage() {
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <CheckCircle size={10} /> Approve
                                   </button>
-                                  <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
+                                  <button id={`deny-tool-${req.id}`} onClick={() => { setDenyingToolId(req.id); setSelectedTool(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <XCircle size={10} /> Deny
                                   </button>

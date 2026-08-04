@@ -6,11 +6,12 @@ import {
   PieChart, Pie,
   LineChart, Line, CartesianGrid, Legend,
 } from 'recharts';
-import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Clock, ChevronDown, ChevronUp, ShieldAlert, ShieldCheck, Globe } from 'lucide-react';
 import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
 import { motion, animate } from 'framer-motion';
 import { useRef } from 'react';
+import { RiskBadge, StatusBadge, VerdictBadge } from '@/components/Badge';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -33,8 +34,8 @@ interface RequestRecord {
 
 /* ── Color palette (semantic — same in both themes) ────── */
 
-const VERDICT = { allow: 'var(--color-risk-low)', flag: 'var(--color-risk-medium)', block: 'var(--color-risk-high)' };
-const RISK    = { low: 'var(--color-risk-low)', medium: 'var(--color-risk-medium)', high: 'var(--color-risk-high)' };
+const VERDICT = { allow: 'var(--risk-low)', flag: 'var(--risk-medium)', block: 'var(--risk-high)' };
+const RISK    = { low: 'var(--risk-low)', medium: 'var(--risk-medium)', high: 'var(--risk-high)' };
 
 const DATA_CAT: Record<string, string> = {
   PII: 'var(--data-pii)', Financial: 'var(--data-financial)', 'Source Code': 'var(--data-source-code)', None: 'var(--data-none)',
@@ -201,6 +202,14 @@ export default function DashboardPage() {
 
   const visibleLogs = [...logs].reverse().slice(0, 5);
 
+  /* ── Business impact derived data ─────────────────────── */
+  const blockedLogs = logs.filter((l) => l.verdict === 'block');
+  const piiBlocked = blockedLogs.filter((l) => l.dataCategory === 'PII').length;
+  const financialBlocked = blockedLogs.filter((l) => l.dataCategory === 'Financial').length;
+  const sourceBlocked = blockedLogs.filter((l) => l.dataCategory === 'Source Code').length;
+  const extensionScans = logs.filter((l) => l.source === 'extension').length;
+  const extensionPct = logs.length > 0 ? Math.round((extensionScans / logs.length) * 100) : 0;
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -223,7 +232,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <RadarIcon size={14} className="text-accent" />
-          <h2 className="text-lg font-serif font-semibold text-text-primary">Dashboard</h2>
+          <h1 className="text-xl font-serif font-semibold text-text-primary">Dashboard</h1>
           <span className="text-sm font-mono text-text-tertiary">/ overview</span>
         </div>
         <div className="flex items-center gap-3">
@@ -243,12 +252,85 @@ export default function DashboardPage() {
         transition={{ delay: 0.1, duration: 0.3 }}
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2"
       >
-        <StatCard label="Total Scans" value={logs.length} color="var(--text-primary)" />
+        <Link href="/admin/logs" className="block hover:opacity-80 transition-opacity"><StatCard label="Total Scans" value={logs.length} color="var(--text-primary)" /></Link>
         <StatCard label="Scans Flagged" value={logs.filter(l => l.verdict === 'flag').length} color={VERDICT.flag} />
         <StatCard label="Scans Blocked" value={logs.filter(l => l.verdict === 'block').length} color={VERDICT.block} />
-        <StatCard label="Total Tools" value={tools.length} color="var(--text-primary)" />
-        <StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} />
+        <Link href="/admin/tools" className="block hover:opacity-80 transition-opacity"><StatCard label="Total Tools" value={tools.length} color="var(--text-primary)" /></Link>
+        <Link href="/admin/requests" className="block hover:opacity-80 transition-opacity"><StatCard label="Pending Tools" value={tools.filter((t) => t.status === 'pending').length} color={RISK.medium} /></Link>
         <StatCard label="High Risk Tools" value={tools.filter((t) => t.riskTier === 'High').length} color={RISK.high} />
+      </motion.div>
+
+      {/* ── Governance Impact ──────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3 }}
+        className="panel p-4 space-y-3"
+      >
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={12} className="text-accent" />
+          <span className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Governance Impact</span>
+          <span className="text-[10px] font-mono text-text-tertiary ml-auto">since Prompt Guard adoption</span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--risk-high)' }}>
+                <AnimatedNumber value={blockedLogs.length} />
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Incidents Caught</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              Prompts blocked before reaching third‑party AI APIs — preventing data leakage of sensitive enterprise content.
+            </p>
+            <div className="flex items-center gap-3 text-[10px] font-mono text-text-tertiary pt-1">
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-pii)' }} />
+                PII · {piiBlocked}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-financial)' }} />
+                Financial · {financialBlocked}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-sm" style={{ background: 'var(--data-source-code)' }} />
+                Source · {sourceBlocked}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--data-pii)' }}>
+                <AnimatedNumber value={piiBlocked} />
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">PII Exposures Averted</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              HIPAA / GDPR compliance risk mitigated — employee PII, customer data, and personal credentials intercepted before transmission.
+            </p>
+            <div className="flex items-center gap-1.5 text-[10px] font-mono pt-1">
+              <ShieldCheck size={10} className="text-risk-low" />
+              <span className="text-risk-low">compliance-safe</span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xl font-bold font-mono" style={{ color: 'var(--accent)' }}>
+                {extensionPct}<span className="text-sm">%</span>
+              </span>
+            </div>
+            <p className="text-xs font-mono uppercase tracking-widest text-text-secondary font-semibold">Shadow IT Coverage</p>
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              {extensionScans} of {logs.length} scans originated from the browser extension — protecting ChatGPT, Gemini, Claude, Copilot, and DeepSeek outside the corporate portal.
+            </p>
+            <div className="flex items-center gap-1.5 text-[10px] font-mono pt-1">
+              <Globe size={10} className="text-accent" />
+              <span className="text-accent">multi‑platform guard</span>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Section 1: Prompt Security ───────────────────────────────── */}
@@ -430,8 +512,8 @@ export default function DashboardPage() {
             </button>
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
+                  <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800">
                     <SortTh label="Name" sortKey="name" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                     <SortTh label="Risk" sortKey="riskTier" active={sortKey} dir={sortDir} onToggle={toggleSort} />
                     <SortTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onToggle={toggleSort} />
@@ -445,16 +527,11 @@ export default function DashboardPage() {
                   {(showToolRegistry ? sortedTools : sortedTools.slice(0, 5)).map((t, i) => (
                     <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-2 pr-3 text-text-primary font-medium">{t.name}</td>
-                      <td className="py-2 pr-3">
-                        {t.riskTier
-                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-sm font-bold font-mono uppercase">{t.riskTier}</span>
-                          : <span className="text-text-muted">—</span>}
+                       <td className="py-2 pr-3">
+                        <RiskBadge tier={t.riskTier} />
                       </td>
                       <td className="py-2 pr-3">
-                        <span className={`text-sm font-mono uppercase ${
-                          t.status === 'approved' ? 'text-risk-low' :
-                          t.status === 'blocked' ? 'text-risk-high' : 'text-risk-medium'
-                        }`}>{t.status}</span>
+                        <StatusBadge status={t.status} />
                       </td>
                       <td className="py-2 pl-3 text-sm font-mono text-text-tertiary hidden lg:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                     </tr>
@@ -490,8 +567,8 @@ export default function DashboardPage() {
             </div>
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
+                  <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800">
                     <th className="pb-1.5 pr-3 font-medium">Verdict</th>
                     <th className="pb-1.5 pr-3 font-medium hidden sm:table-cell">Risk</th>
                     <th className="pb-1.5 pr-3 font-medium hidden md:table-cell">Source</th>
@@ -502,9 +579,7 @@ export default function DashboardPage() {
                   {visibleLogs.map((l, i) => (
                     <tr key={l.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-2 pr-3">
-                        <span className={`text-sm font-bold font-mono uppercase ${
-                          l.verdict === 'allow' ? 'text-risk-low' : l.verdict === 'flag' ? 'text-risk-medium' : 'text-risk-high'
-                        }`}>{l.verdict}</span>
+                        <VerdictBadge verdict={l.verdict} />
                       </td>
                       <td className="py-2 pr-3 hidden sm:table-cell">
                         <span style={{ color: riskColor(l.riskLevel === 'none' ? 'Low' : l.riskLevel) }} className="text-sm font-mono uppercase">{l.riskLevel}</span>
@@ -535,7 +610,7 @@ function AnimatedNumber({ value }: { value: number }) {
     const node = nodeRef.current;
     if (node) {
       const controls = animate(0, value, {
-        duration: 1.5,
+        duration: 0.6,
         ease: "easeOut",
         onUpdate(v) {
           node.textContent = Math.round(v).toString();
