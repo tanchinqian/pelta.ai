@@ -7,6 +7,7 @@ import {
   FileText, ScanLine, Gavel, Bell,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { VerdictBadge } from '@/components/Badge';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -294,9 +295,7 @@ export default function RedressPage() {
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-bold font-mono uppercase shrink-0 px-1 py-0.5 rounded" style={{ color: VERDICT_COLOR[log.verdict], background: `${VERDICT_COLOR[log.verdict]}15` }}>
-                      {log.verdict}
-                    </span>
+                    <VerdictBadge verdict={log.verdict} />
                     <span className="text-sm font-mono uppercase" style={{ color: VERDICT_COLOR[log.verdict] }}>{log.riskLevel}</span>
                   </div>
                   <p className="text-base text-text-primary leading-snug line-clamp-2">{log.promptSnippet}</p>

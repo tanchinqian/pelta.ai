@@ -11,6 +11,7 @@ import Link from 'next/link';
 import RadarIcon from '@/components/RadarIcon';
 import { motion, animate } from 'framer-motion';
 import { useRef } from 'react';
+import { RiskBadge, StatusBadge, VerdictBadge } from '@/components/Badge';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -33,8 +34,8 @@ interface RequestRecord {
 
 /* ── Color palette (semantic — same in both themes) ────── */
 
-const VERDICT = { allow: 'var(--color-risk-low)', flag: 'var(--color-risk-medium)', block: 'var(--color-risk-high)' };
-const RISK    = { low: 'var(--color-risk-low)', medium: 'var(--color-risk-medium)', high: 'var(--color-risk-high)' };
+const VERDICT = { allow: 'var(--risk-low)', flag: 'var(--risk-medium)', block: 'var(--risk-high)' };
+const RISK    = { low: 'var(--risk-low)', medium: 'var(--risk-medium)', high: 'var(--risk-high)' };
 
 const DATA_CAT: Record<string, string> = {
   PII: 'var(--data-pii)', Financial: 'var(--data-financial)', 'Source Code': 'var(--data-source-code)', None: 'var(--data-none)',
@@ -527,15 +528,10 @@ export default function DashboardPage() {
                     <tr key={t.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-2 pr-3 text-text-primary font-medium">{t.name}</td>
                        <td className="py-2 pr-3">
-                        {t.riskTier
-                          ? <span style={{ color: riskColor(t.riskTier) }} className="text-sm font-bold font-mono uppercase cursor-help" title={`Why: ${(t.justification ?? '').slice(0, 150)}${(t.justification ?? '').length > 150 ? '…' : ''}`}>{t.riskTier}</span>
-                          : <span className="text-text-muted">—</span>}
+                        <RiskBadge tier={t.riskTier} />
                       </td>
                       <td className="py-2 pr-3">
-                        <span className={`text-sm font-mono uppercase ${
-                          t.status === 'approved' ? 'text-risk-low' :
-                          t.status === 'blocked' ? 'text-risk-high' : 'text-risk-medium'
-                        }`}>{t.status}</span>
+                        <StatusBadge status={t.status} />
                       </td>
                       <td className="py-2 pl-3 text-sm font-mono text-text-tertiary hidden lg:table-cell">{t.nistFunctions.join(', ') || '—'}</td>
                     </tr>
@@ -583,9 +579,7 @@ export default function DashboardPage() {
                   {visibleLogs.map((l, i) => (
                     <tr key={l.id} className={`border-b border-border/40 hover:bg-surface-hover/50 transition-colors ${i % 2 === 1 ? 'bg-surface-hover/20' : ''}`}>
                       <td className="py-2 pr-3">
-                        <span className={`text-sm font-bold font-mono uppercase ${
-                          l.verdict === 'allow' ? 'text-risk-low' : l.verdict === 'flag' ? 'text-risk-medium' : 'text-risk-high'
-                        }`}>{l.verdict}</span>
+                        <VerdictBadge verdict={l.verdict} />
                       </td>
                       <td className="py-2 pr-3 hidden sm:table-cell">
                         <span style={{ color: riskColor(l.riskLevel === 'none' ? 'Low' : l.riskLevel) }} className="text-sm font-mono uppercase">{l.riskLevel}</span>

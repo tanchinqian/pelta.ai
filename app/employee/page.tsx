@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Send, FileText, ShieldCheck, CheckCircle2, XCircle, Clock, History, Wrench } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { motion } from 'framer-motion';
 
 interface RequestRecord {
@@ -129,15 +130,11 @@ export default function EmployeeDashboard() {
                       {req.department && ` · ${req.department}`}
                     </p>
                   </div>
-                  <span className={`text-xs font-bold font-mono uppercase shrink-0 flex items-center gap-0.5 ${
-                    req.status === 'approved' ? 'text-risk-low' :
-                    req.status === 'denied' ? 'text-risk-high' : 'text-risk-medium'
-                  }`}>
-                    {req.status === 'approved' && <CheckCircle2 size={9} />}
-                    {req.status === 'denied' && <XCircle size={9} />}
-                    {req.status === 'pending' && <Clock size={9} className="animate-pulse" />}
-                    {req.status}
-                  </span>
+                  <StatusBadge status={req.status} icon={
+                    req.status === 'approved' ? <CheckCircle2 size={9} /> :
+                    req.status === 'denied' ? <XCircle size={9} /> :
+                    <Clock size={9} className="animate-pulse" />
+                  } />
                 </div>
               ))}
             </div>
@@ -168,9 +165,7 @@ export default function EmployeeDashboard() {
                 <div key={tool.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 flex items-center justify-between gap-2">
                   <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{tool.name}</span>
                   {tool.riskTier && (
-                    <span className="text-xs font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded" style={{ color: RISK_COLOR[tool.riskTier], background: `${RISK_COLOR[tool.riskTier]}15` }}>
-                      {tool.riskTier}
-                    </span>
+                    <RiskBadge tier={tool.riskTier} />
                   )}
                 </div>
               ))}

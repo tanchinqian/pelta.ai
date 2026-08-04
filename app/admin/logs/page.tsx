@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import { Filter, Search, ChevronDown, ChevronUp, Download, RefreshCw } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { VerdictBadge, DataCategoryBadge } from '@/components/Badge';
 import { renderHighlightedText, listDetectedPatterns } from '@/lib/highlightUtils';
 
 interface GuardLog {
@@ -229,7 +230,7 @@ export default function LogsPage() {
                       {new Date(l.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-sm font-bold font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.verdict}</span>
+                      <VerdictBadge verdict={l.verdict} />
                     </td>
                     <td className="px-3 py-2">
                       <span className="text-sm font-mono uppercase" style={{ color: VERDICT_COLOR[l.verdict] }}>{l.riskLevel}</span>
@@ -242,7 +243,7 @@ export default function LogsPage() {
                     <td className="px-3 py-2 text-sm font-mono text-zinc-600 dark:text-zinc-300 hidden md:table-cell">{l.tool ?? '—'}</td>
                     <td className="px-3 py-2 text-sm font-mono text-zinc-500 dark:text-zinc-400 hidden md:table-cell">{l.detectionMethod}</td>
                     <td className="px-3 py-2 hidden lg:table-cell">
-                      <span className="text-sm font-mono" style={{ color: DATA_CAT_COLOR[l.dataCategory] ?? '#64748b' }}>{l.dataCategory}</span>
+                      <DataCategoryBadge category={l.dataCategory} />
                     </td>
                     <td className="px-3 py-2 text-sm font-mono text-zinc-500 dark:text-zinc-400 truncate max-w-[260px]">{l.promptSnippet}</td>
                     <td className="px-3 py-2 text-zinc-400 dark:text-zinc-500">

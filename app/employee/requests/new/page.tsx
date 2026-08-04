@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History, ShieldCheck } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
@@ -261,17 +262,11 @@ export default function NewRequestPage() {
                     <div key={req.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{req.toolRequested}</span>
-                        <span
-                          className={`text-sm font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
-                            req.status === 'approved' ? 'text-risk-low' :
-                            req.status === 'denied' ? 'text-risk-high' : 'text-risk-medium'
-                          }`}
-                        >
-                          {req.status === 'approved' && <CheckCircle2 size={9} />}
-                          {req.status === 'denied' && <XCircle size={9} />}
-                          {req.status === 'pending' && <Clock size={9} className="animate-pulse" />}
-                          {req.status}
-                        </span>
+                        <StatusBadge status={req.status} icon={
+                          req.status === 'approved' ? <CheckCircle2 size={9} /> :
+                          req.status === 'denied' ? <XCircle size={9} /> :
+                          <Clock size={9} className="animate-pulse" />
+                        } />
                       </div>
                       <p className="text-zinc-500 dark:text-zinc-400 text-sm font-mono mt-1">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -311,12 +306,7 @@ export default function NewRequestPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
-                          <span
-                            className="text-sm font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
-                            style={{ color: RISK_COLOR[tool.riskTier], background: `${RISK_COLOR[tool.riskTier]}15` }}
-                          >
-                            {tool.riskTier}
-                          </span>
+                          <RiskBadge tier={tool.riskTier} />
                         )}
                       </div>
                       <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 line-clamp-2 leading-relaxed">{tool.description}</p>
