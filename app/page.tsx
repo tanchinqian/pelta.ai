@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Shield, Lock, FileText, BarChart3, Users, ChevronRight, Activity, ShieldCheck, Cpu, Database, ArrowRight, BookOpen, Scale, Globe, Eye, Send, Search, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RadarIcon from '@/components/RadarIcon';
+import SeedButton from '@/components/SeedButton';
 
 const views = {
   employee: {
@@ -103,6 +104,8 @@ export default function LandingPage() {
               Admin
             </button>
           </div>
+
+          <SeedButton />
 
           {/* Content */}
           <div className="space-y-4 animate-slide-in" key={view}>
