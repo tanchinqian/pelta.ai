@@ -60,7 +60,7 @@ const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
 
 /* ── Components ────────────────────────────────────────── */
 
-function ThemeToggleMini() {
+function ThemeToggleMini({ collapsed }: { collapsed?: boolean }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [mounted, setMounted] = useState(false);
 
@@ -90,27 +90,38 @@ function ThemeToggleMini() {
 
   if (!mounted) return <div className="h-8" />;
 
+  const label = theme === 'dark' ? 'Light mode' : 'Dark mode';
+  const icon = theme === 'dark' ? (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  );
+
   return (
     <button
       onClick={toggle}
-      className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors cursor-pointer"
+      title={label}
+      className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors cursor-pointer ${
+        collapsed ? 'justify-center' : ''
+      }`}
     >
-      {theme === 'dark' ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-        </svg>
-      )}
-      {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+      <span className="shrink-0">{icon}</span>
+      <span
+        className="whitespace-nowrap transition-opacity duration-150 text-xs"
+        style={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto', overflow: 'hidden' }}
+      >
+        {label}
+      </span>
     </button>
   );
 }
 
-function SeedButtonSidebar() {
+function SeedButtonSidebar({ collapsed }: { collapsed?: boolean }) {
   const [seeding, setSeeding] = useState(false);
 
   const handleSeed = async () => {
@@ -127,11 +138,18 @@ function SeedButtonSidebar() {
     <button
       onClick={handleSeed}
       disabled={seeding}
-      className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-tertiary hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer disabled:opacity-40"
       title="Reset all data to seed state"
+      className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-tertiary hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer disabled:opacity-40 ${
+        collapsed ? 'justify-center' : ''
+      }`}
     >
-      <RefreshCw size={14} className={seeding ? 'animate-spin' : ''} />
-      Reset
+      <RefreshCw size={14} className={`shrink-0 ${seeding ? 'animate-spin' : ''}`} />
+      <span
+        className="whitespace-nowrap transition-opacity duration-150 text-xs"
+        style={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto', overflow: 'hidden' }}
+      >
+        Reset
+      </span>
     </button>
   );
 }
@@ -172,16 +190,35 @@ function RequestBadge() {
   );
 }
 
-function NavGroup({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
+function NavGroup({ label, items, pathname, collapsed }: { label: string; items: NavItem[]; pathname: string; collapsed?: boolean }) {
   return (
     <div className="space-y-1">
-      <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-text-muted">{label}</p>
+      {/* Section label — hidden when collapsed */}
+      {!collapsed && (
+        <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-text-muted">{label}</p>
+      )}
+      {collapsed && <div className="py-1 border-t border-border/40 mx-2" />}
       {items.map((item) => {
         const active = item.exact
           ? pathname === item.href
           : item.matchPaths.some((p) => pathname.startsWith(p));
         const isRequests = item.href === '/admin/requests';
-        return (
+        return collapsed ? (
+          /* Icon-only collapsed mode */
+          <Link
+            key={item.href}
+            href={item.href}
+            title={item.label}
+            className={`flex items-center justify-center h-9 w-9 mx-auto rounded transition-all ${
+              active
+                ? 'text-accent bg-accent-dim'
+                : 'text-text-muted hover:bg-surface-hover hover:text-text-secondary'
+            }`}
+          >
+            {item.icon}
+          </Link>
+        ) : (
+          /* Expanded mode */
           <Link
             key={item.href}
             href={item.href}
@@ -191,7 +228,7 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
                 : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary border-transparent'
             }`}
           >
-            <span className={`shrink-0 transition-colors ${active ? 'text-accent' : 'text-text-muted group-hover:text-text-tertiary'}`}>{item.icon}</span>
+            <span className={`shrink-0 transition-colors ${active ? 'text-accent' : 'text-text-muted'}`}>{item.icon}</span>
             <span className="truncate">{item.label}</span>
             {isRequests && <RequestBadge />}
           </Link>
@@ -205,18 +242,42 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem('pelta-sidebar');
+    if (stored === 'collapsed') setCollapsed(true);
+  }, []);
+
+  const toggle = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('pelta-sidebar', next ? 'collapsed' : 'expanded');
+  };
 
   return (
-    <aside className="w-[280px] shrink-0 h-screen flex flex-col border-r border-border bg-surface/30 sticky top-0">
+    <aside
+      className="shrink-0 h-screen flex flex-col border-r border-border bg-surface/30 sticky top-0 overflow-hidden transition-[width] duration-200 ease-in-out"
+      style={{ width: mounted ? (collapsed ? '56px' : '220px') : '220px' }}
+    >
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 px-6 h-16 border-b border-border shrink-0 hover:bg-surface-hover/50 transition-colors">
+      <Link
+        href="/"
+        title="pelta.ai"
+        className="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0 hover:bg-surface-hover/50 transition-colors overflow-hidden"
+      >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-accent shrink-0">
           <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
           <path d="M12 7a5 5 0 0 1 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
           <path d="M12 11a1 1 0 0 1 1 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
           <circle cx="12" cy="12" r="1.5" fill="currentColor" />
         </svg>
-        <span className="text-lg tracking-tight font-serif">
+        <span
+          className="text-lg tracking-tight font-serif whitespace-nowrap transition-opacity duration-150"
+          style={{ opacity: collapsed ? 0 : 1 }}
+        >
           <span className="font-semibold text-text-primary">pelta</span>
           <span className="text-accent font-bold">.</span>
           <span className="font-light text-text-secondary">ai</span>
@@ -225,14 +286,36 @@ export default function Sidebar() {
 
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-4">
-        <NavGroup label="Employee" items={EMPLOYEE_ITEMS} pathname={pathname} />
-        <NavGroup label="Admin" items={ADMIN_ITEMS} pathname={pathname} />
+        <NavGroup label="Employee" items={EMPLOYEE_ITEMS} pathname={pathname} collapsed={collapsed} />
+        <NavGroup label="Admin"    items={ADMIN_ITEMS}    pathname={pathname} collapsed={collapsed} />
       </nav>
 
       {/* Bottom controls */}
-      <div className="px-2 py-2 border-t border-border space-y-0.5">
-        <SeedButtonSidebar />
-        <ThemeToggleMini />
+      <div className={`py-2 border-t border-border space-y-0.5 ${collapsed ? 'px-1' : 'px-2'}`}>
+        <SeedButtonSidebar collapsed={collapsed} />
+        <ThemeToggleMini   collapsed={collapsed} />
+
+        {/* Collapse toggle */}
+        <button
+          onClick={toggle}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+        >
+          {/* Chevron icon inline */}
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className="shrink-0 transition-transform duration-200"
+            style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          >
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span
+            className="whitespace-nowrap transition-opacity duration-150 text-xs"
+            style={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto', overflow: 'hidden' }}
+          >
+            Collapse
+          </span>
+        </button>
       </div>
     </aside>
   );
