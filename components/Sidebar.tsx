@@ -184,13 +184,13 @@ function NavGroup({ label, items, pathname }: { label: string; items: NavItem[];
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-3 px-4 py-2 rounded-l-none rounded-r text-sm transition-all border-l ${
+            className={`flex items-center gap-3 px-4 py-2 rounded-l-none rounded-r text-sm transition-all border-l-2 ${
               active
-                ? 'text-text-primary font-medium border-accent bg-accent-dim/60'
+                ? 'text-text-primary font-semibold border-accent bg-accent-dim'
                 : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary border-transparent'
             }`}
           >
-            <span className={`shrink-0 ${active ? 'text-accent' : 'text-text-tertiary'}`}>{item.icon}</span>
+            <span className={`shrink-0 transition-colors ${active ? 'text-accent' : 'text-text-muted group-hover:text-text-tertiary'}`}>{item.icon}</span>
             <span className="truncate">{item.label}</span>
             {isRequests && <RequestBadge />}
           </Link>
