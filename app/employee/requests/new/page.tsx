@@ -6,7 +6,6 @@ import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History
 import RadarIcon from '@/components/RadarIcon';
 import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
@@ -155,19 +154,24 @@ export default function NewRequestPage() {
 
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
 
+  const DESC_MIN = 20;
+  const DESC_MAX = 300;
+  const descLen        = description.trim().length;
+  const descTooShort   = description.length > 0 && descLen < DESC_MIN;
+  const descNearLimit  = description.length > DESC_MAX * 0.8;
+  const descOverLimit  = description.length > DESC_MAX;
+  const descValid      = descLen >= DESC_MIN && !descOverLimit;
+  const nameTrimmed    = name.trim().length > 0;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1, duration: 0.3 }}
-      className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
+    <div className="flex-1 p-4 max-w-7xl mx-auto w-full text-text-primary">
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex items-center gap-2 text-sm font-mono text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-2 text-sm font-mono text-text-tertiary">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
           <span>·</span>
           <span className="px-1.5 py-0.5 rounded bg-risk-medium/10 text-risk-medium">{pendingCount} pending</span>
           <span>·</span>
-          <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">{myRequests.length} total</span>
+          <span className="bg-surface-hover text-text-secondary text-xs px-2 py-0.5 rounded border border-border">{myRequests.length} total</span>
         </div>
       </div>
 
@@ -192,7 +196,9 @@ export default function NewRequestPage() {
                   <Wrench size={10} /> Tool Name
                 </label>
                 <input
-                  className="w-full bg-surface-hover border border-border text-text-primary placeholder-text-muted focus:border-accent focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors"
+                  className={`w-full bg-surface-hover border text-text-primary placeholder-text-muted focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors ${
+                    nameTrimmed ? 'border-risk-low/50 focus:border-risk-low' : 'border-border focus:border-accent'
+                  }`}
                   placeholder="e.g. NotebookLM, Copilot"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -208,17 +214,39 @@ export default function NewRequestPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-mono uppercase tracking-widest text-text-secondary font-semibold flex items-center gap-1">
-                  <FileText size={10} /> Intended Use Case
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-mono uppercase tracking-widest text-text-secondary font-semibold flex items-center gap-1">
+                    <FileText size={10} /> Intended Use Case
+                  </label>
+                  {description.length > 0 && (
+                    <span className={`text-xs font-mono transition-colors ${
+                      descOverLimit ? 'text-risk-high' : descNearLimit ? 'text-risk-medium' : descValid ? 'text-risk-low' : 'text-text-muted'
+                    }`}>
+                      {description.length}/{DESC_MAX}
+                    </span>
+                  )}
+                </div>
                 <input
-                  className="w-full bg-surface-hover border border-border text-text-primary placeholder-text-muted focus:border-accent focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors"
+                  className={`w-full bg-surface-hover border text-text-primary placeholder-text-muted focus:outline-none rounded-lg px-3 py-2 text-sm transition-colors ${
+                    descOverLimit ? 'border-risk-high/50 focus:border-risk-high' :
+                    descValid     ? 'border-risk-low/50 focus:border-risk-low' :
+                    'border-border focus:border-accent'
+                  }`}
                   placeholder="e.g. AI note-taking for meeting summaries"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
                   disabled={loading}
                 />
+                <p className={`text-xs transition-colors flex items-center gap-1 ${
+                  descTooShort  ? 'text-risk-medium' :
+                  descValid     ? 'text-risk-low' :
+                  'text-text-muted'
+                }`}>
+                  {descTooShort  && <>⚠ At least {DESC_MIN} characters required</>}
+                  {descValid     && <>✓ Looks good</>}
+                  {!descTooShort && !descValid && description.length === 0 && <>Min. {DESC_MIN} characters</>}
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -350,6 +378,6 @@ export default function NewRequestPage() {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

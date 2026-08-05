@@ -268,8 +268,10 @@ export default function RedressPage() {
 
   return (
     <div className="flex-1 flex min-h-0">
-      {/* ── Left: Event list ── */}
-      <div className="w-[340px] shrink-0 border-r border-border flex flex-col bg-surface/10">
+      {/* ── Left: Event list (desktop always visible, mobile only when no log selected) ── */}
+      <div className={`lg:w-[340px] lg:shrink-0 border-r border-border flex flex-col bg-surface/10 ${
+        selectedLog ? 'hidden lg:flex' : 'flex-1 lg:flex-none'
+      }`}>
         <div className="flex items-center gap-2 px-4 h-9 border-b border-border shrink-0">
           <ShieldAlert size={12} className="text-accent" />
           <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Flagged Events</span>
@@ -292,7 +294,7 @@ export default function RedressPage() {
                   key={log.id}
                   onClick={() => setSelectedLog(log)}
                   className={`w-full text-left px-3 py-2.5 hover:bg-surface-hover/50 transition-colors cursor-pointer ${
-                    selectedLog?.id === log.id ? 'bg-accent-dim/40 border-l border-accent font-medium' : 'border-l border-transparent'
+                    selectedLog?.id === log.id ? 'bg-accent-dim/40 border-l-2 border-accent font-medium' : 'border-l-2 border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
@@ -311,10 +313,19 @@ export default function RedressPage() {
         </div>
       </div>
 
-      {/* ── Right: Detail view ── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      {/* ── Right: Detail view (desktop always, mobile only when log selected) ── */}
+      <div className={`flex-1 flex flex-col min-w-0 min-h-0 ${
+        selectedLog ? 'flex' : 'hidden lg:flex'
+      }`}>
         {/* Right header */}
         <div className="flex items-center gap-2 px-4 h-9 border-b border-border shrink-0 bg-surface/5">
+          {/* Mobile back button */}
+          <button
+            onClick={() => setSelectedLog(null)}
+            className="lg:hidden flex items-center gap-1 text-xs text-text-tertiary hover:text-text-primary transition-colors cursor-pointer mr-1"
+          >
+            ← Back
+          </button>
           <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Event Detail</span>
           {selectedLog && (
             <span className="text-sm font-mono text-text-tertiary ml-auto">{selectedLog.id.slice(0, 8)}</span>
