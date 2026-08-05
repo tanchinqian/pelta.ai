@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Layers,
   ShieldCheck,
+  Bell,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────────────── */
@@ -243,6 +244,49 @@ export function SlimTopBar() {
   return <SlimTopBarInner />;
 }
 
+/* Contextual quick-action per section */
+const QUICK_ACTIONS: Record<string, { label: string; href: string; icon: React.ReactNode }> = {
+  employee:       { label: 'New Request', href: '/employee/requests/new', icon: <Send size={11} /> },
+  'admin/tools':  { label: 'Classify Tool', href: '/admin/tools/new',     icon: <Search size={11} /> },
+};
+
+function TopBarPendingBadge() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const [appeals, requests] = await Promise.all([
+          fetch('/api/access-requests').then((r) => r.json()),
+          fetch('/api/requests').then((r) => r.json()),
+        ]);
+        const appealPending  = Array.isArray(appeals)   ? appeals.filter((r: any)   => r.status === 'pending').length : 0;
+        const requestPending = Array.isArray(requests)  ? requests.filter((r: any)  => r.status === 'pending').length : 0;
+        setCount(appealPending + requestPending);
+      } catch {}
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30_000);
+    const handler = () => fetchCount();
+    window.addEventListener('pelta:refetch-requests', handler);
+    return () => { clearInterval(interval); window.removeEventListener('pelta:refetch-requests', handler); };
+  }, []);
+
+  if (count === 0) return null;
+
+  return (
+    <div className="relative flex items-center" title={`${count} pending item${count !== 1 ? 's' : ''}`}>
+      <Bell size={14} className="text-text-tertiary" />
+      <span
+        className="absolute -top-1.5 -right-1.5 text-[9px] font-bold font-mono leading-none px-1 py-0.5 rounded-full"
+        style={{ color: 'var(--risk-medium)', background: 'rgba(217,119,6,0.15)' }}
+      >
+        {count}
+      </span>
+    </div>
+  );
+}
+
 function SlimTopBarInner() {
   const pathname = usePathname();
 
@@ -251,6 +295,15 @@ function SlimTopBarInner() {
   for (const [route, info] of Object.entries(PAGE_TITLES)) {
     if (pathname === route) { best = info; break; }
     if (pathname.startsWith(route + '/') && route !== '/') { best = info; break; }
+  }
+
+  // Find contextual quick-action
+  let quickAction: { label: string; href: string; icon: React.ReactNode } | null = null;
+  for (const [prefix, action] of Object.entries(QUICK_ACTIONS)) {
+    if (pathname.startsWith('/' + prefix) && pathname !== action.href) {
+      quickAction = action;
+      break;
+    }
   }
 
   return (
@@ -262,6 +315,19 @@ function SlimTopBarInner() {
           <span className="text-sm font-mono text-text-tertiary">{best.crumb}</span>
         </>
       )}
+
+      <div className="ml-auto flex items-center gap-3">
+        <TopBarPendingBadge />
+        {quickAction && (
+          <Link
+            href={quickAction.href}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-surface-hover hover:border-accent/40 hover:text-accent text-text-secondary transition-colors"
+          >
+            {quickAction.icon}
+            {quickAction.label}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
