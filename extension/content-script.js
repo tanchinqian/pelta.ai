@@ -26,7 +26,6 @@ async function resolveApiBase() {
         chrome.storage.sync.get(STORAGE_KEY, resolve);
       });
       API_BASE = stored[STORAGE_KEY] || LOCAL_URL;
-      console.log('[pelta] API_BASE resolved to:', API_BASE);
     }
   } catch {}
 }

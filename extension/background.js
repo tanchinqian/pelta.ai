@@ -9,9 +9,7 @@ const LOCAL_URL = 'http://localhost:3000';
 async function getApiBase() {
   try {
     const stored = await chrome.storage.sync.get(STORAGE_KEY);
-    const base = stored[STORAGE_KEY] || LOCAL_URL;
-    console.log('[pelta] background API_BASE:', base);
-    return base;
+    return stored[STORAGE_KEY] || LOCAL_URL;
   } catch {
     return LOCAL_URL;
   }
