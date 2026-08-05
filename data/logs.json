@@ -206,5 +206,17 @@
     "source": "extension",
     "tool": "ChatGPT",
     "timestamp": "2026-07-17T14:10:00.000Z"
+  },
+  {
+    "id": "35eb7ce1-d349-41a2-b645-4b882a63d7d0",
+    "promptSnippet": "Translate this customer feedback: 'The product is great but sarah.park@gmail.com had issues with the billing page.'",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-08-05T13:46:20.376Z"
   }
 ]

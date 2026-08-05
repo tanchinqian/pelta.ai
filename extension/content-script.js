@@ -903,24 +903,25 @@ function showFlag(response, promptText, trigger, meta = {}) {
     btn.disabled = true;
     btn.className = "pelta-btn pelta-btn-secondary";
     try {
-      const res = await fetch(`${API_BASE}/api/access-requests`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employeeName: "Alice Chen",
-          sections: ["Prompt Approval"],
-          riskLevel: "medium",
-          reason: "User requested bypass for prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
-        })
+      const data = await new Promise(resolve => {
+        chrome.runtime.sendMessage({
+          type: 'CREATE_ACCESS_REQUEST',
+          payload: {
+            employeeName: "Alice Chen",
+            sections: ["Prompt Approval"],
+            riskLevel: "medium",
+            reason: "User requested bypass for prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
+          }
+        }, resolve);
       });
-      const data = await res.json();
-      if (data.id) {
+      if (data && data.id) {
         btn.textContent = "Waiting for Admin...";
         const interval = setInterval(async () => {
           try {
-            const checkRes = await fetch(`${API_BASE}/api/access-requests`);
-            const allReqs = await checkRes.json();
-            const myReq = allReqs.find(r => r.id === data.id);
+            const allReqs = await new Promise(resolve => {
+              chrome.runtime.sendMessage({ type: 'GET_ACCESS_REQUESTS' }, resolve);
+            });
+            const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
                 approvedPrompts.add(promptText.trim());
@@ -1003,24 +1004,25 @@ function showBlock(response, promptText, trigger, meta = {}) {
     btn.disabled = true;
     btn.className = "pelta-btn pelta-btn-secondary";
     try {
-      const res = await fetch(`${API_BASE}/api/access-requests`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employeeName: "Alice Chen",
-          sections: ["Prompt Approval"],
-          riskLevel: "high",
-          reason: "User reported false positive for blocked prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
-        })
+      const data = await new Promise(resolve => {
+        chrome.runtime.sendMessage({
+          type: 'CREATE_ACCESS_REQUEST',
+          payload: {
+            employeeName: "Alice Chen",
+            sections: ["Prompt Approval"],
+            riskLevel: "high",
+            reason: "User reported false positive for blocked prompt:\n\n" + (promptText.length > 1500 ? promptText.substring(0, 1500) + '...' : promptText),
+          }
+        }, resolve);
       });
-      const data = await res.json();
-      if (data.id) {
+      if (data && data.id) {
         btn.textContent = "Waiting for Admin...";
         const interval = setInterval(async () => {
           try {
-            const checkRes = await fetch(`${API_BASE}/api/access-requests`);
-            const allReqs = await checkRes.json();
-            const myReq = allReqs.find(r => r.id === data.id);
+            const allReqs = await new Promise(resolve => {
+              chrome.runtime.sendMessage({ type: 'GET_ACCESS_REQUESTS' }, resolve);
+            });
+            const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
                 approvedPrompts.add(promptText.trim());

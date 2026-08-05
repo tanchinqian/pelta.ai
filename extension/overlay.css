@@ -376,7 +376,8 @@
 
 /* ── Inline Edit Textarea ──────────────────────────────── */
 .pelta-edit-area {
-  width: 100%;
+  width: 90%;
+  display: block;
   min-height: 80px;
   max-height: 160px;
   background: #0f172a;
@@ -387,9 +388,9 @@
   font-size: 11px;
   line-height: 1.5;
   padding: 8px 10px;
-  resize: vertical;
+  resize: none;
   outline: none;
-  margin: 6px 0 10px;
+  margin: 6px auto 10px auto;
 }
 .pelta-edit-area:focus {
   border-color: #6366f1;

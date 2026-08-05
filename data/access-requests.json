@@ -56,5 +56,21 @@
     "type": "appeal",
     "requestedAt": "2026-07-17T10:00:00.000Z",
     "decidedAt": null
+  },
+  {
+    "id": "277c2dc5-daf5-40cd-bed5-212f82adb295",
+    "employeeName": "Alice Chen",
+    "sections": [
+      "Prompt Approval"
+    ],
+    "riskLevel": "high",
+    "reason": "User reported false positive for blocked prompt:\n\nTranslate this customer feedback: 'The product is great but sarah.park@gmail.com had issues with the billing page.'",
+    "status": "rejected",
+    "adminComment": "Email address exists\n",
+    "reviewerName": "Admin",
+    "logRef": "",
+    "type": "access",
+    "requestedAt": "2026-08-05T13:42:39.939Z",
+    "decidedAt": "2026-08-05T13:43:05.077Z"
   }
 ]
