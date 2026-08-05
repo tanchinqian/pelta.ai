@@ -9,14 +9,25 @@ const CORS_HEADERS = {
 
 const apiKey = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || '';
 
-// Same model list as lib/gemini.ts — these are known to work with this API key
-const MODEL_CANDIDATES = [
+const DEFAULT_MODELS = [
+  'gemini-flash-latest',
   'gemini-3.5-flash',
   'gemini-3.1-pro-preview',
   'gemini-3-flash-preview',
   'gemini-2.5-flash',
-  'gemini-flash-latest',
 ];
+
+function getModelCandidates(): string[] {
+  const override = process.env.GEMINI_CLASSIFY_MODEL;
+  if (override) {
+    const models = override.split(',').map((s) => s.trim()).filter(Boolean);
+    const rest = DEFAULT_MODELS.filter((m) => !models.includes(m));
+    return [...models, ...rest];
+  }
+  return DEFAULT_MODELS;
+}
+
+const LLM_TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '20000', 10);
 
 const OCR_PROMPT =
   'You are an OCR tool. Extract ALL visible text from this image exactly as it appears. ' +
@@ -42,18 +53,26 @@ export async function POST(req: NextRequest) {
     let text = '';
     let lastErr: Error | null = null;
 
-    for (const modelName of MODEL_CANDIDATES) {
+    for (const modelName of getModelCandidates()) {
       try {
         console.log(`[pelta/ocr] trying ${modelName}...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent([OCR_PROMPT, imagePart]);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { temperature: 0, maxOutputTokens: 4096 },
+        });
+        const result = await Promise.race([
+          model.generateContent([OCR_PROMPT, imagePart]),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('TIMEOUT')), LLM_TIMEOUT_MS),
+          ),
+        ]);
         text = result.response.text().trim();
         console.log(`[pelta/ocr] ${modelName} extracted ${text.length} chars`);
         break;
       } catch (err: any) {
         lastErr = err;
         const msg = String(err?.message ?? err);
-        if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED|not supported/i.test(msg)) {
+        if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED|not supported|TIMEOUT/i.test(msg)) {
           console.warn(`[pelta/ocr] ${modelName} unavailable, trying next:`, msg.slice(0, 120));
           continue;
         }

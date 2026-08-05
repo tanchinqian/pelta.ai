@@ -3,14 +3,26 @@ import { NistRetrievalResult, retrieveNistContext, formatNistContextForPrompt } 
 
 const apiKey = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || '';
 
-/** Try these in order — free-tier availability varies by project */
-const MODEL_CANDIDATES = [
+const DEFAULT_MODELS = [
+  'gemini-3.5-flash-lite',
+  'gemini-flash-latest',
   'gemini-3.5-flash',
   'gemini-3.1-pro-preview',
   'gemini-3-flash-preview',
   'gemini-2.5-flash',
-  'gemini-flash-latest',
 ];
+
+const LLM_TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '12000', 10);
+
+function getModelCandidates(): string[] {
+  const override = process.env.GEMINI_CLASSIFY_MODEL;
+  if (override) {
+    const models = override.split(',').map((s) => s.trim()).filter(Boolean);
+    const rest = DEFAULT_MODELS.filter((m) => !models.includes(m));
+    return [...models, ...rest];
+  }
+  return DEFAULT_MODELS;
+}
 
 function getClient(): GoogleGenerativeAI {
   return new GoogleGenerativeAI(apiKey);
@@ -81,21 +93,54 @@ const SUGGEST_FALLBACK: string[] = [
   'Draft a project transition summary in a neutral tone that I can adapt and send to the appropriate stakeholder.',
 ];
 
-async function generateWithFallback(prompt: string): Promise<string> {
+interface GenerateOptions {
+  systemInstruction?: string;
+  maxOutputTokens?: number;
+  validate?: (text: string) => boolean;
+}
+
+async function generateWithFallback(
+  prompt: string,
+  opts?: GenerateOptions,
+): Promise<string> {
   if (!apiKey) throw new Error('No LLM_API_KEY configured');
   const genAI = getClient();
+  const candidates = getModelCandidates();
   let lastErr: Error | null = null;
 
-  for (const modelName of MODEL_CANDIDATES) {
+  for (const modelName of candidates) {
+    const label = `[llm] ${modelName}`;
+    console.time(label);
     try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        ...(opts?.systemInstruction ? { systemInstruction: opts.systemInstruction } : {}),
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: opts?.maxOutputTokens ?? 256,
+        },
+      });
+
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT')), LLM_TIMEOUT_MS),
+        ),
+      ]);
+
+      const text = result.response.text();
+
+      if (opts?.validate && !opts.validate(text)) {
+        throw new Error('VALIDATION_FAILED');
+      }
+
+      console.timeEnd(label);
+      return text;
     } catch (err: any) {
+      console.timeEnd(label);
       lastErr = err;
       const msg = String(err?.message ?? err);
-      // Try next model on quota / not found / rate limit
-      if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED/i.test(msg)) {
+      if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED|TIMEOUT|VALIDATION_FAILED/i.test(msg)) {
         console.warn(`[llm] ${modelName} failed, trying next:`, msg.slice(0, 120));
         continue;
       }
@@ -164,9 +209,12 @@ export async function suggestSafePrompts(
   if (!apiKey) return SUGGEST_FALLBACK;
   try {
     const patternList = detectedPatterns.length > 0 ? detectedPatterns.join(', ') : 'sensitive data';
-    const prompt = `${SUGGEST_SYSTEM_PROMPT}\n\nDetected sensitive patterns: ${patternList}\n\nOriginal blocked prompt:\n"""\n${blockedPrompt.slice(0, 1000)}\n"""\n\nReturn ONLY a JSON array of exactly 3 strings.`;
+    const prompt = `Detected sensitive patterns: ${patternList}\n\nOriginal blocked prompt:\n"""\n${blockedPrompt.slice(0, 1000)}\n"""\n\nReturn ONLY a JSON array of exactly 3 strings.`;
 
-    const text = await generateWithFallback(prompt);
+    const text = await generateWithFallback(prompt, {
+      systemInstruction: SUGGEST_SYSTEM_PROMPT,
+      maxOutputTokens: 512,
+    });
 
     try {
       const parsed = parseJson(text);
@@ -182,16 +230,25 @@ export async function suggestSafePrompts(
 }
 
 export async function classifyPromptRisk(text: string): Promise<PromptRiskResponse> {
-  if (!apiKey) return mockPromptRisk(text);
+  console.time('[llm] classifyPromptRisk total');
+  if (!apiKey) {
+    console.timeEnd('[llm] classifyPromptRisk total');
+    return mockPromptRisk(text);
+  }
   try {
-    const prompt = `${PROMPT_CHECK_SYSTEM_PROMPT}\n\nText:\n"""\n${text.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON with riskLevel and reason.`;
-    const text_ = await generateWithFallback(prompt);
-    try {
-      return parseJson(text_) as PromptRiskResponse;
-    } catch {
-      return { riskLevel: 'medium', reason: 'Failed to parse LLM response; defaulting to medium risk.' };
-    }
+    const prompt = `Text:\n"""\n${text.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON with riskLevel and reason.`;
+    const text_ = await generateWithFallback(prompt, {
+      systemInstruction: PROMPT_CHECK_SYSTEM_PROMPT,
+      maxOutputTokens: 512,
+      validate: (t) => {
+        try { parseJson(t); return true; } catch { return false; }
+      },
+    });
+    const result = parseJson(text_) as PromptRiskResponse;
+    console.timeEnd('[llm] classifyPromptRisk total');
+    return result;
   } catch (err: any) {
+    console.timeEnd('[llm] classifyPromptRisk total');
     console.warn('[llm] classifyPromptRisk fallback:', err?.message);
     return mockPromptRisk(text);
   }
@@ -201,21 +258,28 @@ export async function classifyToolRisk(
   toolName: string,
   description: string,
 ): Promise<ToolRiskResponse> {
-  if (!apiKey) return mockToolRisk(toolName, description);
+  console.time('[llm] classifyToolRisk total');
+  if (!apiKey) {
+    console.timeEnd('[llm] classifyToolRisk total');
+    return mockToolRisk(toolName, description);
+  }
   try {
     const nistContext = retrieveNistContext(toolName, description);
     const contextBlock = formatNistContextForPrompt(nistContext);
 
-    const prompt = `${SYSTEM_PROMPT}\n\n${contextBlock}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
-    const text = await generateWithFallback(prompt);
-    try {
-      const parsed = parseJson(text) as ToolRiskResponse;
-      return { ...parsed, retrievedNistContext: nistContext };
-    } catch {
-      console.warn('[llm] parse failed, using heuristic mock');
-      return mockToolRisk(toolName, description);
-    }
+    const prompt = `${contextBlock}\n\nTool name: "${toolName}"\nDescription: "${description}"\n\nReturn ONLY valid JSON with the fields: riskTier, nistFunctions, dataCategories, justification, recommendedPolicy.`;
+    const text = await generateWithFallback(prompt, {
+      systemInstruction: SYSTEM_PROMPT,
+      maxOutputTokens: 1024,
+      validate: (t) => {
+        try { parseJson(t); return true; } catch { return false; }
+      },
+    });
+    const parsed = parseJson(text) as ToolRiskResponse;
+    console.timeEnd('[llm] classifyToolRisk total');
+    return { ...parsed, retrievedNistContext: nistContext };
   } catch (err: any) {
+    console.timeEnd('[llm] classifyToolRisk total');
     console.warn('[llm] classifyToolRisk fallback:', err?.message);
     return mockToolRisk(toolName, description);
   }

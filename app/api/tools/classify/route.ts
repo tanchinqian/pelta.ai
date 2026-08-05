@@ -19,7 +19,7 @@ interface ToolRecord {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, description } = await req.json();
+    const { name, description, existingId } = await req.json();
     if (!name || !description) {
       return NextResponse.json(
         { error: 'name and description are required' },
@@ -28,9 +28,50 @@ export async function POST(req: NextRequest) {
     }
 
     const tools = readStore<ToolRecord>('tools');
-    const existing = tools.find((t) => t.name.toLowerCase() === name.trim().toLowerCase());
+    const normalizedName = name.trim().toLowerCase();
+    const normalizedDesc = description.trim().toLowerCase();
 
-    // classifyToolRisk handles its own fallback (mock on no-key/quota errors)
+    // Force reclassify via existingId — skip cache, always call LLM
+    if (existingId) {
+      const existing = tools.find((t) => t.id === existingId);
+      const llmResult = await classifyToolRisk(name.trim(), description.trim());
+      const classification = {
+        name: name.trim(),
+        description: description.trim(),
+        riskTier: llmResult.riskTier,
+        nistFunctions: llmResult.nistFunctions,
+        dataCategories: llmResult.dataCategories,
+        justification: llmResult.justification,
+        recommendedPolicy: llmResult.recommendedPolicy,
+        retrievedNistContext: llmResult.retrievedNistContext,
+      };
+
+      if (existing) {
+        updateItem<ToolRecord>('tools', existing.id, classification);
+        return NextResponse.json({ ...existing, ...classification });
+      }
+      const newTool: ToolRecord = {
+        id: uuid(),
+        ...classification,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      addItem('tools', newTool);
+      return NextResponse.json(newTool);
+    }
+
+    // Cache hit — same name AND description
+    const cached = tools.find(
+      (t) =>
+        t.name.toLowerCase() === normalizedName &&
+        t.description.toLowerCase() === normalizedDesc,
+    );
+    if (cached) {
+      console.log(`[classify] cache hit for "${name}" — returning existing classification`);
+      return NextResponse.json(cached);
+    }
+
+    // New classification — call LLM
     const llmResult = await classifyToolRisk(name.trim(), description.trim());
     const classification = {
       name: name.trim(),
@@ -43,20 +84,13 @@ export async function POST(req: NextRequest) {
       retrievedNistContext: llmResult.retrievedNistContext,
     };
 
+    // Update if same name with different description, otherwise create
+    const nameMatch = tools.find((t) => t.name.toLowerCase() === normalizedName);
     let finalTool: ToolRecord;
 
-    if (existing) {
-      const updates: Partial<ToolRecord> = {
-        description: classification.description,
-        riskTier: classification.riskTier,
-        nistFunctions: classification.nistFunctions,
-        dataCategories: classification.dataCategories,
-        justification: classification.justification,
-        recommendedPolicy: classification.recommendedPolicy,
-        retrievedNistContext: classification.retrievedNistContext,
-      };
-      updateItem<ToolRecord>('tools', existing.id, updates);
-      finalTool = { ...existing, ...updates } as ToolRecord;
+    if (nameMatch) {
+      updateItem<ToolRecord>('tools', nameMatch.id, classification);
+      finalTool = { ...nameMatch, ...classification } as ToolRecord;
     } else {
       finalTool = {
         id: uuid(),
