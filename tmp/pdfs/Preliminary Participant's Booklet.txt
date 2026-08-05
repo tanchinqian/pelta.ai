@@ -1,0 +1,237 @@
+
+===== PAGE 1 =====
+Preliminary
+Participants’
+Booklet
+Preliminary
+Participants’
+Booklet
+X
+===== PAGE 2 =====
+CONTENTS
+1.0 Introduction
+2.0 What is Hack Attack 3.0?
+3.0 Rules and Regulations
+4.0 Timeline
+5.0 Preliminary Details
+6.0 FAQs
+7.0 Contact Us
+===== PAGE 3 =====
+1 . 0  I n t r o d u c t i o n
+1 . 0  I n t r o d u c t i o n
+H a c k  A t t a c k  3 . 0  i s  a  n a t i o n a l - l e v e l  h a c k a t h o n ,  c o - h o s t e d  b y
+t h e  C o m p u t e r  S o c i e t y  o f  U n i v e r s i t i  T u n k u  A b d u l  R a h m a n
+( C O M P S O C  U T A R )  a n d  t h e  G o o g l e  D e v e l o p e r  G r o u p  o n
+C a m p u s  U n i v e r s i t i  S a i n s  M a l a y s i a  ( G D G o C  U S M ) .  
+W e  w e l c o m e  u n d e r g r a d u a t e s  f r o m  b o t h  p u b l i c  a n d  p r i v a t e
+h i g h e r  e d u c a t i o n  i n s t i t u t i o n s  i n  M a l a y s i a  t o  t a k e  p a r t  i n  t h i s
+e x c i t i n g  e v e n t .  
+T h i s  h a c k a t h o n  a i m s  t o  d e v e l o p  p a r t i c i p a n t s '  p r o b l e m -
+s o l v i n g  a n d  t e a m w o r k  s k i l l s ,  w h i l e  p r o v i d i n g  h a n d s - o n
+e x p e r i e n c e  i n  b u i l d i n g  r e a l - w o r l d  s o l u t i o n s ,  a n d
+o p p o r t u n i t i e s  t o  n e t w o r k  w i t h  p e e r s  a n d  i n d u s t r y
+p r o f e s s i o n a l s .
+===== PAGE 4 =====
+Hack Attack 3.0 is an experience beyond competition; it’s a
+platform for students to innovate, collaborate, and grow.
+This hackathon challenges students to think creatively, solve
+realworld problems, and develop new skills. 
+Hack Attack 3.0 is a hackathon with two key stages: 
+the Preliminary Round and the Final Round. 
+2 . 0  W h a t  i s  H a c k  A t t a c k  3 . 0 ?
+2 . 0  W h a t  i s  H a c k  A t t a c k  3 . 0 ?
+Preliminary Round
+Final Round
+Focus on project ideation and prototype
+Evaluate through pitching and live demo
+Online
+Physical @ UTAR Kampar Campus
+===== PAGE 5 =====
+3.0 Rules & Regulation
+3.0 Rules & Regulation
+Each team must have 2 - 4 members in total. 
+This hackathon is open ONLY to undergraduates
+currently enrolled in any university or college in Malaysia. 
+Teams can consist of members from different
+universities/colleges. 
+However, each team must designate a leader who is
+affiliated with the university/college the majority of team
+members belong to. The team will then be considered
+representatives of that university/college. 
+Individuals in privileged roles, such as organizers, judges,
+mentors, and partner representatives, are not eligible to
+participate. 
+1.Participation Eligibility
+1.Participation Eligibility
+===== PAGE 6 =====
+3.0 Rules & Regulation
+3.0 Rules & Regulation
+All prizes and awards are to be shared between all team
+members and are non-transferable. It must be redeemed by
+the designated winner(s). 
+The decision on the selection of winners by the judges and
+organisers of Hack Attack 3.0 is final and binding. No form
+of appeal will be entertained. 
+2.Prizes and Awards
+2.Prizes and Awards
+RM 1000
+RM 1000RM 2000
+RM 2000
+RM 4000
+RM 4000
+===== PAGE 7 =====
+3.0 Rules & Regulation
+3.0 Rules & Regulation
+Committee Rights & Responsibilities
+The Hack Attack 3.0 Organizing Committee reserves the
+right to modify the rules and regulations without prior
+notice. Participants hold the responsibility to constantly
+check on communication channels should there be any
+changes in the rules and regulations. 
+The Hack Attack 3.0 Organizing Committee reserves the
+right, at their sole discretion, to eliminate or disqualify
+any participants or teams regarded as being in breach of
+these rules and regulations. 
+Participation of Hack Attack 3.0 is at the participant's
+sole risk. To the extent permitted by law, the Organizing
+Committee will not accept any responsibility for any
+damage, loss, liabilities, injuries, costs, expenses or claims
+suffered by participants or any third parties arising out of
+or in connection with the competition and/or accepting
+a prize. 
+3.Liability
+3.Liability
+===== PAGE 8 =====
+3.0 Rules & Regulation
+3.0 Rules & Regulation
+Data Usage & Consent
+The personal data of the applicants/Participants will be
+used according to the Malaysia Personal Data Protection
+Act 2010. By registering, the Participants agree that his/her
+personal data may be stored and used by the Hack Attack
+3.0 Organiser within the course and for the purpose of the
+organisation to carry out HackAttack 3.0. 
+This consent can be revoked at any time whereupon the
+registration for the Hack Attack 3.0 will be automatically
+cancelled. Stored personal data will be deleted upon
+revocation or at the latest after the end of Hack Attack 3.0. 
+Participants' personal data (such as Participant
+identification) may be shared with event sponsors for
+legitimate purposes, but consent can be revoked at any
+time. 
+Participants agree that any personal information or
+pictures taken within the course of Hack Attack 3.0 may be
+used for future promotional, marketing, publicity and
+recruitment purposes without any claim to remuneration. 
+4.Data Protection & Privacy
+4.Data Protection & Privacy
+===== PAGE 9 =====
+3.0 Rules & Regulation
+3.0 Rules & Regulation
+Your IP Rights & Agreements
+Participants retain the intellectual property rights to their
+projects. 
+However, by participating in Hack Attack 3.0, teams grant
+the event organizers a non-exclusive, royalty-free license to
+showcase and promote their projects for marketing and
+educational purposes. 
+Sponsors may express interest in utilizing ideas or
+methodologies from participants' projects for their own
+purposes with the explicit consent from the participants.
+Participants are able to negotiate terms if applicable. 
+5.Intellectual Property
+5.Intellectual Property
+===== PAGE 10 =====
+Event Date
+Registration 16 June - 14 July
+Preliminary Round 15 - 22 July
+Preliminary Judging 24 - 31 July
+Finalist Announcement 1 August
+Final Round Preparation 2 - 7 August
+Grand Final 8 August
+4.0 Timeline
+4.0 Timeline
+===== PAGE 11 =====
+5.0 Preliminary Details
+5.0 Preliminary Details
+Participants may CLICK HERE to access the INFO
+PACK regarding
+Case studies
+Judging rubric
+Proposal template
+More details such as Workshops, Preliminary Judges Profile,
+Sponsors Information, and Grand Finals Agenda will be
+updated in the drive folder, and team leaders will be notified.
+All submissions must be completed by 22 July 2026, 11:59PM
+S u b m i s s i o n
+S u b m i s s i o n
+CLICK HERE
+===== PAGE 12 =====
+5.0 Preliminary Details
+5.0 Preliminary Details
+Participants must submit the following materials for the
+Preliminary Round: 
+1.Proposal [link for proposal template] 
+a.Participants must follow the given template. 
+b.Additional sections may be included if necessary. 
+c.The proposal must not exceed 10 pages (excluding
+the appendix). 
+d.The proposal file cannot exceed 10MB.
+Submission must be in docx. format. 
+2.Presentation video 
+a.The video must not exceed 5 minutes in length. 
+b.The video should provide a clear project overview,
+including its objectives and potential impact. 
+c.The video should showcase the prototype and
+demonstrate its functionality. 
+d.Ensure the video is structured and visually clear. 
+e.Submission must be in YouTube link format (set
+to Unlisted or Public for judge access)
+===== PAGE 13 =====
+5.0 Preliminary Details
+5.0 Preliminary Details
+3.Prototype link (optional) 
+a.Participants can submit a link to their working
+prototype, such as a live demo, design mockup, or
+hosted application. 
+b.While optional, providing a prototype link allows
+judges to better understand the functionality and
+user experience of the project. 
+4.Code Repository link (optional) 
+a.If participants choose to submit a code repository
+(e.g. GitHub, GitLab), a README file must be
+included with detailed setup instructions to guide
+the judges in running the project.
+5.Resumes 
+a.Resume of each members are encourage to be
+submitted.
+===== PAGE 14 =====
+6.0 FAQs
+6.0 FAQs
+1) Can I work on more than one case studies?
+No, each team can only work on one case study
+2)  Can I copy existing code from any source?
+You can have a boilerplate code to assist you in the
+development. However, the idea of your solution must be
+unique, and your team may face disqualification if found
+of any plagiarism
+3)  How do I contact the organisers for questions?
+Feel free to reach out through our WhatsApp communiity
+4) Are there any restrictions on the tech stack we can use?
+No, there are no restriction on the tech stack you can use.
+5) How will the projects be judges?
+Projects wiill be assessed in groups based on predefined
+judging criteria to ensure a fair and objective evualation
+process
+ 
+===== PAGE 15 =====
+J o n a t h a n  L e o w
+UTAR Director of Hack Attack 3.0
+Email: jonathanleowzy@gmail.com
+Phone No.: +60 12-1265 9660
+7.0 Contact us
+7.0 Contact us
+Y e o h  C h o n g  S i a n g
+USM Director of Hack Attack 3.0
+Email: csyeoh0726@gmail.com
+Phone No.: +60 17-480 4221

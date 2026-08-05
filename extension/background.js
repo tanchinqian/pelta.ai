@@ -3,7 +3,17 @@
  *   guard check API and returns the verdict.
  * ─────────────────────────────────────────────────────────── */
 
-const API_BASE = 'http://localhost:3000';
+const STORAGE_KEY = 'pelta_api_base';
+const LOCAL_URL = 'http://localhost:3000';
+
+async function getApiBase() {
+  try {
+    const stored = await chrome.storage.sync.get(STORAGE_KEY);
+    return stored[STORAGE_KEY] || LOCAL_URL;
+  } catch {
+    return LOCAL_URL;
+  }
+}
 
 /* ── Fail-closed toggle ───────────────────────────────────
  *   true  → block the send when the governance server is down
@@ -31,28 +41,26 @@ function storeEvent(msg, data) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'CHECK_PROMPT') return;
 
-  fetch(`${API_BASE}/api/guard/check`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: msg.text,
-      source: 'extension',
-      tool: msg.tool || 'ChatGPT',
-    }),
-  })
-    .then((r) => {
-      if (!r.ok) {
-        return r.json().then((body) => {
-          throw new Error(body.error || `HTTP ${r.status}`);
-        });
+  (async () => {
+    const API_BASE = await getApiBase();
+    try {
+      const res = await fetch(`${API_BASE}/api/guard/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: msg.text,
+          source: 'extension',
+          tool: msg.tool || 'ChatGPT',
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || `HTTP ${res.status}`);
       }
-      return r.json();
-    })
-    .then((data) => {
+      const data = await res.json();
       storeEvent(msg, data);
       sendResponse(data);
-    })
-    .catch((err) => {
+    } catch (err) {
       console.warn('[pelta] API call failed:', err.message);
       const fallback = {
         error: true,
@@ -66,7 +74,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       };
       storeEvent(msg, fallback);
       sendResponse(fallback);
-    });
+    }
+  })();
 
-  return true; // keep message channel open for async response
+  return true;
+});
+
+/* ── Desktop Notification Handler ─────────────────────────
+ *   Fired by content-script when an admin approves/rejects
+ *   a request, even if the overlay has already been dismissed.
+ * ─────────────────────────────────────────────────────────── */
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== 'NOTIFY_USER') return;
+
+  const isApproved = msg.status === 'approved';
+  // Minimal valid 1x1 PNG (Chrome requires a local/data URL for notifications)
+  const iconDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  chrome.notifications.create(`pelta-${Date.now()}`, {
+    type: 'basic',
+    iconUrl: iconDataUrl,
+    title: isApproved ? 'pelta.ai — Request Approved ✓' : 'pelta.ai — Request Denied',
+    message: isApproved
+      ? 'Your prompt has been unblocked by an admin. Go back to the tab to send it.'
+      : `Denied: ${msg.reason || 'No reason provided.'}`,
+    priority: 2,
+  }, (notifId) => {
+    if (chrome.runtime.lastError) {
+      console.warn('[pelta] Notification failed:', chrome.runtime.lastError.message);
+    }
+  });
+  sendResponse({ ok: true });
 });

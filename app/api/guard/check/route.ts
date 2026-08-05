@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scanWithRegex } from '@/lib/regexPatterns';
 import { classifyPromptRisk, hasApiKey } from '@/lib/gemini';
-import { addItem } from '@/lib/fileStore';
+import { addItem, readStore } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
 interface GuardLog {
@@ -26,6 +26,16 @@ interface HighlightSpan {
 
 interface GuardResponse extends GuardLog {
   highlights: HighlightSpan[];
+}
+
+interface DlpRule {
+  id: string;
+  name: string;
+  pattern: string;
+  severity: 'high' | 'medium' | 'low';
+  category: string;
+  enabled: boolean;
+  createdAt: string;
 }
 
 function inferDataCategory(prompt: string): string {
@@ -72,6 +82,38 @@ function extractUrlParams(prompt: string): string {
   return extras.length > 0 ? `${prompt}\n[url params]: ${extras.join(' ')}` : prompt;
 }
 
+/* ── Run enabled custom DLP rules against prompt ───────────── */
+function scanWithCustomRules(
+  prompt: string,
+  rules: DlpRule[],
+): { hasHighSeverity: boolean; hasMediumSeverity: boolean; hits: { label: string; severity: string }[]; highlights: HighlightSpan[] } {
+  const customHighlights: HighlightSpan[] = [];
+  const hits: { label: string; severity: string }[] = [];
+  let hasHighSeverity = false;
+  let hasMediumSeverity = false;
+
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    let regex: RegExp;
+    try {
+      regex = new RegExp(rule.pattern, 'gi');
+    } catch {
+      continue; // skip invalid patterns
+    }
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(prompt)) !== null) {
+      const start = m.index;
+      const end = start + m[0].length;
+      customHighlights.push({ start, end, pattern: rule.name, severity: rule.severity });
+      hits.push({ label: rule.name, severity: rule.severity });
+      if (rule.severity === 'high') hasHighSeverity = true;
+      if (rule.severity === 'medium') hasMediumSeverity = true;
+    }
+  }
+
+  return { hasHighSeverity, hasMediumSeverity, hits, highlights: customHighlights };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, source, tool } = await req.json();
@@ -85,22 +127,29 @@ export async function POST(req: NextRequest) {
     const enrichedPrompt = extractUrlParams(expandBase64(prompt));
     const regexResult = scanWithRegex(enrichedPrompt);
 
+    // Step 1b: Custom DLP rules pass
+    const customRules = readStore<DlpRule>('dlp-rules');
+    const customResult = scanWithCustomRules(prompt, customRules);
+
     const dataCategory = inferDataCategory(prompt);
 
-    // Build highlights from regex hits
-    // Filter out hits that occurred in the appended enriched text to avoid out-of-bounds on client
-    const highlights: HighlightSpan[] = regexResult.hits
-      .filter((h) => h.index < prompt.length)
-      .map((h) => ({ start: h.index, end: Math.min(h.end, prompt.length), pattern: h.label, severity: h.severity }))
-      .sort((a, b) => a.start - b.start);
+    // Merge highlights from base regex + custom rules
+    const highlights: HighlightSpan[] = [
+      ...regexResult.hits
+        .filter((h) => h.index < prompt.length)
+        .map((h) => ({ start: h.index, end: Math.min(h.end, prompt.length), pattern: h.label, severity: h.severity })),
+      ...customResult.highlights.filter((h) => h.start < prompt.length),
+    ].sort((a, b) => a.start - b.start);
 
     const respond = (log: GuardLog): NextResponse => {
       const body: GuardResponse = { ...log, highlights };
       return NextResponse.json(body);
     };
 
-    if (regexResult.hasHighSeverity) {
-      const detail = regexResult.hits.filter((h) => h.severity === 'high').map((h) => h.label).join(', ');
+    if (regexResult.hasHighSeverity || customResult.hasHighSeverity) {
+      const baseDetail = regexResult.hits.filter((h) => h.severity === 'high').map((h) => h.label);
+      const customDetail = customResult.hits.filter((h) => h.severity === 'high').map((h) => h.label);
+      const detail = [...baseDetail, ...customDetail].join(', ');
       const log: GuardLog = {
         id: uuid(),
         promptSnippet: truncated,
@@ -116,8 +165,10 @@ export async function POST(req: NextRequest) {
       return respond(log);
     }
 
-    if (regexResult.hasMediumSeverity) {
-      const detail = regexResult.hits.filter((h) => h.severity === 'medium').map((h) => h.label).join(', ');
+    if (regexResult.hasMediumSeverity || customResult.hasMediumSeverity) {
+      const baseDetail = regexResult.hits.filter((h) => h.severity === 'medium').map((h) => h.label);
+      const customDetail = customResult.hits.filter((h) => h.severity === 'medium').map((h) => h.label);
+      const detail = [...baseDetail, ...customDetail].join(', ');
       const log: GuardLog = {
         id: uuid(),
         promptSnippet: truncated,

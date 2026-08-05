@@ -529,7 +529,7 @@ export const SEED_REQUESTS = [
 export const SEED_ACCESS_REQUESTS = [
   {
     id: "cc110001-ac00-0000-0000-000000000001",
-    employeeName: "Demo Employee",
+    employeeName: "Alice Chen",
     sections: ["Email address", "Phone number"],
     reason: "This contact list is for an internal team offsite. The email and phone belong to our own staff, not external customers.",
     status: "pending",
@@ -541,7 +541,7 @@ export const SEED_ACCESS_REQUESTS = [
   },
   {
     id: "cc110002-ac00-0000-0000-000000000002",
-    employeeName: "Demo Employee",
+    employeeName: "Alice Chen",
     sections: ["Financial data"],
     reason: "Preparing an internal Q3 summary for the leadership team only. Not for external sharing.",
     status: "approved",
@@ -553,7 +553,7 @@ export const SEED_ACCESS_REQUESTS = [
   },
   {
     id: "cc110003-ac00-0000-0000-000000000003",
-    employeeName: "Demo Employee",
+    employeeName: "Alice Chen",
     sections: ["PII", "Email address"],
     reason: "Need to send onboarding instructions to new hires joining next week.",
     status: "rejected",
@@ -581,7 +581,7 @@ export const SEED_AUDIT_LOG = [
   {
     id: "audit-0001-0000-0000-000000000001",
     requestId: "cc110002-ac00-0000-0000-000000000002",
-    employeeName: "Demo Employee",
+    employeeName: "Alice Chen",
     action: "approved",
     reviewerName: "Admin",
     adminComment: null,
@@ -592,7 +592,7 @@ export const SEED_AUDIT_LOG = [
   {
     id: "audit-0002-0000-0000-000000000002",
     requestId: "cc110003-ac00-0000-0000-000000000003",
-    employeeName: "Demo Employee",
+    employeeName: "Alice Chen",
     action: "rejected",
     reviewerName: "Admin",
     adminComment: "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",

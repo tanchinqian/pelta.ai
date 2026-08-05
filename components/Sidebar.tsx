@@ -12,6 +12,7 @@ import {
   FileText,
   RefreshCw,
   Layers,
+  ShieldCheck,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────────────── */
@@ -27,6 +28,7 @@ interface NavItem {
 /* ── Static nav items ──────────────────────────────────── */
 
 const EMPLOYEE_ITEMS: NavItem[] = [
+  { href: '/employee', label: 'Workspace', icon: <ShieldCheck size={18} />, matchPaths: ['/employee'], exact: true },
   { href: '/employee/requests/new', label: 'Request Tool', icon: <Send size={18} />, matchPaths: ['/employee/requests'] },
   { href: '/employee/redress', label: 'Redress', icon: <ShieldAlert size={18} />, matchPaths: ['/employee/redress'] },
 ];
@@ -36,6 +38,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { href: '/admin/tools/new', label: 'Classify', icon: <Search size={18} />, matchPaths: ['/admin/tools/new'] },
   { href: '/admin/tools', label: 'Tools', icon: <Layers size={18} />, matchPaths: ['/admin/tools'], exact: true },
   { href: '/admin/requests', label: 'Requests', icon: <ClipboardList size={18} />, matchPaths: ['/admin/requests'] },
+  { href: '/admin/dlp-rules', label: 'DLP Rules', icon: <ShieldCheck size={18} />, matchPaths: ['/admin/dlp-rules'] },
   { href: '/admin/logs', label: 'Logs', icon: <FileText size={18} />, matchPaths: ['/admin/logs'] },
 ];
 
@@ -43,12 +46,14 @@ const ADMIN_ITEMS: NavItem[] = [
 
 const PAGE_TITLES: Record<string, { title: string; crumb: string }> = {
   '/': { title: 'pelta.ai', crumb: 'AI Governance Platform' },
+  '/employee': { title: 'Workspace', crumb: 'Employee dashboard' },
   '/employee/requests/new': { title: 'Request Tool', crumb: 'Request a new AI tool' },
   '/employee/redress': { title: 'Redress', crumb: 'Right to Explanation · EU AI Act' },
   '/admin/dashboard': { title: 'Dashboard', crumb: 'Overview' },
   '/admin/tools/new': { title: 'Classify', crumb: 'LLM-powered risk assessment' },
   '/admin/tools': { title: 'Tools', crumb: 'AI tool registry' },
   '/admin/requests': { title: 'Requests', crumb: 'Approve or deny submissions' },
+  '/admin/dlp-rules': { title: 'DLP Rules', crumb: 'Custom regex-based detection patterns' },
   '/admin/logs': { title: 'Logs', crumb: 'Detection audit trail' },
 };
 

@@ -35,6 +35,10 @@ const PATTERNS: { label: string; pattern: RegExp; severity: 'high' | 'medium' | 
   { label: 'Source code (function/class)', pattern: /\b(function|class|def|public class|interface|struct|enum)\s+[A-Za-z0-9_]+\s*[({\:]/g, severity: 'high' },
   { label: 'Source code (imports)', pattern: /\b(import\s+.*?\s+from\s+['"].*?['"]|require\s*\(\s*['"].*?['"]\s*\)|#include\s*[<"].*?[>"])/g, severity: 'high' },
   { label: 'SQL Query', pattern: /\b(SELECT\s+.*?\s+FROM|INSERT\s+INTO|UPDATE\s+.*?\s+SET|DELETE\s+FROM)\s/gi, severity: 'high' },
+  
+  // Prompt Injection & Jailbreaks
+  { label: 'Prompt Injection (Instruction Override)', pattern: /\b(ignore (all )?previous instructions|disregard previous|forget (all )?previous|system override|system prompt|you are now)\b/gi, severity: 'high' },
+  { label: 'Jailbreak (Roleplay / DAN)', pattern: /\b(do anything now|jailbreak|developer mode|dev mode|bypass filters?|unrestricted|limitless|always respond with)\b/gi, severity: 'high' },
 ];
 
 const SUSPICIOUS_KEYWORDS = [
@@ -43,6 +47,7 @@ const SUSPICIOUS_KEYWORDS = [
   'merger', 'layoff', 'restructuring', 'insider', 'classified', 'sensitive',
   'password', 'credentials', 'pii', 'personally identifiable', 'patient',
   'health record', 'hipaa', 'gdpr', 'bank account', 'routing',
+  'jailbreak', 'ignore previous', 'system prompt', 'bypass filter'
 ];
 
 export function scanWithRegex(text: string): RegexResult {

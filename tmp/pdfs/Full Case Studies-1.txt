@@ -1,0 +1,195 @@
+
+===== PAGE 1 =====
+C a s e
+S t u d i e s
+C a s e
+S t u d i e s
+X
+===== PAGE 2 =====
+Description
+Modern enterprises rely heavily on digital infrastructure to support daily business
+operations, customer services, and financial transactions. Most global technology
+companies operate a complex IT environment consisting of cloud platforms, enterprise
+applications, databases, network infrastructure, and financial systems distributed across
+multiple regions. Any unexpected system outage, service degradation, or financial
+anomaly can directly affect business continuity, customer experience, operational
+efficiency, and organisational reputation.
+Traditionally, IT support teams respond to incidents only after users report problems or
+system monitoring tools trigger alerts. Similarly, financial fraud detection often relies on
+predefined business rules that identify suspicious transactions only after they occur.
+While these approaches remain important, they are increasingly insufficient because
+modern IT environments generate massive volumes of system logs, application metrics,
+user activities, and transaction records that are difficult for human operators to analyse in
+real time. 
+Recent advances in Artificial Intelligence (AI), Machine Learning (ML), and data
+analytics provide new opportunities to shift from reactive monitoring to proactive
+prediction. Predictive analytics can analyse historical incident records, infrastructure
+performance metrics, application logs, and user behaviour to identify patterns that
+typically precede system failures. At the same time, anomaly detection algorithms can
+continuously monitor financial transactions and operational activities to identify unusual
+behaviour that may indicate fraud, security breaches, insider threats, or operational risks
+before significant damage occurs.
+The challenge is to design an intelligent monitoring and prediction system capable of
+integrating operational and financial data from multiple sources, identifying potential
+incidents before they escalate, and recommending or automatically executing appropriate
+remediation actions. 
+Case Study 1: AI-Driven IT Incident
+Prediction & Financial Risk Detection
+Case Study 1: AI-Driven IT Incident
+Prediction & Financial Risk Detection
+===== PAGE 3 =====
+Key Challenges
+1) Integrating Large Volumes of Operational and Financial Data
+Enterprise environments generate enormous amounts of data from different sources,
+including application logs, server performance metrics, network monitoring systems,
+cloud infrastructure, security events, and financial transaction records.nThe challenge is
+to design a scalable data pipeline that can collect, clean, integrate, and process structured
+and unstructured data while maintaining data quality and supporting near real-time
+analysis. Without proper integration, predictive models may miss important relationships
+between infrastructure events and financial risks.
+2) Accurate Prediction of IT Incidents and Financial Anomalies
+Predicting future incidents is significantly more difficult than detecting existing
+problems. System failures may be caused by hardware degradation, software defects,
+configuration errors, network congestion, or unexpected user behaviour. An effective AI
+solution must distinguish genuine risks from normal operational variations while
+minimising false positives and false negatives. The predictive models should also provide
+explainable results so that IT engineers, financial analysts, and business managers
+understand why a particular incident or transaction has been flagged and can confidently
+take appropriate action.
+3) Automated Response and Decision Support
+Detecting incidents early only creates value if organisations can respond quickly and
+effectively. However, enterprise environments often involve thousands of interconnected
+systems, making manual investigation and remediation slow and resource-intensive. The
+challenge is to design an intelligent decision-support system capable of recommending or
+automatically executing appropriate remediation actions, such as restarting failed services,
+reallocating computing resources, blocking suspicious financial transactions, or escalating
+incidents to the appropriate teams. 
+Example Use Cases
+1.Predict system outages using infrastructure logs, application metrics, and historical
+incident data 
+2.Detect anomalous financial transactions and suspicious user behaviour
+3.Recommend automated remediation actions
+4.Develop a real-time operational risk dashboard
+===== PAGE 4 =====
+Description
+A subscription-based business model allows customers to pay repeatedly for continuous
+access to a product or service instead of making a one-time purchase. As more companies
+move from selling products once to providing long-term services, customer experience
+becomes increasingly important because revenue depends on whether customers continue
+using, renewing, or upgrading their subscriptions.
+Customer churn represents the rate at which customers stop using a service, and it gives
+companies a clear signal to improve customer experience and retention strategies. The
+issue with subscription-based services is that customers may cancel or reduce their plans if
+they do not see enough value, experience poor service, or feel that the subscription does
+not match their actual needs. This creates pressure for companies to understand customer
+behaviour more deeply instead of only tracking sales.
+Another issue is under-utilized subscriptions, where customers continue paying for a
+service but do not use it effectively. This can lead to dissatisfaction because customers
+may feel that they are wasting money or not receiving enough benefit from the plan. At
+the same time, companies may miss opportunities to recommend better packages, provide
+extra support, or upsell relevant services. 
+Research on customer churn prediction shows that machine learning can help identify
+customers who are most likely to leave before cancellation happens. Smart subscription
+and customer experience optimization is a concept meant to use data analytics, AI, and
+customer health monitoring to improve retention, engagement, and upselling
+opportunities. A smart system can analyze usage patterns, customer activity, support
+history, payment behaviour, and feedback to recommend personalized subscription plans,
+detect inactive customers, and help businesses take action at the right time.
+Case Study 2: Smart Subscription &
+Customer Experience Optimization
+Case Study 2: Smart Subscription &
+Customer Experience Optimization
+===== PAGE 5 =====
+Key Challenges
+1) Data Integration and Customer Behaviour Analysis
+Subscription data often comes from many different sources, such as usage records,
+payment history, service requests, customer feedback, and account activity. These data
+points may be stored in different systems and may not follow the same format. This
+presents the challenge of designing a system that can collect, clean, and connect customer
+information into one complete profile so that businesses can understand customer
+behaviour accurately.
+2) Accurate Churn Prediction and Customer Health Scoring
+A major challenge is identifying which customers are likely to cancel, downgrade, or stop
+engaging with the service. Churn is not always obvious because a customer may still be
+subscribed but may already be dissatisfied or inactive. The system must analyze warning
+signs such as reduced usage, repeated complaints, late payments, low engagement, or
+unused features. This requires predictive models that are accurate, explainable, and useful
+for customer service, sales, and management teams.
+3) Personalization and Scalable Customer Experience
+Different customers have different needs depending on their usage level, budget, business
+goals, and service expectations. A smart subscription system must be able to recommend
+suitable plans, support actions, or upselling opportunities without making the process
+too complicated. The challenge is to balance automation with human decision-making so
+that the company can deliver a more personalized experience while still managing many
+customers efficiently.
+Example Use Cases
+1.Predict customer churn based on usage patterns
+2.Recommend personalized subscription plans
+3.Identify inactive or under-utilized subscriptions
+4.Build a dashboard to monitor customer health and engagement
+===== PAGE 6 =====
+Description
+As organisations embed generative AI and machine learning tools into everyday workflows,
+the pace of adoption is beginning to outrun the policies meant to control it. Employees
+now reach for AI assistants for coding, drafting, analysis, and customer communication
+long before IT, legal, and compliance teams have agreed on what is safe to share with these
+tools. This creates a governance gap: AI is generating real productivity gains, but often
+without the oversight, transparency, or accountability that would normally accompany a
+new enterprise system.
+The scale of this gap is significant. Survey data collected in early 2026 found that nearly half
+of employees use AI tools their employer has not approved, with a majority of free-tool
+users doing so without any enterprise-grade data protection. This so-called “shadow AI”
+problem is not confined to junior staff either; a large share of C-suite executives say they
+tolerate unapproved AI use because the productivity gains are too valuable to slow down.
+The financial exposure is measurable too: breaches involving AI-related tools now carry a
+substantial cost premium over conventional data breaches, driven largely by slower
+detection and limited forensic visibility into what data entered a given AI tool.
+The challenge is to design a system or framework that ensures AI governance, including
+data protection, transparency, and ethical use. In practice, this means knowing which AI
+tools are in use, who is allowed to use them, what data they can see, and how their outputs
+get checked. Frameworks such as the NIST AI Risk Management Framework organise
+responsible AI practice around four functions: Govern, Map, Measure, and Manage, and
+are increasingly used as the practical backbone underneath emerging regulation such as the
+EU AI Act. Access to a given AI model is also not guaranteed to stay the same. In June
+2026, the U.S. government briefly ordered Anthropic to suspend access to two of its
+newest models, Claude Fable 5 and Claude Mythos 5, for every foreign national
+worldwide, before lifting the restriction weeks later. The trigger was a cybersecurity
+concern: Amazon researchers reported a way to jailbreak Fable 5's safeguards, prompting
+the model to identify software vulnerabilities and, in one case, produce exploit code. 
+Case Study 3: AI Governance &
+Responsible AI in Enterprise
+Case Study 3: AI Governance &
+Responsible AI in Enterprise
+===== PAGE 7 =====
+Key Challenges
+1) Ensuring Responsible AI Usage, and Employee Compliance
+Employees adopt new AI tools far faster than governance processes can be written for them,
+and outright bans tend to push usage further out of sight rather than eliminating it. A
+workable system needs to make the approved path the easiest path: a new AI tool needs to
+be approvable in days, not months, while still capturing what data it will touch and who is
+at risk. The primary difficulty here is organisational and behavioural as much as technical,
+the system must change how thousands of employees across departments behave, not just
+process a data feed. This is a matter of building willing compliance, not just introducing
+regulations.
+2) Data Privacy and Security
+AI tools make it possible to move data outside an organisation’s control with a single click,
+because prompts, documents, and outputs can be pasted into a chat window in seconds. A
+simple solution that comes to mind is that the framework must classify data sensitivity,
+restrict which categories of information may be shared with which class of AI tool, and
+maintain a record of AI usage that can satisfy both internal audit at the company and
+external government regulators. This differs from a conventional cybersecurity monitoring
+problem in that the “attack surface” is often an authorised employee using an unauthorised
+tool, rather than an external adversary. 
+3) Transparency and Ethical Boundaries in AI Use
+Being transparent and ethical means more than avoiding bias or technical mistakes, it's
+about whether someone affected by an AI-assisted decision can find out AI was involved,
+and get a plain explanation for the outcome as well as a redressal pathway. Where an AI tool
+helps decide something that affects a person, that person should be able to learn that AI
+played a part and ask for the decision to be looked at again. This also means setting clear
+limits on what AI should never be used for, even where it's technically possible such as
+covertly monitoring employees or profiling people without their knowledge.
+Example Use Cases
+1.Build framework to monitor AI model risks (Bias and Data Leakage)
+2.Implement approval workflow for AI tool usage
+3.Develop dashboard to track AI usage across departments
+4.Suggest policies or automated checks for sensitive data

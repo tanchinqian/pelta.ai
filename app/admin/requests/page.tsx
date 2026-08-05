@@ -6,6 +6,7 @@ import {
   Briefcase, ShieldAlert,
 } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -73,33 +74,6 @@ function fmt(iso: string) {
   });
 }
 
-function RiskBadge({ level }: { level: string | null }) {
-  const l = (level ?? 'low').toLowerCase();
-  return (
-    <span
-      className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded"
-      style={{ color: RISK_COLOR[l] ?? RISK_COLOR.low, background: RISK_BG[l] ?? RISK_BG.low }}
-    >
-      {l}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span
-      className="text-sm font-bold font-mono uppercase px-1.5 py-0.5 rounded border"
-      style={{
-        color: STATUS_COLOR[status] ?? 'var(--text-secondary)',
-        borderColor: `${STATUS_COLOR[status] ?? 'var(--border)'}40`,
-        background: `${STATUS_COLOR[status] ?? 'transparent'}0d`,
-      }}
-    >
-      {status}
-    </span>
-  );
-}
-
 function SectionTag({ label }: { label: string }) {
   return (
     <span className="text-sm font-medium font-mono px-1.5 py-0.5 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300">
@@ -144,7 +118,7 @@ function AppealDetailModal({
             </div>
             <div className="flex flex-col items-end gap-1">
               <StatusBadge status={req.status} />
-              {req.riskLevel && <RiskBadge level={req.riskLevel} />}
+              {req.riskLevel && <RiskBadge tier={req.riskLevel} />}
             </div>
           </div>
           <div>
@@ -153,7 +127,7 @@ function AppealDetailModal({
           </div>
           <div>
             <p className="text-sm font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1.5">Reason for Access</p>
-            <p className="text-base text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">{req.reason}</p>
+            <p className="text-base text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 whitespace-pre-wrap max-h-64 overflow-y-auto">{req.reason}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
@@ -187,7 +161,7 @@ function AppealDetailModal({
                   </button>
                   <button id={`reject-modal-${req.id}`} onClick={() => onStartReject(req.id)}
                     className="flex items-center gap-1.5 text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer">
-                    <XCircle size={12} /> Decline
+                    <XCircle size={12} /> Deny
                   </button>
                 </div>
               ) : (
@@ -201,7 +175,7 @@ function AppealDetailModal({
                   <div className="flex items-center gap-2">
                     <button onClick={() => onSendRejection(req.id)} disabled={!rejectionDraft.trim()}
                       className="text-base font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
-                      Confirm Decline
+                      Confirm Deny
                     </button>
                     <button onClick={onCancelReject} className="text-base text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer">Cancel</button>
                   </div>
@@ -487,7 +461,7 @@ export default function RequestsPage() {
 
   return (
     <>
-      <div className="flex-1 p-4 max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-3">
           <div className="space-y-0.5">
@@ -580,30 +554,30 @@ export default function RequestsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
-                        <th className="px-4 py-3 font-semibold">Employee</th>
-                        <th className="px-4 py-3 font-semibold hidden sm:table-cell">Request ID</th>
-                        <th className="px-4 py-3 font-semibold hidden md:table-cell">Data Categories</th>
-                        <th className="px-4 py-3 font-semibold">Risk</th>
-                        <th className="px-4 py-3 font-semibold hidden lg:table-cell">Reason</th>
-                        <th className="px-4 py-3 font-semibold hidden lg:table-cell">Submitted</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold">Actions</th>
+                        <th className="px-3 py-3 font-semibold">Employee</th>
+                        <th className="px-3 py-3 font-semibold hidden sm:table-cell">Request ID</th>
+                        <th className="px-3 py-3 font-semibold hidden md:table-cell">Data Categories</th>
+                        <th className="px-3 py-3 font-semibold">Risk</th>
+                        <th className="px-3 py-3 font-semibold hidden lg:table-cell">Reason</th>
+                        <th className="px-3 py-3 font-semibold hidden lg:table-cell">Submitted</th>
+                        <th className="px-3 py-3 font-semibold">Status</th>
+                        <th className="px-3 py-3 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80">
                       {searchedAppeals.map((req, i) => (
                         <tr key={req.id} className={`hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors ${i % 2 === 1 ? 'bg-zinc-50/50 dark:bg-white/[0.02]' : ''}`}>
-                          <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{req.employeeName}</td>
-                          <td className="px-4 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
-                          <td className="px-4 py-3 hidden md:table-cell">
+                          <td className="px-3 py-3 font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{req.employeeName}</td>
+                          <td className="px-3 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{req.id.slice(0, 8)}…</td>
+                          <td className="px-3 py-3 hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">{req.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap"><RiskBadge level={req.riskLevel} /></td>
-                          <td className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400 max-w-[160px] truncate hidden lg:table-cell">{req.reason}</td>
-                          <td className="px-4 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1.5 flex-wrap">
+                          <td className="px-3 py-3 whitespace-nowrap"><RiskBadge tier={req.riskLevel} /></td>
+                          <td className="px-3 py-3 text-sm text-zinc-500 dark:text-zinc-400 max-w-[140px] truncate hidden lg:table-cell">{req.reason}</td>
+                          <td className="px-3 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-1.5 flex-nowrap">
                               <button id={`view-appeal-${req.id}`} onClick={() => setSelectedAppeal(req)}
                                 className="text-sm font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 View
@@ -616,7 +590,7 @@ export default function RequestsPage() {
                                   </button>
                                   <button id={`decline-appeal-${req.id}`} onClick={() => { setRejectingId(req.id); setSelectedAppeal(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
-                                    <XCircle size={10} /> Decline
+                                    <XCircle size={10} /> Deny
                                   </button>
                                 </>
                               )}
@@ -665,16 +639,13 @@ export default function RequestsPage() {
                               <td className="py-2 px-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap">{fmt(entry.timestamp)}</td>
                               <td className="py-2 pr-3 text-base font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{entry.employeeName}</td>
                               <td className="py-2 pr-3 whitespace-nowrap">
-                                <span className="text-sm font-bold font-mono uppercase"
-                                  style={{ color: entry.action === 'approved' ? 'var(--risk-low)' : 'var(--risk-high)' }}>
-                                  {entry.action}
-                                </span>
+                                <StatusBadge status={entry.action} />
                               </td>
                               <td className="py-2 pr-3 text-sm font-mono text-zinc-600 dark:text-zinc-300 hidden sm:table-cell whitespace-nowrap">{entry.reviewerName}</td>
                               <td className="py-2 pr-3 hidden md:table-cell">
                                 <div className="flex flex-wrap gap-1">{entry.sections.map((s) => <SectionTag key={s} label={s} />)}</div>
                               </td>
-                              <td className="py-2 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge level={entry.riskLevel} /></td>
+                              <td className="py-2 pr-3 hidden md:table-cell whitespace-nowrap"><RiskBadge tier={entry.riskLevel} /></td>
                               <td className="py-2 text-sm text-zinc-500 dark:text-zinc-400 truncate max-w-[160px] hidden lg:table-cell">{entry.adminComment ?? '—'}</td>
                             </tr>
                           ))}
@@ -739,24 +710,24 @@ export default function RequestsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
-                        <th className="px-4 py-3 font-semibold">Employee</th>
-                        <th className="px-4 py-3 font-semibold hidden sm:table-cell">Department</th>
-                        <th className="px-4 py-3 font-semibold">Tool Requested</th>
-                        <th className="px-4 py-3 font-semibold hidden lg:table-cell">Submitted</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold">Actions</th>
+                        <th className="px-3 py-3 font-semibold">Employee</th>
+                        <th className="px-3 py-3 font-semibold hidden sm:table-cell">Department</th>
+                        <th className="px-3 py-3 font-semibold">Tool Requested</th>
+                        <th className="px-3 py-3 font-semibold hidden lg:table-cell">Submitted</th>
+                        <th className="px-3 py-3 font-semibold">Status</th>
+                        <th className="px-3 py-3 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80">
                       {searchedTools.map((req, i) => (
                         <tr key={req.id} className={`hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors ${i % 2 === 1 ? 'bg-zinc-50/50 dark:bg-white/[0.02]' : ''}`}>
-                          <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{req.employeeName}</td>
-                          <td className="px-4 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{req.department}</td>
-                          <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{req.toolRequested}</td>
-                          <td className="px-4 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1.5 flex-wrap">
+                          <td className="px-3 py-3 font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">{req.employeeName}</td>
+                          <td className="px-3 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{req.department}</td>
+                          <td className="px-3 py-3 font-medium text-zinc-900 dark:text-zinc-100">{req.toolRequested}</td>
+                          <td className="px-3 py-3 text-sm font-mono text-zinc-500 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">{fmt(req.requestedAt)}</td>
+                          <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={req.status} /></td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-1.5 flex-nowrap">
                               <button id={`view-tool-${req.id}`} onClick={() => setSelectedTool(req)}
                                 className="text-sm font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 View
@@ -767,7 +738,7 @@ export default function RequestsPage() {
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-low bg-risk-low/10 hover:bg-risk-low/20 border border-risk-low/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <CheckCircle size={10} /> Approve
                                   </button>
-                                  <button id={`deny-tool-${req.id}`} onClick={() => updateToolReq(req.id, 'denied')}
+                                  <button id={`deny-tool-${req.id}`} onClick={() => { setDenyingToolId(req.id); setSelectedTool(req); }}
                                     className="flex items-center gap-1 text-sm font-semibold text-risk-high bg-risk-high/10 hover:bg-risk-high/20 border border-risk-high/30 rounded-lg px-2 py-0.5 transition-colors cursor-pointer whitespace-nowrap">
                                     <XCircle size={10} /> Deny
                                   </button>

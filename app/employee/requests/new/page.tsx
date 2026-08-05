@@ -4,12 +4,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Building, Wrench, FileText, CheckCircle2, XCircle, Clock, History, ShieldCheck } from 'lucide-react';
 import RadarIcon from '@/components/RadarIcon';
+import { RiskBadge, StatusBadge } from '@/components/Badge';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { DEMO_EMPLOYEE } from '@/lib/constants';
 
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR'];
-
-// Demo employee — single implicit user (no real auth in this app)
-const DEMO_EMPLOYEE = 'Alice Chen';
 
 interface RequestRecord {
   id: string;
@@ -55,16 +55,28 @@ export default function NewRequestPage() {
   const [approvedTools, setApprovedTools] = useState<ToolRecord[]>([]);
 
   useEffect(() => {
-    (async () => {
+    let mounted = true;
+    const fetchData = async () => {
       try {
         const [reqRes, toolRes] = await Promise.all([
-          fetch('/api/requests').then((r) => r.json()) as Promise<RequestRecord[]>,
-          fetch('/api/tools').then((r) => r.json()) as Promise<ToolRecord[]>,
+          fetch('/api/requests', { cache: 'no-store' }).then((r) => r.json()) as Promise<RequestRecord[]>,
+          fetch('/api/tools', { cache: 'no-store' }).then((r) => r.json()) as Promise<ToolRecord[]>,
         ]);
+        if (!mounted) return;
         setMyRequests(reqRes.filter((r) => r.employeeName === DEMO_EMPLOYEE));
         setApprovedTools(toolRes.filter((t) => t.status === 'approved'));
       } catch {}
-    })();
+    };
+    fetchData();
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchData(); };
+    const onRefetch = () => fetchData();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pelta:refetch-requests', onRefetch);
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pelta:refetch-requests', onRefetch);
+    };
   }, []);
 
   // Inline hint: if the user types a name that matches an approved tool
@@ -138,7 +150,11 @@ export default function NewRequestPage() {
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
 
   return (
-    <div className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+      className="flex-1 p-4 max-w-7xl mx-auto w-full text-zinc-900 dark:text-zinc-100">
       <div className="flex items-center gap-3 mb-4">
         <div className="flex items-center gap-2 text-sm font-mono text-zinc-500 dark:text-zinc-400">
           <span className="px-1.5 py-0.5 rounded bg-risk-low/10 text-risk-low">{approvedTools.length} approved</span>
@@ -261,17 +277,11 @@ export default function NewRequestPage() {
                     <div key={req.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{req.toolRequested}</span>
-                        <span
-                          className={`text-sm font-bold font-mono uppercase shrink-0 flex items-center gap-1 ${
-                            req.status === 'approved' ? 'text-risk-low' :
-                            req.status === 'denied' ? 'text-risk-high' : 'text-risk-medium'
-                          }`}
-                        >
-                          {req.status === 'approved' && <CheckCircle2 size={9} />}
-                          {req.status === 'denied' && <XCircle size={9} />}
-                          {req.status === 'pending' && <Clock size={9} className="animate-pulse" />}
-                          {req.status}
-                        </span>
+                        <StatusBadge status={req.status} icon={
+                          req.status === 'approved' ? <CheckCircle2 size={9} /> :
+                          req.status === 'denied' ? <XCircle size={9} /> :
+                          <Clock size={9} className="animate-pulse" />
+                        } />
                       </div>
                       <p className="text-zinc-500 dark:text-zinc-400 text-sm font-mono mt-1">
                         {new Date(req.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -311,12 +321,7 @@ export default function NewRequestPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-zinc-900 dark:text-zinc-100 font-medium truncate">{tool.name}</span>
                         {tool.riskTier && (
-                          <span
-                            className="text-sm font-bold font-mono uppercase shrink-0 px-1.5 py-0.5 rounded"
-                            style={{ color: RISK_COLOR[tool.riskTier], background: `${RISK_COLOR[tool.riskTier]}15` }}
-                          >
-                            {tool.riskTier}
-                          </span>
+                          <RiskBadge tier={tool.riskTier} />
                         )}
                       </div>
                       <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 line-clamp-2 leading-relaxed">{tool.description}</p>
@@ -327,6 +332,6 @@ export default function NewRequestPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

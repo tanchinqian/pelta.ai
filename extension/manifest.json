@@ -3,11 +3,12 @@
   "name": "pelta.ai Prompt Guard",
   "version": "1.0",
   "description": "Intercepts ChatGPT prompts and checks them against pelta.ai's governance API before they are sent.",
+  "options_page": "options.html",
   "action": {
     "default_popup": "popup.html",
     "default_title": "pelta.ai Prompt Guard"
   },
-  "permissions": ["storage", "clipboardRead", "tabs"],
+  "permissions": ["storage", "clipboardRead", "tabs", "notifications"],
   "host_permissions": [
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
@@ -16,7 +17,8 @@
     "https://chat.deepseek.com/*",
     "https://deepseek.com/*",
     "https://copilot.microsoft.com/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "https://peltaai-production.up.railway.app/*"
   ],
   "content_scripts": [
     {

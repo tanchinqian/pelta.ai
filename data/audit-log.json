@@ -2,7 +2,7 @@
   {
     "id": "audit-0001-0000-0000-000000000001",
     "requestId": "cc110002-ac00-0000-0000-000000000002",
-    "employeeName": "Demo Employee",
+    "employeeName": "Alice Chen",
     "action": "approved",
     "reviewerName": "Admin",
     "adminComment": null,
@@ -15,7 +15,7 @@
   {
     "id": "audit-0002-0000-0000-000000000002",
     "requestId": "cc110003-ac00-0000-0000-000000000003",
-    "employeeName": "Demo Employee",
+    "employeeName": "Alice Chen",
     "action": "rejected",
     "reviewerName": "Admin",
     "adminComment": "New hire PII must not be processed through unapproved AI tools. Please use the internal HR system for onboarding communications.",
