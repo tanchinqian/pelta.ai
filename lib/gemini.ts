@@ -109,8 +109,6 @@ async function generateWithFallback(
   let lastErr: Error | null = null;
 
   for (const modelName of candidates) {
-    const label = `[llm] ${modelName}`;
-    console.time(label);
     try {
       const model = genAI.getGenerativeModel({
         model: modelName,
@@ -134,10 +132,8 @@ async function generateWithFallback(
         throw new Error('VALIDATION_FAILED');
       }
 
-      console.timeEnd(label);
       return text;
     } catch (err: any) {
-      console.timeEnd(label);
       lastErr = err;
       const msg = String(err?.message ?? err);
       if (/429|404|quota|rate|not found|RESOURCE_EXHAUSTED|TIMEOUT|VALIDATION_FAILED/i.test(msg)) {
@@ -230,11 +226,7 @@ export async function suggestSafePrompts(
 }
 
 export async function classifyPromptRisk(text: string): Promise<PromptRiskResponse> {
-  console.time('[llm] classifyPromptRisk total');
-  if (!apiKey) {
-    console.timeEnd('[llm] classifyPromptRisk total');
-    return mockPromptRisk(text);
-  }
+  if (!apiKey) return mockPromptRisk(text);
   try {
     const prompt = `Text:\n"""\n${text.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON with riskLevel and reason.`;
     const text_ = await generateWithFallback(prompt, {
@@ -245,10 +237,8 @@ export async function classifyPromptRisk(text: string): Promise<PromptRiskRespon
       },
     });
     const result = parseJson(text_) as PromptRiskResponse;
-    console.timeEnd('[llm] classifyPromptRisk total');
     return result;
   } catch (err: any) {
-    console.timeEnd('[llm] classifyPromptRisk total');
     console.warn('[llm] classifyPromptRisk fallback:', err?.message);
     return mockPromptRisk(text);
   }
@@ -258,11 +248,7 @@ export async function classifyToolRisk(
   toolName: string,
   description: string,
 ): Promise<ToolRiskResponse> {
-  console.time('[llm] classifyToolRisk total');
-  if (!apiKey) {
-    console.timeEnd('[llm] classifyToolRisk total');
-    return mockToolRisk(toolName, description);
-  }
+  if (!apiKey) return mockToolRisk(toolName, description);
   try {
     const nistContext = retrieveNistContext(toolName, description);
     const contextBlock = formatNistContextForPrompt(nistContext);
@@ -276,10 +262,8 @@ export async function classifyToolRisk(
       },
     });
     const parsed = parseJson(text) as ToolRiskResponse;
-    console.timeEnd('[llm] classifyToolRisk total');
     return { ...parsed, retrievedNistContext: nistContext };
   } catch (err: any) {
-    console.timeEnd('[llm] classifyToolRisk total');
     console.warn('[llm] classifyToolRisk fallback:', err?.message);
     return mockToolRisk(toolName, description);
   }
