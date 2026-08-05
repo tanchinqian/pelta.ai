@@ -407,13 +407,13 @@ export default function ClassifyToolPage() {
   };
 
   return (
-    <div className="flex-1 p-4 space-y-4 max-w-7xl mx-auto w-full text-text-primary">
+    <div className="flex-1 p-4 space-y-3 w-full text-text-primary">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800 gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <RadarIcon size={16} className="text-accent" />
-            <h1 className="text-xl font-serif font-semibold text-text-primary">Tool Classification Intelligence</h1>
+            <h1 className="text-2xl font-serif font-semibold text-text-primary">Tool Classification Intelligence</h1>
           </div>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Govern, assess, and audit artificial intelligence applications across the enterprise.</p>
         </div>

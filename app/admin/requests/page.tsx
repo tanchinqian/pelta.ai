@@ -461,13 +461,13 @@ export default function RequestsPage() {
 
   return (
     <>
-      <div className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-4">
+      <div className="flex-1 p-4 w-full space-y-3">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800 gap-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <RadarIcon size={16} className="text-accent" />
-              <h1 className="text-xl font-serif font-semibold text-zinc-900 dark:text-zinc-100">Access Requests</h1>
+              <h1 className="text-2xl font-serif font-semibold text-zinc-900 dark:text-zinc-100">Access Requests</h1>
             </div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">Approve, reject, and audit data-access and tool-request submissions.</p>
           </div>

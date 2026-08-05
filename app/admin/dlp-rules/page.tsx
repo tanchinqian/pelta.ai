@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlusCircle, Trash2, ToggleLeft, ToggleRight, ShieldAlert, CheckCircle2, AlertTriangle, Minus, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
+import RadarIcon from '@/components/RadarIcon';
 
 interface DlpRule {
   id: string;
@@ -137,12 +138,15 @@ export default function DlpRulesPage() {
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      <div className="flex-1 p-4 max-w-[1400px] mx-auto w-full space-y-4 overflow-y-auto">
+      <div className="flex-1 p-4 w-full space-y-3 overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between pb-2 border-b border-border">
           <div>
-            <h2 className="text-xl font-bold text-text-primary tracking-tight">Custom DLP Rules</h2>
+            <div className="flex items-center gap-2">
+              <RadarIcon size={16} className="text-accent" />
+              <h1 className="text-2xl font-serif font-semibold text-text-primary tracking-tight">Custom DLP Rules</h1>
+            </div>
             <p className="text-sm text-text-secondary mt-0.5">
               Define regex-based patterns to detect and block custom sensitive keywords across all AI tools.
             </p>

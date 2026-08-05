@@ -227,12 +227,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 p-4 space-y-3 max-w-[1400px] mx-auto w-full">
+    <div className="flex-1 p-4 space-y-3 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <RadarIcon size={14} className="text-accent" />
-          <h1 className="text-xl font-serif font-semibold text-text-primary">Dashboard</h1>
+      <div className="flex items-center justify-between pb-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <RadarIcon size={16} className="text-accent" />
+            <h1 className="text-2xl font-serif font-semibold text-text-primary">Dashboard</h1>
+          </div>
           <span className="text-sm font-mono text-text-tertiary">/ overview</span>
         </div>
         <div className="flex items-center gap-3">
