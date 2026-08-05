@@ -10,6 +10,7 @@ const CORS_HEADERS = {
 const apiKey = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || '';
 
 const DEFAULT_MODELS = [
+  'gemini-3.5-flash-lite',
   'gemini-flash-latest',
   'gemini-3.5-flash',
   'gemini-3.1-pro-preview',
