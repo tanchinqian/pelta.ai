@@ -1062,7 +1062,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
-                if (myReq.status === 'approved') {
+              if (myReq.status === 'approved') {
                   clearInterval(interval);
                   try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
                   const overlayEl = document.getElementById('pelta-overlay');
@@ -1071,17 +1071,16 @@ function showFlag(response, promptText, trigger, meta = {}) {
                     removeOverlay();
                     replaySend();
                   }
-                }
-              } else if (myReq.status === 'rejected') {
-                clearInterval(interval);
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Request Denied";
-                  btn.className = "pelta-btn pelta-btn-redact";
+                } else if (myReq.status === 'rejected') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Request Denied";
+                    btn.className = "pelta-btn pelta-btn-redact";
+                  }
                 }
               }
-            }
           } catch (err) {}
         }, 2000);
       }
@@ -1161,7 +1160,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
-                if (myReq.status === 'approved') {
+              if (myReq.status === 'approved') {
                   clearInterval(interval);
                   try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
                   const overlayEl = document.getElementById('pelta-overlay');
@@ -1175,17 +1174,16 @@ function showBlock(response, promptText, trigger, meta = {}) {
                       removeOverlay();
                     }, 1500);
                   }
-                }
-              } else if (myReq.status === 'rejected') {
-                clearInterval(interval);
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Report Denied";
-                  btn.className = "pelta-btn pelta-btn-redact";
+                } else if (myReq.status === 'rejected') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Report Denied";
+                    btn.className = "pelta-btn pelta-btn-redact";
+                  }
                 }
               }
-            }
           } catch (err) {}
         }, 2000);
       }
