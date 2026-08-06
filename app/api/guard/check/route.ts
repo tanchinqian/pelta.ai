@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scanWithRegex } from '@/lib/regexPatterns';
-import { classifyPromptRisk, hasApiKey } from '@/lib/gemini';
+import { classifyPromptRisk, hasApiKey, rewritePromptSafe } from '@/lib/gemini';
 import { addItem, readStore } from '@/lib/fileStore';
 import { v4 as uuid } from 'uuid';
 
@@ -26,6 +26,7 @@ interface HighlightSpan {
 
 interface GuardResponse extends GuardLog {
   highlights: HighlightSpan[];
+  rewrittenPrompt?: string;
 }
 
 interface DlpRule {
@@ -141,8 +142,17 @@ export async function POST(req: NextRequest) {
       ...customResult.highlights.filter((h) => h.start < prompt.length),
     ].sort((a, b) => a.start - b.start);
 
-    const respond = (log: GuardLog): NextResponse => {
-      const body: GuardResponse = { ...log, highlights };
+    const respond = async (log: GuardLog): Promise<NextResponse> => {
+      let rewrittenPrompt: string | undefined;
+      if ((log.verdict === 'flag' || log.verdict === 'block') && hasApiKey()) {
+        // Best-effort LLM rewrite; never blocks the check if it fails
+        rewrittenPrompt = await rewritePromptSafe(prompt);
+      }
+      const body: GuardResponse = {
+        ...log,
+        highlights,
+        ...(rewrittenPrompt ? { rewrittenPrompt } : {}),
+      };
       return NextResponse.json(body);
     };
 

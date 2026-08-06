@@ -445,6 +445,9 @@ const globalKeypressHandler = (e) => {
 };
 const globalOtherHandler = (e) => {
   if (interceptedEnter || document.getElementById('pelta-overlay')) {
+    // Allow editing inside the overlay (the redact textarea) — only block the host app's input/submit
+    const overlay = document.getElementById('pelta-overlay');
+    if (overlay && e.target && overlay.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -752,19 +755,29 @@ function clearPrompt() {
 function replaySend() {
   replaying = true;
   unlockSendButton();
-  requestAnimationFrame(() => {
-    const btn = document.querySelector(SELECTORS.sendButton);
-    if (btn) {
-      btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      btn.click();
+  // Small delay so React/ProseMirror can process typeIntoInput first
+  setTimeout(() => {
+    try {
+      const btn = document.querySelector(SELECTORS.sendButton);
+      if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
+        btn.focus();
+        btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        btn.click();
+      } else if (inputEl) {
+        // Last resort: synthetic Enter on the input
+        inputEl.focus();
+        inputEl.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+          bubbles: true, cancelable: true,
+        }));
+      }
+    } finally {
+      setTimeout(() => { replaying = false; }, 400);
     }
-    // Fallback: try submitting the parent form
-    if (inputEl) {
-      const form = inputEl.closest('form');
-      if (form) form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    }
-    replaying = false;
-  });
+  }, 80);
 }
 
 /* ── Send button lock ────────────────────────────────────────── */
@@ -890,47 +903,146 @@ function startCheck(text, trigger, meta = {}) {
   }
 }
 
+/* ── Local highlight builder (fallback when server returns no spans) ── */
+function buildLocalHighlights(text) {
+  const spans = [];
+  for (const rule of INLINE_REGEX) {
+    const re = new RegExp(rule.pattern.source, rule.pattern.flags.includes('g') ? rule.pattern.flags : rule.pattern.flags + 'g');
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      spans.push({ start: m.index, end: m.index + m[0].length, pattern: rule.label, severity: rule.severity || 'high' });
+      if (m[0].length === 0) re.lastIndex++;
+    }
+  }
+  // Keyword redaction for business-sensitive terms (LLM-only flags often have no regex spans)
+  const keywordSets = [
+    { re: /\b(revenue|salary|payroll|budget|financial|compensation|pipeline|quarterly|forecast|profit)\b/gi, label: 'Financial' },
+    { re: /\b(confidential|internal|proprietary|nda|trade\s?secret|restricted|sensitive|classified)\b/gi, label: 'Confidential' },
+    { re: /\b(password|credentials|ssn|passport|api[\s_-]?key|bearer|token)\b/gi, label: 'Secret' },
+  ];
+  for (const { re, label } of keywordSets) {
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      spans.push({ start: m.index, end: m.index + m[0].length, pattern: label, severity: 'medium' });
+    }
+  }
+  // Drop overlapping spans (keep earliest / longest)
+  spans.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  const cleaned = [];
+  let lastEnd = -1;
+  for (const s of spans) {
+    if (s.start >= lastEnd) {
+      cleaned.push(s);
+      lastEnd = s.end;
+    }
+  }
+  return cleaned;
+}
+
 /* ── Build redacted text string ── */
 function buildRedactedText(text, highlights) {
-  if (!highlights || highlights.length === 0) return text;
+  const spans = (highlights && highlights.length > 0)
+    ? highlights
+    : buildLocalHighlights(text);
+  if (!spans || spans.length === 0) return text;
 
   const aliasMap = new Map();
   const labelCounts = new Map();
 
   // First pass: assign aliases in order of appearance (left-to-right)
-  const ascending = [...highlights].sort((a, b) => a.start - b.start);
+  const ascending = [...spans].sort((a, b) => a.start - b.start);
   for (const h of ascending) {
-    const raw = text.slice(h.start, h.end);
-    if (!aliasMap.has(raw)) {
-      const label = h.pattern || 'Secret';
-      const count = (labelCounts.get(label) || 0) + 1;
-      labelCounts.set(label, count);
-      aliasMap.set(raw, `[${label} ${count}]`);
-    }
+    const start = typeof h.start === 'number' ? h.start : h.index;
+    const end = typeof h.end === 'number' ? h.end : (start + (h.match?.length || 0));
+    if (start == null || end == null || start < 0 || end > text.length || start >= end) continue;
+    const raw = text.slice(start, end);
+    if (!raw || aliasMap.has(raw)) continue;
+    const label = h.pattern || h.label || 'Secret';
+    const count = (labelCounts.get(label) || 0) + 1;
+    labelCounts.set(label, count);
+    aliasMap.set(raw, `[${label} ${count}]`);
   }
 
   // Second pass: replace text from right-to-left to keep indices valid
-  const sorted = [...highlights].sort((a, b) => b.start - a.start);
+  const sorted = [...spans]
+    .map((h) => ({
+      start: typeof h.start === 'number' ? h.start : h.index,
+      end: typeof h.end === 'number' ? h.end : ((typeof h.start === 'number' ? h.start : h.index) + (h.match?.length || 0)),
+    }))
+    .filter((h) => h.start != null && h.end != null && h.start >= 0 && h.end <= text.length && h.start < h.end)
+    .sort((a, b) => b.start - a.start);
+
   let redacted = text;
   for (const h of sorted) {
-    const raw = text.slice(h.start, h.end); // Use original text to lookup map
+    const raw = text.slice(h.start, h.end);
     const alias = aliasMap.get(raw);
+    if (!alias) continue;
     redacted = redacted.slice(0, h.start) + alias + redacted.slice(h.end);
   }
   return redacted;
 }
 
-/* ── Type clean text into chat input ── */
+/* ── Type clean text into chat input (ProseMirror / React safe) ── */
 function typeIntoInput(text) {
-  if (!inputEl) return;
-  if (inputEl.tagName === 'TEXTAREA') {
-    inputEl.value = text;
-  } else {
-    // ProseMirror / Quill / Gemini contenteditable
-    inputEl.innerText = text;
+  // Re-acquire if the host app replaced the composer DOM
+  if (!inputEl || !document.contains(inputEl)) {
+    acquire();
   }
-  inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-  inputEl.dispatchEvent(new Event('change',    { bubbles: true, cancelable: true }));
+  if (!inputEl) return;
+
+  const value = text ?? '';
+  inputEl.focus();
+
+  if (inputEl.tagName === 'TEXTAREA') {
+    // Bypass React's synthetic value tracker
+    const desc = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+    if (desc && desc.set) desc.set.call(inputEl, value);
+    else inputEl.value = value;
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  } else {
+    // contenteditable (ProseMirror / Quill / Gemini)
+    try {
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(inputEl);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      // Preferred path — most editors listen for beforeinput/insertText
+      let ok = false;
+      try {
+        ok = document.execCommand('insertText', false, value);
+      } catch (_) {
+        ok = false;
+      }
+      if (!ok) {
+        // Clear then insert a plain text node + fire InputEvent
+        while (inputEl.firstChild) inputEl.removeChild(inputEl.firstChild);
+        const tool = getToolName();
+        if (tool === 'Gemini') {
+          inputEl.textContent = value;
+        } else {
+          const p = document.createElement('p');
+          p.textContent = value || '\u200b';
+          inputEl.appendChild(p);
+        }
+        inputEl.dispatchEvent(new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertText',
+          data: value,
+        }));
+      }
+    } catch (_) {
+      inputEl.innerText = value;
+      inputEl.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'insertText',
+        data: value,
+      }));
+    }
+  }
   inputEl.focus();
 }
 
@@ -1035,7 +1147,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = buildRedactedText(promptText, response.highlights);
+  const rewrittenText = response.rewrittenPrompt || buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -1046,7 +1158,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ${fileBadge}
     ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
     <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
-    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(rewrittenText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
       <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm Anonymized &amp; Send</button>
@@ -1056,11 +1168,18 @@ function showFlag(response, promptText, trigger, meta = {}) {
   `;
 
   document.getElementById('pelta-confirm-send').onclick = () => {
-    const finalVal = document.getElementById('pelta-edit-area').value;
-    typeIntoInput(finalVal);
+    const area = document.getElementById('pelta-edit-area');
+    const finalVal = area ? area.value : '';
     removeOverlay();
     removeStatusBadge();
-    replaySend();
+    unlockSendButton();
+    // Mark replaying BEFORE typing so the real-time scanner doesn't re-flag the redacted text
+    replaying = true;
+    typeIntoInput(finalVal);
+    // Give ProseMirror/React a tick to commit the value, then send
+    setTimeout(() => {
+      replaySend();
+    }, 120);
   };
 
   document.getElementById('pelta-allow').onclick = async (e) => {
@@ -1093,9 +1212,10 @@ function showFlag(response, promptText, trigger, meta = {}) {
                   try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
                   const overlayEl = document.getElementById('pelta-overlay');
                   if (overlayEl) {
+                    replaying = true;
                     typeIntoInput(promptText);
                     removeOverlay();
-                    replaySend();
+                    setTimeout(() => { replaySend(); }, 120);
                   }
                 } else if (myReq.status === 'rejected') {
                   clearInterval(interval);
@@ -1136,7 +1256,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = buildRedactedText(promptText, response.highlights);
+  const rewrittenText = response.rewrittenPrompt || buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -1147,7 +1267,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ${fileBadge}
     ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
     <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
-    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(rewrittenText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
       <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm Anonymized &amp; Type</button>
@@ -1157,10 +1277,15 @@ function showBlock(response, promptText, trigger, meta = {}) {
   `;
 
   document.getElementById('pelta-confirm-type').onclick = () => {
-    const finalVal = document.getElementById('pelta-edit-area').value;
-    typeIntoInput(finalVal);
+    const area = document.getElementById('pelta-edit-area');
+    const finalVal = area ? area.value : '';
     removeOverlay();
     removeStatusBadge();
+    unlockSendButton();
+    replaying = true;
+    typeIntoInput(finalVal);
+    // Keep replaying true briefly so inline scanner doesn't re-flag the typed text
+    setTimeout(() => { replaying = false; }, 500);
   };
 
   document.getElementById('pelta-report').onclick = async (e) => {

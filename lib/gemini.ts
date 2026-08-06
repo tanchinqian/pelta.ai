@@ -225,6 +225,40 @@ export async function suggestSafePrompts(
   }
 }
 
+const REWRITE_SYSTEM_PROMPT = `You are a data-loss prevention assistant rewriting a single prompt that was blocked for containing sensitive data.
+
+Rewrite the prompt into exactly ONE sanitized version that:
+1. Preserves the user's original intent and request as closely as possible
+2. Removes, generalises, or replaces all sensitive data (no real emails, phone numbers, names, addresses, IDs, credentials, dollar amounts, or other identifiers)
+3. Keeps any non-sensitive instructions and structure intact
+4. Is ready to use as-is without further editing
+
+Return ONLY valid JSON of the form {"rewritten": "<the single rewritten prompt>"}. No markdown fences, no preamble, no explanation.`;
+
+const REWRITE_FALLBACK = '';
+
+export async function rewritePromptSafe(prompt: string): Promise<string> {
+  if (!apiKey) return REWRITE_FALLBACK;
+  try {
+    const p = `Original blocked prompt:\n"""\n${prompt.slice(0, 2000)}\n"""\n\nReturn ONLY valid JSON of the form {"rewritten": "..."}.`;
+    const text = await generateWithFallback(p, {
+      systemInstruction: REWRITE_SYSTEM_PROMPT,
+      maxOutputTokens: 768,
+      validate: (t) => {
+        try { const j = parseJson(t); return typeof j.rewritten === 'string' && j.rewritten.length > 0; } catch { return false; }
+      },
+    });
+    const result = parseJson(text);
+    if (result && typeof result.rewritten === 'string' && result.rewritten.trim().length > 0) {
+      return result.rewritten.trim();
+    }
+    return REWRITE_FALLBACK;
+  } catch (err: any) {
+    console.warn('[llm] rewritePromptSafe fallback:', err?.message);
+    return REWRITE_FALLBACK;
+  }
+}
+
 export async function classifyPromptRisk(text: string): Promise<PromptRiskResponse> {
   if (!apiKey) return mockPromptRisk(text);
   try {
