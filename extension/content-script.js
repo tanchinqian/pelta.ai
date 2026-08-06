@@ -833,45 +833,61 @@ function startCheck(text, trigger, meta = {}) {
   isScanning = true;
   showStatusBadge('scanning', 'scanning...');
   showChecking(text);
-  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
+  try {
+    chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
+      if (chrome.runtime.lastError) {
+        unlockSendButton();
+        isScanning = false;
+        showStatusBadge('error', 'check failed');
+        showError(chrome.runtime.lastError.message || 'Extension error.');
+        typeIntoInput(text);
+        return;
+      }
+      unlockSendButton();
+      isScanning = false;
+      if (!response) {
+        showStatusBadge('error', 'check failed');
+        showError('No response from backend.');
+        typeIntoInput(text);
+        return;
+      }
+      if (response.error) {
+        showStatusBadge('error', 'check failed');
+        showError(response.error);
+        typeIntoInput(text);
+        return;
+      }
+
+      switch (response.verdict) {
+        case 'allow':
+          removeOverlay();
+          showAllowToast();
+          showStatusBadge('safe', 'safe');
+          setTimeout(() => removeStatusBadge(), 3000);
+          typeIntoInput(text);
+          replaySend();
+          break;
+        case 'flag':
+          showStatusBadge('flag', 'flag');
+          showFlag(response, text, trigger, meta);
+          break;
+        case 'block':
+          showStatusBadge('blocked', 'blocked');
+          showBlock(response, text, trigger, meta);
+          break;
+        default:
+          removeOverlay();
+          removeStatusBadge();
+          replaySend();
+      }
+    });
+  } catch (err) {
     unlockSendButton();
     isScanning = false;
-    if (!response) {
-      showStatusBadge('error', 'check failed');
-      showError('No response from backend.');
-      typeIntoInput(text);
-      return;
-    }
-    if (response.error) {
-      showStatusBadge('error', 'check failed');
-      showError(response.error);
-      typeIntoInput(text);
-      return;
-    }
-
-    switch (response.verdict) {
-      case 'allow':
-        removeOverlay();
-        showAllowToast();
-        showStatusBadge('safe', 'safe');
-        setTimeout(() => removeStatusBadge(), 3000);
-        typeIntoInput(text);
-        replaySend();
-        break;
-      case 'flag':
-        showStatusBadge('flag', 'flag');
-        showFlag(response, text, trigger, meta);
-        break;
-      case 'block':
-        showStatusBadge('blocked', 'blocked');
-        showBlock(response, text, trigger, meta);
-        break;
-      default:
-        removeOverlay();
-        removeStatusBadge();
-        replaySend();
-    }
-  });
+    showStatusBadge('error', 'check failed');
+    showError('Extension disconnected. Please reload the page.');
+    typeIntoInput(text);
+  }
 }
 
 /* ── Build redacted text string ── */
