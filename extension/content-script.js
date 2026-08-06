@@ -32,8 +32,8 @@ async function resolveApiBase() {
 
 /* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
-  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
-  sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button',
+  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea, div[role="textbox"][contenteditable="true"]',
+  sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button, [id*="send-button" i], [id*="submit-button" i], form button:last-of-type, div[role="button"][data-testid*="send" i], button[aria-label*="Send"]',
 };
 
 /* ── State ───────────────────────────────────────────────── */
@@ -43,9 +43,7 @@ let reconnectObserver = null;
 
 /* ── Re-entrancy guard ────────────────────────────────── */
 let replaying = false;
-
-/* ── Approved Prompt Cache ────────────────────────────── */
-const approvedPrompts = new Set();
+let isScanning = false;
 
 /* ── OCR engine state ────────────────────────────────────── */
 let nanoAvailable = false;
@@ -288,6 +286,105 @@ function removeActiveBadge() {
   if (style) style.remove();
 }
 
+/* ── Inline Status Badge ─────────────────────────────────── */
+const STATUS_STATES = {
+  scanning: { bg: '#18181b', border: '#c9922a', color: '#fbbf24', icon: '&#9203;' },
+  safe:     { bg: '#052e16', border: '#22c55e', color: '#4ade80', icon: '&#10003;' },
+  flag:     { bg: '#1c1917', border: '#f59e0b', color: '#fbbf24', icon: '&#9888;' },
+  blocked:  { bg: '#1a0e0e', border: '#ef4444', color: '#f87171', icon: '&#10007;' },
+  error:    { bg: '#18181b', border: '#f97316', color: '#fb923c', icon: '&#9888;' },
+  clean:    { bg: '#18181b', border: '#27272a', color: '#9e9b94', icon: '&#9670;' },
+  caution:  { bg: '#1c1917', border: '#a16207', color: '#facc15', icon: '&#9670;' },
+  risky:    { bg: '#1a0e0e', border: '#991b1b', color: '#fca5a5', icon: '&#9670;' },
+};
+
+function showStatusBadge(state, text) {
+  const s = STATUS_STATES[state] || STATUS_STATES.clean;
+  let badge = document.getElementById('pelta-status-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'pelta-status-badge';
+    document.body.appendChild(badge);
+  }
+  badge.style.cssText = `
+    position: fixed; bottom: 75px; right: 12px; z-index: 999999;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px; border-radius: 6px;
+    background: ${s.bg}; border: 1px solid ${s.border};
+    color: ${s.color};
+    font-family: monospace; font-size: 10px; font-weight: 500;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    pointer-events: none;
+    opacity: 1; transition: opacity 0.2s ease;
+  `;
+  badge.innerHTML = `<span style="color:${s.color}">${s.icon}</span><span>pelta.ai ${text}</span>`;
+}
+
+function removeStatusBadge() {
+  const badge = document.getElementById('pelta-status-badge');
+  if (badge) {
+    badge.style.opacity = '0';
+    setTimeout(() => { if (badge.parentNode) badge.remove(); }, 250);
+  }
+}
+
+/* ── Inline Regex Scan (browser-side, no API call) ──────── */
+const INLINE_REGEX = [
+  { pattern: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/gi, label: 'email', severity: 'high' },
+  { pattern: /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, label: 'ssn', severity: 'high' },
+  { pattern: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, label: 'phone', severity: 'high' },
+  { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, label: 'credit-card', severity: 'high' },
+  { pattern: /\b(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|ghp_[a-zA-Z0-9]{20,})\b/g, label: 'api-key', severity: 'high' },
+];
+
+const INLINE_FINANCIAL = /\b(revenue|salary|payroll|budget|financial|compensation|pipeline|q[1-4]\s\d{4}|quarterly|forecast|profit|loss)\b/i;
+const INLINE_CONFIDENTIAL = /\b(confidential|internal|proprietary|nda|trade\s?secret|restricted|sensitive|classified)\b/i;
+const INLINE_SOURCE = /\b(function|class|import\s|require\s|export\s|public\skey|private\skey|api[\s_-]?key|endpoint|git\s|commit|pull\s?request|interface|async|await|token)\b/i;
+const INLINE_PII = /\b(first\s?name|last\s?name|date\s?of\s?birth|passport|social\s?security|maiden\s?name|address|zip\s?code)\b/i;
+
+let inlineDebounce = null;
+
+function inlineScan(text) {
+  if (!text || !text.trim()) {
+    showStatusBadge('clean', 'clean');
+    return;
+  }
+  let highCount = 0;
+  let mediumCount = 0;
+
+  for (const rule of INLINE_REGEX) {
+    const matches = text.match(rule.pattern);
+    if (matches) {
+      if (rule.severity === 'high') highCount += matches.length;
+      else mediumCount += matches.length;
+    }
+  }
+
+  if (INLINE_FINANCIAL.test(text)) mediumCount++;
+  if (INLINE_CONFIDENTIAL.test(text)) mediumCount++;
+  if (INLINE_SOURCE.test(text)) mediumCount++;
+  if (INLINE_PII.test(text)) mediumCount++;
+
+  if (highCount > 0) {
+    showStatusBadge('risky', `risky (${highCount} match)`);
+  } else if (mediumCount >= 2) {
+    showStatusBadge('caution', `caution (${mediumCount} matches)`);
+  } else if (mediumCount === 1) {
+    showStatusBadge('clean', 'clean — 1 keyword');
+  } else {
+    showStatusBadge('clean', 'clean');
+  }
+}
+
+inputHandler = () => {
+  if (replaying || isScanning) return;
+  if (inlineDebounce) clearTimeout(inlineDebounce);
+  inlineDebounce = setTimeout(() => {
+    const text = getPromptText();
+    inlineScan(text);
+  }, 500);
+};
+
 /* ── Bootstrap ─────────────────────────────────────────── */
 function getPromptText() {
   if (!inputEl) return '';
@@ -314,6 +411,10 @@ function watchForMount() {
       detachListeners();
       if (acquire()) console.log('[pelta] re-acquired chat elements');
     }
+    // Also re-acquire sendEl if it was replaced
+    if (!sendEl || !document.contains(sendEl)) {
+      sendEl = document.querySelector(SELECTORS.sendButton);
+    }
   });
   reconnectObserver.observe(document.body, { childList: true, subtree: true });
 }
@@ -328,6 +429,8 @@ let dragOverHandler = null;
 let fileInputHandler = null;
 let escapeHandler = null;
 let keypressHandler = null;
+let submitHandler = null;
+let inputHandler = null;
 
 let interceptedEnter = false;
 
@@ -382,38 +485,44 @@ function attachListeners() {
       }
     }
 
-    if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
-      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
-        // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
-        const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
-        if (isEditable) {
-          inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
-        } else {
-          return;
-        }
-      }
-      const text = getPromptText();
-      if (!text || !text.trim()) return;
-      
-      // Aggressively rip focus away
-      if (e.target && typeof e.target.blur === 'function') {
-        e.target.blur();
-      }
-      
-      // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
-      if (inputEl.tagName === 'TEXTAREA') {
-        inputEl.value = '';
+    // Detect send intent: plain Enter OR Ctrl/Cmd+Enter
+    const isSendKey =
+      (e.key === 'Enter' && !e.shiftKey && !e.isComposing) ||
+      ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.isComposing);
+    if (!isSendKey || replaying) return;
+
+    if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
+      // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
+      const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
+      if (isEditable) {
+        inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
       } else {
-        inputEl.innerText = '';
+        return;
       }
-      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-      
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      interceptedEnter = true;
-      startCheck(text, 'keydown');
     }
+    const text = getPromptText();
+    if (!text || !text.trim()) return;
+
+    lockSendButton();
+
+    // Aggressively rip focus away
+    if (e.target && typeof e.target.blur === 'function') {
+      e.target.blur();
+    }
+
+    // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
+    if (inputEl.tagName === 'TEXTAREA') {
+      inputEl.value = '';
+    } else {
+      inputEl.innerText = '';
+    }
+    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    interceptedEnter = true;
+    startCheck(text, 'keydown');
   };
 
   clickHandler = (e) => {
@@ -423,6 +532,8 @@ function attachListeners() {
 
     const text = getPromptText();
     if (!text || !text.trim()) return;
+
+    lockSendButton();
 
     // Definitively prevent the host app from sending the prompt by deleting it
     if (inputEl.tagName === 'TEXTAREA') {
@@ -467,6 +578,22 @@ function attachListeners() {
       e.stopPropagation();
       e.stopImmediatePropagation();
     }
+  };
+
+  submitHandler = (e) => {
+    if (replaying || isScanning) return;
+    const text = getPromptText();
+    if (!text || !text.trim()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    lockSendButton();
+    if (inputEl) {
+      if (inputEl.tagName === 'TEXTAREA') inputEl.value = '';
+      else inputEl.innerText = '';
+      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+    }
+    startCheck(text, 'form-submit');
   };
 
   pasteHandler = async (e) => {
@@ -536,13 +663,13 @@ function attachListeners() {
   document.addEventListener('mousedown', clickHandler, true);
   document.addEventListener('pointerdown', clickHandler, true);
   window.addEventListener('paste', pasteHandler, true);
-  // File picker upload interception (capture phase — fires before Gemini's handlers)
   document.addEventListener('change', fileInputHandler, true);
+  document.addEventListener('submit', submitHandler, true);
   if (inputEl) {
     inputEl.addEventListener('dragover', dragOverHandler, false);
     inputEl.addEventListener('drop', dropHandler, false);
+    inputEl.addEventListener('input', inputHandler, false);
   }
-  // Fallback: catch drops anywhere on the document
   document.addEventListener('dragover', dragOverHandler, false);
   document.addEventListener('drop', dropHandler, false);
 }
@@ -565,6 +692,12 @@ function detachListeners() {
   if (keypressHandler) {
     window.removeEventListener('keypress', keypressHandler, true);
   }
+  if (submitHandler) {
+    document.removeEventListener('submit', submitHandler, true);
+  }
+  if (inputHandler) {
+    if (inputEl) inputEl.removeEventListener('input', inputHandler, false);
+  }
   if (dragOverHandler) {
     document.removeEventListener('dragover', dragOverHandler, false);
     if (inputEl) inputEl.removeEventListener('dragover', dragOverHandler, false);
@@ -581,6 +714,8 @@ function detachListeners() {
   dragOverHandler = null;
   fileInputHandler = null;
   escapeHandler = null;
+  submitHandler = null;
+  inputHandler = null;
   inputEl = null;
   sendEl = null;
   removeActiveBadge();
@@ -679,28 +814,29 @@ function removeOverlay() {
 /* ── Verification flow ──────────────────────────────────── */
 function startCheck(text, trigger, meta = {}) {
   if (!text.trim()) {
-    replaySend();
-    return;
-  }
-  if (approvedPrompts.has(text.trim())) {
-    console.log('[pelta] Prompt was previously approved in this session. Bypassing check.');
-    typeIntoInput(text);
+    showStatusBadge('clean', 'nothing to scan');
+    setTimeout(() => removeStatusBadge(), 2000);
     replaySend();
     return;
   }
 
   lockSendButton();
+  isScanning = true;
+  showStatusBadge('scanning', 'scanning...');
   showChecking(text);
   chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
     unlockSendButton();
+    isScanning = false;
     if (!response) {
+      showStatusBadge('error', 'check failed');
       showError('No response from backend.');
-      typeIntoInput(text); // Restore original
+      typeIntoInput(text);
       return;
     }
     if (response.error) {
+      showStatusBadge('error', 'check failed');
       showError(response.error);
-      typeIntoInput(text); // Restore original
+      typeIntoInput(text);
       return;
     }
 
@@ -708,17 +844,22 @@ function startCheck(text, trigger, meta = {}) {
       case 'allow':
         removeOverlay();
         showAllowToast();
-        typeIntoInput(text); // Restore original
+        showStatusBadge('safe', 'safe');
+        setTimeout(() => removeStatusBadge(), 3000);
+        typeIntoInput(text);
         replaySend();
         break;
       case 'flag':
+        showStatusBadge('flag', 'flag');
         showFlag(response, text, trigger, meta);
         break;
       case 'block':
+        showStatusBadge('blocked', 'blocked');
         showBlock(response, text, trigger, meta);
         break;
       default:
         removeOverlay();
+        removeStatusBadge();
         replaySend();
     }
   });
@@ -921,16 +1062,15 @@ function showFlag(response, promptText, trigger, meta = {}) {
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
-              if (myReq.status === 'approved') {
-                approvedPrompts.add(promptText.trim());
-                clearInterval(interval);
-                // Fire desktop notification in case overlay was already dismissed
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  typeIntoInput(promptText);
-                  removeOverlay();
-                  replaySend();
+                if (myReq.status === 'approved') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    typeIntoInput(promptText);
+                    removeOverlay();
+                    replaySend();
+                  }
                 }
               } else if (myReq.status === 'rejected') {
                 clearInterval(interval);
@@ -1021,22 +1161,20 @@ function showBlock(response, promptText, trigger, meta = {}) {
             const allReqs = await checkRes.json();
             const myReq = allReqs.find(r => r.id === data.id);
             if (myReq) {
-              if (myReq.status === 'approved') {
-                approvedPrompts.add(promptText.trim());
-                clearInterval(interval);
-                // Fire desktop notification in case overlay was already dismissed
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Approved by Admin \u2713";
-                  btn.style.background = "#10b981";
-                  btn.style.borderColor = "#10b981";
-                  btn.style.color = "white";
-                  setTimeout(() => {
-                    typeIntoInput(promptText);
-                    removeOverlay();
-                    // No auto-send; user can manually send now.
-                  }, 1500);
+                if (myReq.status === 'approved') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Approved by Admin \u2713";
+                    btn.style.background = "#10b981";
+                    btn.style.borderColor = "#10b981";
+                    btn.style.color = "white";
+                    setTimeout(() => {
+                      typeIntoInput(promptText);
+                      removeOverlay();
+                    }, 1500);
+                  }
                 }
               } else if (myReq.status === 'rejected') {
                 clearInterval(interval);
