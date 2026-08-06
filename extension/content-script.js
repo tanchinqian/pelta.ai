@@ -751,9 +751,18 @@ function clearPrompt() {
 /* ── Re-dispatch the send action ────────────────────────────────────── */
 function replaySend() {
   replaying = true;
+  unlockSendButton();
   requestAnimationFrame(() => {
     const btn = document.querySelector(SELECTORS.sendButton);
-    if (btn) btn.click();
+    if (btn) {
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      btn.click();
+    }
+    // Fallback: try submitting the parent form
+    if (inputEl) {
+      const form = inputEl.closest('form');
+      if (form) form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
     replaying = false;
   });
 }
@@ -1034,6 +1043,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     const finalVal = document.getElementById('pelta-edit-area').value;
     typeIntoInput(finalVal);
     removeOverlay();
+    removeStatusBadge();
     replaySend();
   };
 
@@ -1089,6 +1099,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
   document.getElementById('pelta-cancel').onclick = () => {
     typeIntoInput(promptText); // Restore original so they don't lose work
     removeOverlay();
+    removeStatusBadge();
   };
 }
 
@@ -1133,6 +1144,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     const finalVal = document.getElementById('pelta-edit-area').value;
     typeIntoInput(finalVal);
     removeOverlay();
+    removeStatusBadge();
   };
 
   document.getElementById('pelta-report').onclick = async (e) => {
@@ -1195,6 +1207,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     typeIntoInput(promptText); // Restore original
     clearPrompt();
     removeOverlay();
+    removeStatusBadge();
   };
 }
 
@@ -1211,7 +1224,10 @@ function showError(reason) {
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss-error">Dismiss</button>
     </div>
   `;
-  document.getElementById('pelta-dismiss-error').onclick = removeOverlay;
+  document.getElementById('pelta-dismiss-error').onclick = () => {
+    removeOverlay();
+    removeStatusBadge();
+  };
 }
 
 /* ── Init ───────────────────────────────────────────────── */
