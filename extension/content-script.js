@@ -343,6 +343,7 @@ const INLINE_SOURCE = /\b(function|class|import\s|require\s|export\s|public\skey
 const INLINE_PII = /\b(first\s?name|last\s?name|date\s?of\s?birth|passport|social\s?security|maiden\s?name|address|zip\s?code)\b/i;
 
 let inlineDebounce = null;
+let inputHandler = null;
 
 function inlineScan(text) {
   if (!text || !text.trim()) {
@@ -430,7 +431,6 @@ let fileInputHandler = null;
 let escapeHandler = null;
 let keypressHandler = null;
 let submitHandler = null;
-let inputHandler = null;
 
 let interceptedEnter = false;
 
