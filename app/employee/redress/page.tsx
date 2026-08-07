@@ -197,13 +197,17 @@ export default function RedressPage() {
   const detectedPatterns = selectedLog ? listDetectedPatterns(selectedLog.promptSnippet) : [];
 
   const handleSubmitRequest = async () => {
-    if (!reason.trim() || selectedSections.length === 0 || !selectedLog) return;
+    const requiresSections = detectedPatterns.length > 0;
+    if (!reason.trim() || !selectedLog || (requiresSections && selectedSections.length === 0)) return;
     setSubmitting(true);
     setSubmitSuccess(false);
     try {
+      const sections = selectedSections.length > 0
+        ? selectedSections
+        : (selectedLog.dataCategory && selectedLog.dataCategory !== 'None' ? [selectedLog.dataCategory] : ['Other']);
       const res = await fetch('/api/access-requests', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeName: DEMO_EMPLOYEE, sections: selectedSections, reason: reason.trim(), logRef: selectedLog.id, type: 'appeal' }),
+        body: JSON.stringify({ employeeName: DEMO_EMPLOYEE, sections, reason: reason.trim(), logRef: selectedLog.id, type: 'appeal' }),
       });
       const data = await res.json();
       setSubmitSuccess(true);
@@ -485,7 +489,7 @@ export default function RedressPage() {
               <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Flagged Sections</p>
               <div className="space-y-1.5 mt-1">
                 {detectedPatterns.length === 0 ? (
-                  <p className="text-sm text-text-muted italic">No specific patterns — describe in your reason.</p>
+                  <p className="text-sm text-text-muted italic">No specific patterns detected. Submit with a reason — your appeal will be reviewed manually.</p>
                 ) : detectedPatterns.map((p) => (
                   <label key={p.label} className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-surface-hover transition-colors cursor-pointer">
                     <input type="checkbox" checked={selectedSections.includes(p.label)} onChange={() => setSelectedSections((prev) => prev.includes(p.label) ? prev.filter((s) => s !== p.label) : [...prev, p.label])} className="accent-accent cursor-pointer" />
@@ -494,6 +498,9 @@ export default function RedressPage() {
                   </label>
                 ))}
               </div>
+              {detectedPatterns.length > 0 && selectedSections.length === 0 && (
+                <p className="text-sm text-risk-medium flex items-center gap-1"><AlertCircle size={10} />Select at least one flagged section</p>
+              )}
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between">
@@ -505,7 +512,7 @@ export default function RedressPage() {
             </div>
             <div className="flex items-center justify-between pt-1">
               <button onClick={() => setModalOpen(false)} className="text-base text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer">Cancel</button>
-              <button onClick={handleSubmitRequest} disabled={submitting || submitSuccess || !reason.trim() || reason.trim().length < 20 || selectedSections.length === 0} className={`flex items-center gap-1.5 text-sm font-medium border rounded px-4 py-1.5 transition-all cursor-pointer disabled:cursor-not-allowed ${submitSuccess ? 'text-risk-low bg-risk-low/10 border-risk-low/30' : 'text-text-primary bg-surface-hover hover:bg-surface border-border disabled:opacity-30'}`}>
+              <button onClick={handleSubmitRequest} disabled={submitting || submitSuccess || !reason.trim() || reason.trim().length < 20 || (detectedPatterns.length > 0 && selectedSections.length === 0)} className={`flex items-center gap-1.5 text-sm font-medium border rounded px-4 py-1.5 transition-all cursor-pointer disabled:cursor-not-allowed ${submitSuccess ? 'text-risk-low bg-risk-low/10 border-risk-low/30' : 'text-text-primary bg-surface-hover hover:bg-surface border-border disabled:opacity-30'}`}>
                 {submitSuccess ? <><Check size={12} className="text-risk-low" /> Submitted</> : submitting ? <><div className="size-3 border border-text-tertiary border-t-text-primary rounded-full animate-spin" /> Submitting</> : 'Submit Appeal'}
               </button>
             </div>
