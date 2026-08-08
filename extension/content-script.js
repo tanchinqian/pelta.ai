@@ -40,10 +40,15 @@ const SELECTORS = {
 let inputEl = null;
 let sendEl = null;
 let reconnectObserver = null;
+let composerBound = null;
 
 /* ── Re-entrancy guard ────────────────────────────────── */
 let replaying = false;
 let isScanning = false;
+
+/* ── One-shot approved text (skip re-scan of confirmed rewrite) ── */
+let approvedText = null;
+const normApproved = (s) => (s || '').trim().replace(/\s+/g, ' ');
 
 /* ── OCR engine state ────────────────────────────────────── */
 let nanoAvailable = false;
@@ -393,12 +398,41 @@ function getPromptText() {
   return inputEl.innerText || inputEl.textContent || '';
 }
 
+function isComposerVisible(v) {
+  if (!v || !document.contains(v)) return false;
+  try {
+    if (!v.matches(SELECTORS.input)) return false;
+    const cs = window.getComputedStyle(v);
+    return v.offsetHeight > 0 && cs.display !== 'none' && cs.visibility !== 'hidden';
+  } catch {
+    return false;
+  }
+}
+
+/* Bind per-composer listeners. Called on every acquire so a re-acquired
+   (remounted) composer regains input/drop handlers. */
+function bindComposer(el) {
+  if (composerBound === el) return;
+  if (composerBound) {
+    composerBound.removeEventListener('input', inputHandler, false);
+    composerBound.removeEventListener('dragover', dragOverHandler, false);
+    composerBound.removeEventListener('drop', dropHandler, false);
+  }
+  composerBound = el;
+  if (el && inputHandler) {
+    el.addEventListener('input', inputHandler, false);
+    el.addEventListener('dragover', dragOverHandler, false);
+    el.addEventListener('drop', dropHandler, false);
+  }
+}
+
 function acquire() {
   const inputs = Array.from(document.querySelectorAll(SELECTORS.input));
-  inputEl = inputs.find(el => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
+  inputEl = inputs.find((el) => isComposerVisible(el)) || inputs.find((el) => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
 
   if (inputEl) {
     attachListeners();
+    bindComposer(inputEl); // re-bind even on re-acquire (new node)
     showActiveBadge();
     return true;
   }
@@ -506,6 +540,16 @@ function attachListeners() {
     const text = getPromptText();
     if (!text || !text.trim()) return;
 
+    // One-shot bypass: the confirmed rewrite is pre-approved — let the host app send it untouched
+    if (approvedText && normApproved(text) === normApproved(approvedText)) {
+      approvedText = null;
+      showAllowToast();
+      replaying = true;
+      setTimeout(() => { replaying = false; }, 600);
+      return;
+    }
+    approvedText = null;
+
     lockSendButton();
 
     // Aggressively rip focus away
@@ -535,6 +579,16 @@ function attachListeners() {
 
     const text = getPromptText();
     if (!text || !text.trim()) return;
+
+    // One-shot bypass: the confirmed rewrite is pre-approved — let the click reach the host app
+    if (approvedText && normApproved(text) === normApproved(approvedText)) {
+      approvedText = null;
+      showAllowToast();
+      replaying = true;
+      setTimeout(() => { replaying = false; }, 600);
+      return;
+    }
+    approvedText = null;
 
     lockSendButton();
 
@@ -668,11 +722,6 @@ function attachListeners() {
   window.addEventListener('paste', pasteHandler, true);
   document.addEventListener('change', fileInputHandler, true);
   document.addEventListener('submit', submitHandler, true);
-  if (inputEl) {
-    inputEl.addEventListener('dragover', dragOverHandler, false);
-    inputEl.addEventListener('drop', dropHandler, false);
-    inputEl.addEventListener('input', inputHandler, false);
-  }
   document.addEventListener('dragover', dragOverHandler, false);
   document.addEventListener('drop', dropHandler, false);
 }
@@ -699,16 +748,17 @@ function detachListeners() {
     document.removeEventListener('submit', submitHandler, true);
   }
   if (inputHandler) {
-    if (inputEl) inputEl.removeEventListener('input', inputHandler, false);
+    if (composerBound) composerBound.removeEventListener('input', inputHandler, false);
   }
   if (dragOverHandler) {
     document.removeEventListener('dragover', dragOverHandler, false);
-    if (inputEl) inputEl.removeEventListener('dragover', dragOverHandler, false);
+    if (composerBound) composerBound.removeEventListener('dragover', dragOverHandler, false);
   }
   if (dropHandler) {
     document.removeEventListener('drop', dropHandler, false);
-    if (inputEl) inputEl.removeEventListener('drop', dropHandler, false);
+    if (composerBound) composerBound.removeEventListener('drop', dropHandler, false);
   }
+  composerBound = null;
   keydownHandler = null;
   keyupHandler = null;
   clickHandler = null;
@@ -829,6 +879,7 @@ function createOverlay() {
 }
 
 function removeOverlay() {
+  approvedText = null;
   const el = document.getElementById('pelta-overlay');
   if (el) el.remove();
 }
@@ -983,67 +1034,80 @@ function buildRedactedText(text, highlights) {
 }
 
 /* ── Type clean text into chat input (ProseMirror / React safe) ── */
-function typeIntoInput(text) {
-  // Re-acquire if the host app replaced the composer DOM
-  if (!inputEl || !document.contains(inputEl)) {
-    acquire();
-  }
-  if (!inputEl) return;
-
-  const value = text ?? '';
-  inputEl.focus();
-
-  if (inputEl.tagName === 'TEXTAREA') {
+function insertIntoComposer(el, value) {
+  if (el.tagName === 'TEXTAREA') {
     // Bypass React's synthetic value tracker
     const desc = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-    if (desc && desc.set) desc.set.call(inputEl, value);
-    else inputEl.value = value;
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-  } else {
-    // contenteditable (ProseMirror / Quill / Gemini)
-    try {
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(inputEl);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      // Preferred path — most editors listen for beforeinput/insertText
-      let ok = false;
-      try {
-        ok = document.execCommand('insertText', false, value);
-      } catch (_) {
-        ok = false;
-      }
-      if (!ok) {
-        // Clear then insert a plain text node + fire InputEvent
-        while (inputEl.firstChild) inputEl.removeChild(inputEl.firstChild);
-        const tool = getToolName();
-        if (tool === 'Gemini') {
-          inputEl.textContent = value;
-        } else {
-          const p = document.createElement('p');
-          p.textContent = value || '\u200b';
-          inputEl.appendChild(p);
-        }
-        inputEl.dispatchEvent(new InputEvent('input', {
-          bubbles: true,
-          cancelable: true,
-          inputType: 'insertText',
-          data: value,
-        }));
-      }
-    } catch (_) {
-      inputEl.innerText = value;
-      inputEl.dispatchEvent(new InputEvent('input', {
-        bubbles: true,
-        cancelable: true,
-        inputType: 'insertText',
-        data: value,
-      }));
-    }
+    if (desc && desc.set) desc.set.call(el, value);
+    else el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
   }
+  // contenteditable (ProseMirror / Quill / Gemini)
+  el.focus();
+  const sel = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  // Preferred path — most editors listen for beforeinput/insertText
+  let ok = false;
+  try {
+    ok = document.execCommand('insertText', false, value);
+  } catch (_) {
+    ok = false;
+  }
+  if (ok) return true;
+  // Manual fallback: clear then insert a plain text node + fire InputEvent
+  while (el.firstChild) el.removeChild(el.firstChild);
+  const tool = getToolName();
+  if (tool === 'Gemini') {
+    el.textContent = value;
+  } else {
+    const p = document.createElement('p');
+    p.textContent = value || '\u200b';
+    el.appendChild(p);
+  }
+  el.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    cancelable: true,
+    inputType: 'insertText',
+    data: value,
+  }));
+  return true;
+}
+
+function typeIntoInput(text) {
+  const value = text ?? '';
+  // Always target the visible composer — a stale/hidden node from a prior
+  // remount is the #1 cause of "text never appears" on ChatGPT.
+  if (!isComposerVisible(inputEl)) {
+    acquire();
+  }
+  if (!inputEl) {
+    console.warn('[pelta] typeIntoInput: no composer found');
+    return;
+  }
+
+  insertIntoComposer(inputEl, value);
   inputEl.focus();
+
+  if (normApproved(getPromptText()) !== normApproved(value)) {
+    console.warn('[pelta] typeIntoInput: insert not verified, re-acquiring and retrying');
+    acquire();
+    if (inputEl) {
+      insertIntoComposer(inputEl, value);
+      inputEl.focus();
+      if (normApproved(getPromptText()) !== normApproved(value)) {
+        console.error('[pelta] typeIntoInput: FINAL mismatch.', { target: value, actual: getPromptText() });
+      } else {
+        console.log('[pelta] typeIntoInput: verified after retry');
+      }
+    }
+  } else {
+    console.log('[pelta] typeIntoInput: verified ok');
+  }
 }
 
 /* ── Build highlighted prompt HTML from API highlights ─── */
@@ -1173,6 +1237,8 @@ function showFlag(response, promptText, trigger, meta = {}) {
     removeOverlay();
     removeStatusBadge();
     unlockSendButton();
+    // Mark the confirmed rewrite as pre-approved so a manual re-send of it skips the guard
+    approvedText = finalVal;
     // Mark replaying BEFORE typing so the real-time scanner doesn't re-flag the redacted text
     replaying = true;
     typeIntoInput(finalVal);
@@ -1215,6 +1281,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
                     replaying = true;
                     typeIntoInput(promptText);
                     removeOverlay();
+                    approvedText = promptText;
                     setTimeout(() => { replaySend(); }, 120);
                   }
                 } else if (myReq.status === 'rejected') {
@@ -1282,6 +1349,8 @@ function showBlock(response, promptText, trigger, meta = {}) {
     removeOverlay();
     removeStatusBadge();
     unlockSendButton();
+    // Mark the confirmed rewrite as pre-approved so the next send of it skips the guard
+    approvedText = finalVal;
     replaying = true;
     typeIntoInput(finalVal);
     // Keep replaying true briefly so inline scanner doesn't re-flag the typed text
