@@ -22,16 +22,9 @@ The exponential adoption of frontier Generative AI systems (Large Language Model
 
 However, this rapid adoption has opened a critical enterprise vulnerability: **Shadow AI**.
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              THE ENTERPRISE SHADOW AI RISK                             │
-├──────────────────────────────────────┬─────────────────────────────────────────────────┤
-│ 🚨 68% of Enterprise Workers         │ 💸 $4.88 Million Average Breach Cost            │
-│ Acknowledge pasting confidential     │ According to the IBM Cost of a Data Breach      │
-│ company data into consumer AI tools  │ Report, AI-related data leaks incur a $670K     │
-│ without IT authorization.            │ cost premium due to delayed discovery [1].      │
-└──────────────────────────────────────┴─────────────────────────────────────────────────┘
-```
+| 🚨 The Enterprise Shadow AI Risk (68%) | 💸 Average AI Breach Cost ($4.88M) |
+|:---|:---|
+| **68% of enterprise workers** acknowledge pasting confidential company data into consumer AI tools without IT authorization. | According to the IBM Cost of a Data Breach Report [1], AI-related data leaks incur a **$670K cost premium** due to delayed discovery and lack of visibility. |
 
 When an employee pastes confidential customer PII, salary bands, merger negotiations, internal API keys, or proprietary algorithms into a public AI interface, that data crosses the enterprise security boundary. In multi-tenant consumer environments, this telemetry can be retained, indexed for model retraining, or exposed in cache-leak exploits.
 
@@ -71,9 +64,9 @@ By ensuring that the authorized, policy-compliant path is also the **path of lea
 Pelta.ai operates as a 3-tier distributed architecture spanning client-side interception, hybrid validation, and centralized compliance orchestration.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   PELTA.AI THREE-TIER ARCHITECTURE                              │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+===================================================================================================
+                                  PELTA.AI THREE-TIER ARCHITECTURE
+===================================================================================================
 
  [ LAYER 1: CLIENT-SIDE INTERCEPTOR ]
    Chrome Manifest V3 Extension (content-script.js, background.js, overlay.css)
@@ -163,18 +156,11 @@ To intercept prompts inside dynamic single-page applications (SPAs) like ChatGPT
 ### 2.3 Smart Prompt Rewriting Pipeline
 When a prompt is flagged or blocked, Pelta invokes `/api/guard/suggest` to generate **3 context-preserving safe alternatives**:
 
-```
-                                  PROMPT REWRITE MODES
- ┌───────────────────────────┬───────────────────────────┬───────────────────────────┐
- │ 1. Entity Masked          │ 2. Structural Abstraction │ 3. Synthetic Simulation   │
- ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
- │ Replaces actual client    │ Strips all domain names   │ Formulates a generic case │
- │ names, emails, and tokens │ and reframes the prompt as│ study with identical math │
- │ with synthetic brackets:  │ a pure algorithmic query: │ and architectural logic:  │
- │ "Analyze financials for   │ "How do I calculate YoY   │ "Suppose Company X has    │
- │ [Client_A]..."            │ margin variance in SQL?"  │ $10M revenue..."          │
- └───────────────────────────┴───────────────────────────┴───────────────────────────┘
-```
+| Mode | Mechanism | Example Transformation |
+|:---|:---|:---|
+| **1. Entity Masked** | Replaces actual client names, emails, and credentials with synthetic bracketed tags. | `"Analyze Q3 revenue for [Client_A] with account [REDACTED_ID]"` |
+| **2. Structural Abstraction** | Strips all domain entities and reframes the prompt as a pure algorithmic or structural query. | `"How do I calculate YoY margin variance and aggregate grouped metrics in SQL?"` |
+| **3. Synthetic Simulation** | Formulates a generic fictional case study with identical math and architectural logic. | `"Suppose Company X has $10M ARR with 15% churn. Model the customer lifetime value..."` |
 
 Employees can click **"Confirm Anonymized & Send"** to insert the rewritten prompt and dispatch it immediately, keeping their workflow completely fluid.
 
@@ -227,16 +213,12 @@ Pelta.ai is intentionally engineered around two primary regulatory standards: th
 
 ### 4.2 Evaluation Matrix Breakdown
 
-```
- ┌──────────────────────────────────────┬─────────────┬─────────────────────────────────┐
- │ Criteria Category                    │ Weight      │ Amaterasu Performance Score     │
- ├──────────────────────────────────────┼─────────────┼─────────────────────────────────┤
- │ 1. Problem Relevance & Innovation    │ 25%         │ 94 / 100                        │
- │ 2. Technical Architecture & Depth    │ 30%         │ 96 / 100                        │
- │ 3. Practical Enterprise Viability    │ 25%         │ 91 / 100                        │
- │ 4. Live Demonstration & UI Polish    │ 20%         │ 95 / 100                        │
- └──────────────────────────────────────┴─────────────┴─────────────────────────────────┘
-```
+| Criteria Category | Weight | Amaterasu Performance Score |
+|:---|:---:|:---:|
+| **1. Problem Relevance & Innovation** | 25% | **94 / 100** |
+| **2. Technical Architecture & Depth** | 30% | **96 / 100** |
+| **3. Practical Enterprise Viability** | 25% | **91 / 100** |
+| **4. Live Demonstration & UI Polish** | 20% | **95 / 100** |
 
 ---
 
@@ -290,18 +272,11 @@ Pelta.ai is intentionally engineered around two primary regulatory standards: th
 
 #### Commercial Pricing Structure:
 
-```
-┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
-│ STARTER TIER            │ BUSINESS TIER           │ ENTERPRISE TIER         │
-├─────────────────────────┼─────────────────────────┼─────────────────────────┤
-│ Free for small teams    │ $35 / seat / month      │ Custom annual contract  │
-│ Up to 15 seats          │ Minimum 50 seats        │ Unlimited seats         │
-│ Core Regex DLP          │ Full Hybrid Gemini DLP  │ Dedicated Cloud/On-Prem │
-│ Community Support       │ Smart Safe Rewrites     │ Custom DLP Rules Engine │
-│ Standard Tool Registry  │ EU AI Act Redress Desk  │ SAML SSO & SIEM Export  │
-│                         │ Priority SLA            │ Dedicated Compliance AM │
-└─────────────────────────┴─────────────────────────┴─────────────────────────┘
-```
+| Tier | Pricing | Target Scale | Key Inclusions |
+|:---|:---|:---|:---|
+| **Starter Tier** | **Free** | Up to 15 seats | Core Regex DLP, Community Support, Standard Tool Registry |
+| **Business Tier** | **$35 / seat / mo** | Min. 50 seats | Full Hybrid Gemini DLP, Smart Safe Rewrites, EU AI Act Redress Desk, Priority SLA |
+| **Enterprise Tier** | **Custom Annual** | Unlimited seats | Dedicated Cloud/On-Prem, Custom DLP Rules Engine, SAML SSO, SIEM Export, Dedicated AM |
 
 #### Financial Projection & Target ARR:
 - **Target Customer Segment:** Mid-market to enterprise technology, financial services, and healthcare companies (200–2,000 employees).

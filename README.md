@@ -28,17 +28,9 @@ Grounding enterprise security in the **NIST AI Risk Management Framework (AI RMF
 
 ## ⚡ The Problem: Shadow AI vs. Binary IT Bans
 
-The rapid proliferation of consumer Generative AI tools inside corporate networks has introduced an unprecedented enterprise threat vector:
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 THE SHADOW AI DILEMMA                                  │
-├─────────────────────────────────────────────────────────┬──────────────────────────────┤
-│ 🚨 68% of Enterprise Employees                           │ 💸 $4.88 Million             │
-│ Regularly paste proprietary code, customer PII, salary  │ Average cost of an enterprise│
-│ bands, or unreleased financials into public LLMs.       │ data breach involving AI [1] │
-└─────────────────────────────────────────────────────────┴──────────────────────────────┘
-```
+| 🚨 The Shadow AI Dilemma (68%) | 💸 Average AI Breach Cost ($4.88M) |
+|:---|:---|
+| **68% of enterprise employees** acknowledge pasting confidential company data (proprietary source code, customer PII, salary bands, or financial projections) into consumer AI tools. | According to the IBM Cost of a Data Breach Report [1], AI-related data leaks incur a **$670K cost premium** due to delayed discovery and lack of visibility. |
 
 ### The Flaw of Binary IT Bans
 Traditional security measures (firewalls, legacy CASBs, and DNS blocks) attempt to solve this with blanket tool bans. However, **binary bans invariably fail**:
@@ -53,18 +45,14 @@ Pelta.ai changes the paradigm from **restriction** to **intelligent real-time fa
 
 ## 🏆 Key Differentiators & Feature Breakdown
 
-```
-                                  PELTA CORE CAPABILITIES
- ┌───────────────────────────┬───────────────────────────┬───────────────────────────┐
- │ 🛡️ Dual-Engine Guard       │ 🔄 Smart Prompt Rewrite   │ 👁️ Multimodal OCR DLP    │
- │ Sub-5ms Regex + Gemini    │ 3 safe context-aware      │ Gemini Nano & Vision      │
- │ contextual LLM escalation │ alternative prompts       │ clipboard interception    │
- ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
- │ 🏛️ NIST AI RMF 1.0        │ ⚖️ EU AI Act Article 86   │ 🌐 Multi-LLM Native       │
- │ Govern, Map, Measure,     │ Right to Explanation &    │ ChatGPT, Gemini, Claude,  │
- │ Manage automated RAG      │ Dispute Redress Portal    │ DeepSeek, Copilot         │
- └───────────────────────────┴───────────────────────────┴───────────────────────────┘
-```
+| Feature | Core Engine | Technical Capability |
+|:---|:---|:---|
+| **🛡️ Dual-Engine Guard** | Sub-5ms Regex + Gemini LLM | Real-time high-entropy secret detection and contextual semantic escalation |
+| **🔄 Smart Prompt Rewrite** | Gemini Flash Assistant | 3 safe, context-aware alternative prompts (Entity-masked, Abstracted, Simulated) |
+| **👁️ Multimodal OCR DLP** | Gemini Nano & Gemini Vision | Screenshot clipboard interception and client-side PDF document scanning |
+| **🏛️ NIST AI RMF 1.0** | Automated Keyword RAG | Continuous mapping across Govern, Map, Measure, Manage functions |
+| **⚖️ EU AI Act Article 86** | Explainability Portal | Transparent right-to-explanation and human-in-the-loop dispute redress |
+| **🌐 Multi-LLM Native** | Manifest V3 Extension | Zero-config DOM interception for ChatGPT, Gemini, Claude, DeepSeek, Copilot |
 
 ### 1. 🛡️ Dual-Engine Hybrid Prompt Guard
 - **Fast-Path Heuristic Scanner (<5ms):** High-entropy regex patterns catch email addresses, credit cards, SSNs, AWS/Stripe/OpenAI API keys, JWT tokens, and known prompt injection/jailbreak signatures (`DAN`, `ignore previous instructions`).
@@ -136,9 +124,9 @@ Native, zero-configuration content scripts seamlessly intercept user submissions
 ## 🏗️ System Architecture & Data Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    PELTA.AI RUNTIME ARCHITECTURE                                 │
-└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+====================================================================================================
+                                   PELTA.AI RUNTIME ARCHITECTURE
+====================================================================================================
 
  [ 1. CLIENT LAYER: Multi-LLM Browser Extension (Manifest V3) ]
   ChatGPT │ Google Gemini │ Anthropic Claude │ DeepSeek │ Microsoft Copilot
