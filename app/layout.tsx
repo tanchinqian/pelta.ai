@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import Sidebar, { SlimTopBar } from "@/components/Sidebar";
+import PageTransition from "@/components/PageTransition";
 import { Toaster } from 'sonner';
 
 const geistSans = Geist({
@@ -41,7 +42,9 @@ export default function RootLayout({
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <SlimTopBar />
-          <main className="flex-1 flex flex-col min-h-0">{children}</main>
+          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <PageTransition>{children}</PageTransition>
+          </main>
         </div>
         <Toaster richColors position="bottom-right" />
       </body>

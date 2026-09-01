@@ -80,6 +80,40 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'CREATE_ACCESS_REQUEST') {
+    (async () => {
+      const API_BASE = await getApiBase();
+      try {
+        const res = await fetch(`${API_BASE}/api/access-requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg.payload),
+        });
+        const data = await res.json();
+        sendResponse(data);
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  if (msg.type === 'GET_ACCESS_REQUESTS') {
+    (async () => {
+      const API_BASE = await getApiBase();
+      try {
+        const res = await fetch(`${API_BASE}/api/access-requests`);
+        const data = await res.json();
+        sendResponse(data);
+      } catch (err) {
+        sendResponse([]);
+      }
+    })();
+    return true;
+  }
+});
+
 /* ── Desktop Notification Handler ─────────────────────────
  *   Fired by content-script when an admin approves/rejects
  *   a request, even if the overlay has already been dismissed.
