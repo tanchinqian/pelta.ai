@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
         t.description.toLowerCase() === normalizedDesc,
     );
     if (cached) {
-      console.log(`[classify] cache hit for "${name}" — returning existing classification`);
       return NextResponse.json(cached);
     }
 

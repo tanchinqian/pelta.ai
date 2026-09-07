@@ -56,7 +56,6 @@ export async function POST(req: NextRequest) {
 
     for (const modelName of getModelCandidates()) {
       try {
-        console.log(`[pelta/ocr] trying ${modelName}...`);
         const model = genAI.getGenerativeModel({
           model: modelName,
           generationConfig: { temperature: 0, maxOutputTokens: 4096 },
@@ -68,7 +67,6 @@ export async function POST(req: NextRequest) {
           ),
         ]);
         text = result.response.text().trim();
-        console.log(`[pelta/ocr] ${modelName} extracted ${text.length} chars`);
         break;
       } catch (err: any) {
         lastErr = err;
