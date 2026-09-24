@@ -1,9 +1,8 @@
-/* ── pelta.ai Prompt Guard — Content Script ────────────────
- *   Injected into chat.openai.com and chatgpt.com.
- *   Intercepts the send action, checks via local API, overlays result.
- *   v2: Image OCR pipeline via Gemini Nano (Chrome) / Tesseract.js (fallback)
- * ─────────────────────────────────────────────────────────── */
-
+/**
+ * Detects which AI tool the user is currently on by reading the hostname.
+ * This label is sent alongside the prompt to the backend so the admin
+ * dashboard can show "User sent to Gemini" vs "User sent to Claude", etc.
+ */
 function getToolName() {
   const host = window.location.hostname;
   if (host.includes('gemini')) return 'Gemini';
@@ -13,12 +12,23 @@ function getToolName() {
   return 'ChatGPT';
 }
 
-/* ── API Base resolver ─────────────────────────────────── */
+/* ── API Base resolver ─────────────────────────────────────────────────────
+ *  The extension popup lets admins configure which Pelta.ai backend to use
+ *  (e.g. localhost for dev, or a production URL for deployment).
+ *  We read that setting from chrome.storage.sync at startup so every API
+ *  call in this script always hits the right backend.
+ * ───────────────────────────────────────────────────────────────────────── */
 const STORAGE_KEY = 'pelta_api_base';
 const LOCAL_URL = 'http://localhost:3000';
 
+// Default to localhost; overwritten by resolveApiBase() on init
 let API_BASE = LOCAL_URL;
 
+/**
+ * Reads the user-configured backend URL from Chrome's synced storage.
+ * Falls back to localhost:3000 if nothing is stored.
+ * Called once at script init (non-blocking, async).
+ */
 async function resolveApiBase() {
   try {
     if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -27,32 +37,76 @@ async function resolveApiBase() {
       });
       API_BASE = stored[STORAGE_KEY] || LOCAL_URL;
     }
-  } catch {}
+  } catch { }
 }
 
-/* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
+/* ── DOM Selectors ────────────────────────────────────────────────────────────
+ *  Each AI tool uses a completely different DOM structure for its chat input
+ *  and send button. ChatGPT uses a <textarea>, Gemini uses a Quill editor
+ *  (div.ql-editor), Claude uses ProseMirror (div.ProseMirror), etc.
+ *
+ *  These broad selector lists ensure we can locate the correct element on
+ *  all supported platforms without needing separate codepaths per site.
+ * ───────────────────────────────────────────────────────────────────────── */
 const SELECTORS = {
+  // Matches the text input area across ChatGPT, Gemini, Claude, DeepSeek, Copilot
   input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea, div[role="textbox"][contenteditable="true"]',
+  // Matches the send/submit button across all supported tools
   sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button, [id*="send-button" i], [id*="submit-button" i], form button:last-of-type, div[role="button"][data-testid*="send" i], button[aria-label*="Send"]',
 };
 
-/* ── State ───────────────────────────────────────────────── */
-let inputEl = null;
-let sendEl = null;
-let reconnectObserver = null;
-let composerBound = null;
+/* ── Module-level state ──────────────────────────────────────────────────────
+ *  These variables track the DOM elements we're controlling and the current
+ *  guard state. They are module-scoped (not inside any function) so all
+ *  handlers and helpers share the same references.
+ * ───────────────────────────────────────────────────────────────────────── */
+let inputEl = null;          // The currently active chat input element
+let sendEl = null;           // The send button element
+let reconnectObserver = null; // MutationObserver that re-acquires DOM elements after SPA navigation
+let composerBound = null;    // The composer element currently wired up with input/drop listeners
 
-/* ── Re-entrancy guard ────────────────────────────────── */
+/* ── Re-entrancy guard ────────────────────────────────────────────────────────
+ *  When Pelta replays a safe/approved prompt back into the input and re-fires
+ *  the send button, our own event listeners would normally intercept that
+ *  replay and start another DLP check — causing an infinite loop.
+ *  `replaying` is set to true during the replay window to skip interception.
+ *  `isScanning` prevents a second submission while a check is in flight.
+ * ───────────────────────────────────────────────────────────────────────── */
 let replaying = false;
 let isScanning = false;
 
-/* ── One-shot approved text (skip re-scan of confirmed rewrite) ── */
+/* ── One-shot approved text ───────────────────────────────────────────────────
+ *  After the user edits and confirms a redacted prompt in the flag/block
+ *  overlay, that exact text is stored here. The next time our intercept fires
+ *  for that text we skip the backend check and let it through immediately.
+ *  This prevents the user from getting stuck in an interception loop.
+ * ───────────────────────────────────────────────────────────────────────── */
 let approvedText = null;
+// Normalise whitespace before comparing approved text so minor editor
+// formatting differences don't cause a mismatch and re-trigger the guard.
 const normApproved = (s) => (s || '').trim().replace(/\s+/g, ' ');
 
-/* ── OCR engine state ────────────────────────────────────── */
+/* ── OCR engine detection ─────────────────────────────────────────────────────
+ *  When a user pastes or drops an image/PDF into a chat, we need to extract
+ *  its text before running the DLP check. We support two OCR engines:
+ *
+ *    1. Gemini Nano  — Chrome's built-in on-device AI (Chrome 128+ with flag).
+ *                      Preferred because it's fast, free, and the image data
+ *                      NEVER leaves the user's machine.
+ *
+ *    2. Tesseract.js — Fallback. We send the image as base64 to our own
+ *                      localhost backend (/api/guard/ocr), which runs
+ *                      Gemini Vision API server-side. Still within our system.
+ *
+ *  `nanoAvailable` is set once at startup and read by the OCR pipeline.
+ * ───────────────────────────────────────────────────────────────────────── */
 let nanoAvailable = false;
 
+/**
+ * Probes whether Chrome's Prompt API (window.ai.languageModel) is available
+ * and ready. This is an experimental Chrome flag feature that exposes
+ * Gemini Nano as an in-browser AI model for tasks like OCR.
+ */
 async function detectOcrEngine() {
   try {
     if (window.ai?.languageModel) {
@@ -65,7 +119,11 @@ async function detectOcrEngine() {
   console.log(`[pelta] OCR engine: ${nanoAvailable ? 'Gemini Nano (on-device)' : 'Tesseract.js (WASM fallback)'}`);
 }
 
-/* ── OCR helpers ─────────────────────────────────────────── */
+/* ── OCR helper functions ─────────────────────────────────────────────────── */
+
+/*
+ * Converts a Blob (image file) into a base64 data URL string
+ */
 function blobToDataUrl(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -75,6 +133,16 @@ function blobToDataUrl(blob) {
   });
 }
 
+/**
+ * Runs OCR using Chrome's on-device Gemini Nano via the experimental
+ * window.ai.languageModel API. The image is converted to a data URL and
+ * sent as a multimodal prompt — the model returns the extracted text.
+ *
+ * If the installed Nano model doesn't support vision (text-only build),
+ * we throw 'nano-no-vision' so the caller can fall back to Tesseract.
+ *
+ * PRIVACY: No data leaves the browser — Nano runs 100% on-device.
+ */
 async function ocrWithNano(blob) {
   const dataUrl = await blobToDataUrl(blob);
   // Chrome Prompt API — try multimodal, fall back gracefully if model is text-only
@@ -87,13 +155,15 @@ async function ocrWithNano(blob) {
   try {
     // Multimodal format (Chrome 128+ with vision flag)
     result = await session.prompt([
-      { role: 'user', content: [
-        { type: 'image', image: dataUrl },
-        { type: 'text', text: 'Extract all text from this image verbatim.' },
-      ]},
+      {
+        role: 'user', content: [
+          { type: 'image', image: dataUrl },
+          { type: 'text', text: 'Extract all text from this image verbatim.' },
+        ]
+      },
     ]);
   } catch {
-    // Fallback: describe image as text prompt — will likely be empty, triggers Tesseract below
+    // This Nano build doesn't support vision — signal the caller to use Tesseract
     console.warn('[pelta] Nano vision not available, falling back to Tesseract');
     session.destroy();
     throw new Error('nano-no-vision');
@@ -102,11 +172,20 @@ async function ocrWithNano(blob) {
   return result.trim();
 }
 
+/**
+ * Fallback OCR path. Instead of running Tesseract in the browser (which has
+ * WASM worker and memory issues in a content-script context), we send the
+ * raw base64 image to our own Next.js backend at /api/guard/ocr.
+ * The backend uses the Gemini Vision API server-side to extract the text.
+ *
+ * PRIVACY: The image is sent to localhost (our own server), not to the AI
+ * tool the user is chatting on. Still within the Pelta.ai trust boundary.
+ */
 async function ocrWithTesseract(blob) {
-  // Send to our localhost backend — Node.js Tesseract, no WASM/Worker issues.
-  // Image stays on the user's machine (localhost = zero data leakage).
+  // Send to our localhost backend — Node.js, no WASM/Worker issues in content scripts.
+  // Image stays within our own system (localhost = zero leakage to third-party AI).
   const dataUrl = await blobToDataUrl(blob);
-  const base64 = dataUrl.split(',')[1]; // strip "data:image/png;base64," prefix
+  const base64 = dataUrl.split(',')[1]; // strip the "data:image/png;base64," prefix
 
   // 15 s timeout — Gemini Vision API typically responds in 1-3 s
   const controller = new AbortController();
@@ -132,6 +211,10 @@ async function ocrWithTesseract(blob) {
   }
 }
 
+/**
+ * Top-level OCR dispatcher. Uses Gemini Nano if available (faster, on-device),
+ * otherwise falls back to the server-side Tesseract/Gemini Vision path.
+ */
 async function extractTextFromImage(blob) {
   if (nanoAvailable) {
     return await ocrWithNano(blob);
@@ -139,6 +222,16 @@ async function extractTextFromImage(blob) {
   return await ocrWithTesseract(blob);
 }
 
+/**
+ * Full pipeline for a single pasted or dropped image:
+ *   1. Lock the send button so the user can't submit while scanning
+ *   2. Show the "reading image..." overlay
+ *   3. Run OCR to extract text from the image
+ *   4. If text was found, hand it to startCheck() for DLP inspection
+ *
+ * If OCR fails (network error, model unavailable) we unlock and show an error
+ * rather than silently letting the image through unscanned.
+ */
 async function runImageDlpCheck(blob, filename) {
   lockSendButton();
   const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
@@ -170,6 +263,11 @@ async function runImageDlpCheck(blob, filename) {
   }
 }
 
+/**
+ * Same as runImageDlpCheck but handles multiple images pasted at once.
+ * Each image is OCR'd sequentially and their extracted texts are joined
+ * with a separator before being sent as a single DLP check.
+ */
 async function runBatchImageDlpCheck(blobs) {
   lockSendButton();
   const engine = nanoAvailable ? 'Gemini Nano' : 'Tesseract.js';
@@ -204,9 +302,17 @@ async function runBatchImageDlpCheck(blobs) {
   }
 }
 
+/**
+ * Pipeline for a dropped or uploaded PDF file:
+ *   1. Convert the PDF to base64 and send to /api/guard/pdf-extract
+ *   2. The backend uses pdf.js to extract all text across all pages
+ *   3. The combined text is then passed to startCheck() for DLP inspection
+ *
+ * Page count is passed through so the overlay can show "X pages scanned".
+ */
 async function runPdfDlpCheck(file) {
   lockSendButton();
-  showOcrScanning('pdf.js'); 
+  showOcrScanning('pdf.js');
   try {
     const base64 = await toBase64(file);
     const res = await fetch(`${API_BASE}/api/guard/pdf-extract`, {
@@ -216,7 +322,7 @@ async function runPdfDlpCheck(file) {
     });
     if (!res.ok) throw new Error('PDF extraction failed');
     const { text, pageCount, filename } = await res.json();
-    
+
     if (!text || !text.trim()) {
       unlockSendButton();
       showOcrNoText(true);
@@ -239,7 +345,12 @@ function toBase64(file) {
   });
 }
 
-/* ── Visual Active Badge ─────────────────────────────────── */
+/* ── Visual Active Badge ─────────────────────────────────────────────────────
+ *  A small pill in the bottom-right corner of every AI chat page that shows
+ *  "pelta.ai active" with a pulsing green dot. Lets the user know the
+ *  extension is running and intercepting prompts on this tab.
+ *  Removed automatically if the extension detaches (e.g. page unload).
+ * ───────────────────────────────────────────────────────────────────────── */
 function showActiveBadge() {
   let badge = document.getElementById('pelta-active-badge');
   if (badge) return;
@@ -267,7 +378,7 @@ function showActiveBadge() {
     pointer-events: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   `;
-  
+
   let style = document.getElementById('pelta-badge-style');
   if (!style) {
     style = document.createElement('style');
@@ -291,16 +402,28 @@ function removeActiveBadge() {
   if (style) style.remove();
 }
 
-/* ── Inline Status Badge ─────────────────────────────────── */
+/* ── Inline Status Badge ─────────────────────────────────────────────────────
+ *  A second badge that sits above the active badge and reflects the current
+ *  DLP state in real time. It cycles through these states:
+ *
+ *    clean    → user is typing, nothing suspicious detected yet
+ *    caution  → medium-severity keywords found while typing (client-side scan)
+ *    risky    → high-severity match found while typing (e.g. email, API key)
+ *    scanning → prompt intercepted, waiting for backend verdict
+ *    safe     → backend returned 'allow', message sent
+ *    flag     → backend returned 'flag', overlay shown
+ *    blocked  → backend returned 'block', overlay shown
+ *    error    → backend unreachable or extension error
+ * ───────────────────────────────────────────────────────────────────────── */
 const STATUS_STATES = {
   scanning: { bg: '#18181b', border: '#c9922a', color: '#fbbf24', icon: '&#9203;' },
-  safe:     { bg: '#052e16', border: '#22c55e', color: '#4ade80', icon: '&#10003;' },
-  flag:     { bg: '#1c1917', border: '#f59e0b', color: '#fbbf24', icon: '&#9888;' },
-  blocked:  { bg: '#1a0e0e', border: '#ef4444', color: '#f87171', icon: '&#10007;' },
-  error:    { bg: '#18181b', border: '#f97316', color: '#fb923c', icon: '&#9888;' },
-  clean:    { bg: '#18181b', border: '#27272a', color: '#9e9b94', icon: '&#9670;' },
-  caution:  { bg: '#1c1917', border: '#a16207', color: '#facc15', icon: '&#9670;' },
-  risky:    { bg: '#1a0e0e', border: '#991b1b', color: '#fca5a5', icon: '&#9670;' },
+  safe: { bg: '#052e16', border: '#22c55e', color: '#4ade80', icon: '&#10003;' },
+  flag: { bg: '#1c1917', border: '#f59e0b', color: '#fbbf24', icon: '&#9888;' },
+  blocked: { bg: '#1a0e0e', border: '#ef4444', color: '#f87171', icon: '&#10007;' },
+  error: { bg: '#18181b', border: '#f97316', color: '#fb923c', icon: '&#9888;' },
+  clean: { bg: '#18181b', border: '#27272a', color: '#9e9b94', icon: '&#9670;' },
+  caution: { bg: '#1c1917', border: '#a16207', color: '#facc15', icon: '&#9670;' },
+  risky: { bg: '#1a0e0e', border: '#991b1b', color: '#fca5a5', icon: '&#9670;' },
 };
 
 function showStatusBadge(state, text) {
@@ -333,7 +456,17 @@ function removeStatusBadge() {
   }
 }
 
-/* ── Inline Regex Scan (browser-side, no API call) ──────── */
+/* ── Inline (client-side) real-time scan ─────────────────────────────────────
+ *  As the user types, we run a lightweight regex scan in the browser — no
+ *  network call, no latency. This gives instant visual feedback via the
+ *  status badge (clean / caution / risky) while the user is composing.
+ *
+ *  This is NOT the authoritative DLP check — that happens server-side when
+ *  the user submits. This is purely a UX signal to warn early.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+// High-severity patterns: a single match here turns the badge red immediately.
+// These are structural patterns with very low false-positive rates.
 const INLINE_REGEX = [
   { pattern: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/gi, label: 'email', severity: 'high' },
   { pattern: /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, label: 'ssn', severity: 'high' },
@@ -342,6 +475,8 @@ const INLINE_REGEX = [
   { pattern: /\b(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|ghp_[a-zA-Z0-9]{20,})\b/g, label: 'api-key', severity: 'high' },
 ];
 
+// Medium-severity keyword groups: two or more of these triggers 'caution' badge.
+// Individual keyword hits produce a 'clean — 1 keyword' badge (informational only).
 const INLINE_FINANCIAL = /\b(revenue|salary|payroll|budget|financial|compensation|pipeline|q[1-4]\s\d{4}|quarterly|forecast|profit|loss)\b/i;
 const INLINE_CONFIDENTIAL = /\b(confidential|internal|proprietary|nda|trade\s?secret|restricted|sensitive|classified)\b/i;
 const INLINE_SOURCE = /\b(function|class|import\s|require\s|export\s|public\skey|private\skey|api[\s_-]?key|endpoint|git\s|commit|pull\s?request|interface|async|await|token)\b/i;
@@ -350,6 +485,16 @@ const INLINE_PII = /\b(first\s?name|last\s?name|date\s?of\s?birth|passport|socia
 let inlineDebounce = null;
 let inputHandler = null;
 
+/**
+ * Runs the client-side inline DLP scan. Called on every input event
+ * (debounced at 500ms) and updates the status badge in real time.
+ *
+ * Scoring logic:
+ *   - Any high-severity regex match → badge turns red ('risky')
+ *   - 2+ medium-severity keyword hits → badge turns yellow ('caution')
+ *   - 1 medium hit → badge stays green but notes '1 keyword'
+ *   - Nothing found → badge stays green ('clean')
+ */
 function inlineScan(text) {
   if (!text || !text.trim()) {
     showStatusBadge('clean', 'clean');
@@ -391,13 +536,24 @@ inputHandler = () => {
   }, 500);
 };
 
-/* ── Bootstrap ─────────────────────────────────────────── */
+/* ── Bootstrap / DOM acquisition ────────────────────────────────────────── */
+/**
+ * Reads the current text from the active chat input.
+ * Must handle both <textarea> (value property) and contenteditable divs
+ * (ProseMirror / Quill / Gemini) which use innerText / textContent.
+ */
 function getPromptText() {
   if (!inputEl) return '';
   if (inputEl.tagName === 'TEXTAREA') return inputEl.value;
   return inputEl.innerText || inputEl.textContent || '';
 }
 
+/**
+ * Checks if a given DOM element is the visible, active chat composer.
+ * SPA frameworks like React/Next.js frequently unmount and remount the
+ * composer on navigation, so we can't just check the reference once.
+ * We verify: still in the DOM, matches our selectors, and is actually visible.
+ */
 function isComposerVisible(v) {
   if (!v || !document.contains(v)) return false;
   try {
@@ -409,26 +565,41 @@ function isComposerVisible(v) {
   }
 }
 
-/* Bind per-composer listeners. Called on every acquire so a re-acquired
-   (remounted) composer regains input/drop handlers. */
+/**
+ * Attaches input/drop listeners directly to the composer element.
+ * Called every time we (re-)acquire the composer, because SPA route changes
+ * can unmount the old element and mount a fresh one with the same selector.
+ * We first remove listeners from the previously bound element to avoid leaks.
+ */
 function bindComposer(el) {
-  if (composerBound === el) return;
+  if (composerBound === el) return; // Already bound to this exact element node
   if (composerBound) {
+    // Clean up listeners from the old (now detached) composer element
     composerBound.removeEventListener('input', inputHandler, false);
     composerBound.removeEventListener('dragover', dragOverHandler, false);
     composerBound.removeEventListener('drop', dropHandler, false);
   }
   composerBound = el;
   if (el && inputHandler) {
-    el.addEventListener('input', inputHandler, false);
-    el.addEventListener('dragover', dragOverHandler, false);
-    el.addEventListener('drop', dropHandler, false);
+    el.addEventListener('input', inputHandler, false);    // real-time inline scan
+    el.addEventListener('dragover', dragOverHandler, false); // intercept file drags
+    el.addEventListener('drop', dropHandler, false);        // intercept file drops
   }
 }
 
+/**
+ * Scans the DOM for the active chat composer and send button, then wires up
+ * all event listeners. Called on page load and after SPA navigations.
+ *
+ * Returns true if a composer was found, false if the page isn't ready yet
+ * (in which case watchForMount() will retry via MutationObserver).
+ */
 function acquire() {
   const inputs = Array.from(document.querySelectorAll(SELECTORS.input));
-  inputEl = inputs.find((el) => isComposerVisible(el)) || inputs.find((el) => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
+  // Prefer the first visible, non-hidden element; fall back to any match
+  inputEl = inputs.find((el) => isComposerVisible(el))
+    || inputs.find((el) => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none')
+    || inputs[0];
 
   if (inputEl) {
     attachListeners();
@@ -439,14 +610,23 @@ function acquire() {
   return false;
 }
 
+/**
+ * Sets up a MutationObserver on document.body to watch for SPA route changes.
+ * AI chat apps (especially ChatGPT and Gemini) are React SPAs that tear down
+ * and rebuild the entire chat composer on every new conversation. Without
+ * this observer, our listeners would be bound to a detached ghost element.
+ *
+ * When we detect the composer has been removed from the DOM, we detach old
+ * listeners and call acquire() to find the newly mounted composer.
+ */
 function watchForMount() {
   if (reconnectObserver) reconnectObserver.disconnect();
   reconnectObserver = new MutationObserver(() => {
     if (!inputEl || !document.contains(inputEl)) {
       detachListeners();
-      if (acquire()) console.log('[pelta] re-acquired chat elements');
+      if (acquire()) console.log('[pelta] re-acquired chat elements after SPA navigation');
     }
-    // Also re-acquire sendEl if it was replaced
+    // Also re-acquire sendEl if the button was replaced during re-render
     if (!sendEl || !document.contains(sendEl)) {
       sendEl = document.querySelector(SELECTORS.sendButton);
     }
@@ -454,20 +634,34 @@ function watchForMount() {
   reconnectObserver.observe(document.body, { childList: true, subtree: true });
 }
 
-/* ── Listeners ──────────────────────────────────────────── */
-let keydownHandler = null;
-let keyupHandler = null;
-let clickHandler = null;
-let pasteHandler = null;
-let dropHandler = null;
-let dragOverHandler = null;
-let fileInputHandler = null;
-let escapeHandler = null;
-let keypressHandler = null;
-let submitHandler = null;
+/* ── Event handler references ─────────────────────────────────────────────────
+ *  We store handler functions in variables so we can remove the exact same
+ *  function reference later in detachListeners(). Arrow function literals
+ *  can't be removed with removeEventListener — named references are required.
+ * ───────────────────────────────────────────────────────────────────────── */
+let keydownHandler = null;    // Intercepts Enter key send
+let keyupHandler = null;      // Cleans up after Enter interception
+let clickHandler = null;      // Intercepts send button clicks
+let pasteHandler = null;      // Intercepts image pastes from clipboard
+let dropHandler = null;       // Intercepts file drops onto the composer
+let dragOverHandler = null;   // Prevents default dragover so we can handle drops
+let fileInputHandler = null;  // Intercepts the file picker (upload button)
+let escapeHandler = null;     // Allows Escape key to dismiss the Pelta overlay
+let keypressHandler = null;   // Suppresses Enter keypress events during interception
+let submitHandler = null;     // Catches any form submit events as a last resort
 
+// Tracks whether we ate an Enter keydown so keyup/keypress handlers know to also suppress it
 let interceptedEnter = false;
 
+/* ── Global capture-phase handlers ───────────────────────────────────────────
+ *  We register these at window level with useCapture=true so they fire BEFORE
+ *  the AI tool's own React/event handlers. This is critical — if the host app
+ *  sees the Enter key first, it will submit the prompt before we can intercept.
+ *
+ *  These global wrappers delegate to the real handlers (assigned inside
+ *  attachListeners) so they can be safely removed/replaced without touching
+ *  the window-level registrations.
+ * ───────────────────────────────────────────────────────────────────────── */
 const globalKeydownHandler = (e) => {
   if (keydownHandler) keydownHandler(e);
 };
@@ -477,10 +671,16 @@ const globalKeyupHandler = (e) => {
 const globalKeypressHandler = (e) => {
   if (keypressHandler) keypressHandler(e);
 };
+/**
+ * Blanket suppressor for beforeinput and submit events while an overlay is
+ * open or an Enter interception is active. We carve out an exception for
+ * events targeting the Pelta overlay's own textarea so the user can still
+ * edit the redacted prompt.
+ */
 const globalOtherHandler = (e) => {
   if (interceptedEnter || document.getElementById('pelta-overlay')) {
-    // Allow editing inside the overlay (the redact textarea) — only block the host app's input/submit
     const overlay = document.getElementById('pelta-overlay');
+    // Let the user type inside the redact textarea — only block the host app
     if (overlay && e.target && overlay.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -488,12 +688,26 @@ const globalOtherHandler = (e) => {
   }
 };
 
+// Register at window level with capture=true so we fire before host app handlers
 window.addEventListener('keydown', globalKeydownHandler, true);
 window.addEventListener('keyup', globalKeyupHandler, true);
 window.addEventListener('keypress', globalKeypressHandler, true);
 window.addEventListener('beforeinput', globalOtherHandler, true);
 window.addEventListener('submit', globalOtherHandler, true);
 
+/**
+ * Wires up all interception event listeners. Called once per composer acquire.
+ * Guard-checked with early return so we never double-attach.
+ *
+ * Interception strategy per event type:
+ *  - keydown  : detect Enter/Ctrl+Enter send intent, immediately clear input
+ *               to prevent the host app from seeing the text, call startCheck
+ *  - click    : same but triggered by clicking the send button
+ *  - submit   : last-resort catch for any form submit the above two missed
+ *  - paste    : intercept image data from clipboard for OCR scanning
+ *  - drop     : intercept image/PDF file drops for OCR scanning
+ *  - change   : intercept file picker uploads (the upload button)
+ */
 function attachListeners() {
   if (keydownHandler || clickHandler || pasteHandler) return; // already attached
 
@@ -508,7 +722,7 @@ function attachListeners() {
     unlockSendButton();
   };
   window.addEventListener('keydown', escapeHandler, true);
-  
+
   keydownHandler = (e) => {
     // Block Enter key if overlay is open (unless typing inside the overlay's textarea)
     const overlay = document.getElementById('pelta-overlay');
@@ -522,25 +736,29 @@ function attachListeners() {
       }
     }
 
-    // Detect send intent: plain Enter OR Ctrl/Cmd+Enter
+    // Detect send intent: plain Enter (no Shift) OR Ctrl/Cmd+Enter
+    // Shift+Enter = newline, isComposing = IME composition in progress (don't intercept)
     const isSendKey =
       (e.key === 'Enter' && !e.shiftKey && !e.isComposing) ||
       ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.isComposing);
     if (!isSendKey || replaying) return;
 
     if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
-      // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
+      // Dynamic fallback: if the user is pressing Enter in any editable field
+      // that doesn't match our stored inputEl (can happen after a re-render),
+      // adopt that field as the current composer on the fly.
       const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
       if (isEditable) {
         inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
       } else {
-        return;
+        return; // Not a composer — ignore this Enter key
       }
     }
     const text = getPromptText();
-    if (!text || !text.trim()) return;
+    if (!text || !text.trim()) return; // Empty input — nothing to intercept
 
-    // One-shot bypass: the confirmed rewrite is pre-approved — let the host app send it untouched
+    // One-shot bypass: if the text exactly matches the pre-approved redacted
+    // prompt, let the host app send it without re-running the DLP check.
     if (approvedText && normApproved(text) === normApproved(approvedText)) {
       approvedText = null;
       showAllowToast();
@@ -552,23 +770,15 @@ function attachListeners() {
 
     lockSendButton();
 
-    // Aggressively rip focus away
-    if (e.target && typeof e.target.blur === 'function') {
-      e.target.blur();
-    }
-
-    // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
-    if (inputEl.tagName === 'TEXTAREA') {
-      inputEl.value = '';
-    } else {
-      inputEl.innerText = '';
-    }
-    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-
+    // Prevent the host app's Enter handler from ever seeing this event.
+    // We rely on capture-phase stopImmediatePropagation — we do NOT clear the
+    // input here because doing so and then restoring it via typeIntoInput breaks
+    // React's controlled component state and causes form.requestSubmit() to
+    // submit an empty form, corrupting the ChatGPT input completely.
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    interceptedEnter = true;
+    interceptedEnter = true; // Signal keyup/keypress handlers to also suppress this key
     startCheck(text, 'keydown');
   };
 
@@ -592,14 +802,7 @@ function attachListeners() {
 
     lockSendButton();
 
-    // Definitively prevent the host app from sending the prompt by deleting it
-    if (inputEl.tagName === 'TEXTAREA') {
-      inputEl.value = '';
-    } else {
-      inputEl.innerText = '';
-    }
-    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-
+    // Suppress the click from reaching the host app — text stays in the input.
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -645,11 +848,7 @@ function attachListeners() {
     e.stopPropagation();
     e.stopImmediatePropagation();
     lockSendButton();
-    if (inputEl) {
-      if (inputEl.tagName === 'TEXTAREA') inputEl.value = '';
-      else inputEl.innerText = '';
-      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-    }
+    // Do NOT clear the input — see keydownHandler comment for the reason.
     startCheck(text, 'form-submit');
   };
 
@@ -805,47 +1004,88 @@ function clearPrompt() {
 function replaySend() {
   replaying = true;
   unlockSendButton();
-  // Small delay so React/ProseMirror can process typeIntoInput first
-  setTimeout(() => {
+
+  /**
+   * Because we no longer clear the input during interception, the text is
+   * already in the composer and React's send button is already enabled.
+   * We just need to click the button. A short retry loop handles the rare
+   * case where the button is momentarily in a transitional state.
+   *
+   * We deliberately do NOT use form.requestSubmit() here — calling it on
+   * ChatGPT's form after programmatic input changes corrupts React's state
+   * and freezes the entire input area.
+   */
+  function tryClick(attemptsLeft) {
     try {
       const btn = document.querySelector(SELECTORS.sendButton);
-      if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
+      const isEnabled = btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true';
+
+      if (isEnabled) {
+        // Fire the full mouse event sequence so React's synthetic event system
+        // and any pointer/click listeners on the button all receive the event.
         btn.focus();
-        btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
-        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-        btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, composed: true }));
+        btn.dispatchEvent(new MouseEvent('mousedown',     { bubbles: true, cancelable: true, composed: true }));
+        btn.dispatchEvent(new MouseEvent('mouseup',       { bubbles: true, cancelable: true, composed: true }));
+        btn.dispatchEvent(new MouseEvent('click',         { bubbles: true, cancelable: true, composed: true }));
         btn.click();
-      } else if (inputEl) {
-        // Last resort: synthetic Enter on the input
-        inputEl.focus();
-        inputEl.dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
-          bubbles: true, cancelable: true,
-        }));
+        console.log('[pelta] replaySend: clicked send button ✓');
+        setTimeout(() => { replaying = false; }, 400);
+
+      } else if (attemptsLeft > 0) {
+        // Button not ready yet — wait 50ms and retry
+        setTimeout(() => tryClick(attemptsLeft - 1), 50);
+
+      } else {
+        // Last resort: synthesize Enter key sequence on the focused input.
+        // This may not work on newest ChatGPT (isTrusted check) but works
+        // on Claude, Gemini, DeepSeek, and older ChatGPT builds.
+        console.warn('[pelta] replaySend: button never became enabled, falling back to Enter key');
+        if (inputEl) {
+          inputEl.focus();
+          for (const type of ['keydown', 'keypress', 'keyup']) {
+            inputEl.dispatchEvent(new KeyboardEvent(type, {
+              key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+              bubbles: true, cancelable: true, composed: true,
+            }));
+          }
+        }
+        setTimeout(() => { replaying = false; }, 400);
       }
-    } finally {
+    } catch (err) {
+      console.error('[pelta] replaySend error:', err);
       setTimeout(() => { replaying = false; }, 400);
     }
-  }, 80);
+  }
+
+  // Since the input was never cleared, the button should already be enabled.
+  // Start almost immediately — 30ms is enough for one React render cycle.
+  setTimeout(() => tryClick(6), 30);
 }
 
-/* ── Send button lock ────────────────────────────────────────── */
+/* ── Send button lock / unlock ───────────────────────────────────────────────
+ *  While a DLP check is in flight we disable the send button visually and
+ *  functionally. This prevents the user from double-submitting and also
+ *  provides a clear UX signal that something is happening.
+ *
+ *  We use a `data-pelta-locked` attribute as a guard so we only lock once
+ *  even if lockSendButton() is called multiple times.
+ * ───────────────────────────────────────────────────────────────────────── */
 function lockSendButton() {
   const btn = document.querySelector(SELECTORS.sendButton);
-  if (!btn || btn.dataset.peltaLocked) return;
+  if (!btn || btn.dataset.peltaLocked) return; // Already locked
   btn.dataset.peltaLocked = '1';
-  btn.style.opacity = '0.35';
-  btn.style.pointerEvents = 'none';
+  btn.style.opacity = '0.35';        // Visual dimming
+  btn.style.pointerEvents = 'none';  // Prevent clicks
   btn.style.transition = 'opacity 0.15s';
 }
 
 function unlockSendButton() {
   const btn = document.querySelector(SELECTORS.sendButton);
   if (!btn) return;
-  delete btn.dataset.peltaLocked;
-  btn.style.opacity = '';
-  btn.style.pointerEvents = '';
+  delete btn.dataset.peltaLocked; // Clear our lock marker
+  btn.style.opacity = '';         // Restore original opacity
+  btn.style.pointerEvents = '';   // Re-enable clicks
 }
 
 /* ── Safe ✓ allow toast ───────────────────────────────────────────── */
@@ -884,7 +1124,20 @@ function removeOverlay() {
   if (el) el.remove();
 }
 
-/* ── Verification flow ──────────────────────────────────── */
+/* ── DLP Verification flow ───────────────────────────────────────────────────
+ *  startCheck() is the central orchestrator. It is called by every interception
+ *  handler (keydown, click, paste, drop, etc.) with the captured text.
+ *
+ *  Flow:
+ *    1. Lock the send button and show 'scanning...' badge
+ *    2. Send the text to the background script via chrome.runtime.sendMessage
+ *    3. Background script forwards it to the Next.js backend (/api/guard/check)
+ *    4. Backend runs regex scan → optional Gemini LLM → returns verdict
+ *    5. Handle the three possible verdicts:
+ *         allow  → replay the send action, show green toast
+ *         flag   → show flag overlay with auto-redacted prompt + admin options
+ *         block  → show block overlay, message does NOT get sent
+ * ───────────────────────────────────────────────────────────────────────── */
 function startCheck(text, trigger, meta = {}) {
   if (!text.trim()) {
     showStatusBadge('clean', 'nothing to scan');
@@ -924,22 +1177,39 @@ function startCheck(text, trigger, meta = {}) {
 
       switch (response.verdict) {
         case 'allow':
+          // Text is still in the input (we never cleared it), so we just need
+          // to re-fire the send action. No typeIntoInput needed.
           removeOverlay();
           showAllowToast();
           showStatusBadge('safe', 'safe');
           setTimeout(() => removeStatusBadge(), 3000);
-          typeIntoInput(text);
           replaySend();
           break;
-        case 'flag':
+        case 'flag': {
+          // Clear the input NOW so the user sees the flag overlay has taken over.
+          // We still have the original text in the `text` variable for the overlay.
+          if (inputEl) {
+            if (inputEl.tagName === 'TEXTAREA') inputEl.value = '';
+            else inputEl.innerText = '';
+            inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+          }
           showStatusBadge('flag', 'flag');
           showFlag(response, text, trigger, meta);
           break;
-        case 'block':
+        }
+        case 'block': {
+          // Same — clear input and show block overlay.
+          if (inputEl) {
+            if (inputEl.tagName === 'TEXTAREA') inputEl.value = '';
+            else inputEl.innerText = '';
+            inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+          }
           showStatusBadge('blocked', 'blocked');
           showBlock(response, text, trigger, meta);
           break;
+        }
         default:
+          // Unknown verdict (future-proofing) — fail open and let it through
           removeOverlay();
           removeStatusBadge();
           replaySend();
@@ -954,7 +1224,24 @@ function startCheck(text, trigger, meta = {}) {
   }
 }
 
-/* ── Local highlight builder (fallback when server returns no spans) ── */
+/* ── Highlight & Redaction Utilities ────────────────────────────────────────
+ *  These functions power the visual highlight overlay and auto-redaction in
+ *  the flag/block modals. They work in two phases:
+ *
+ *    1. buildLocalHighlights(text) — runs regex patterns to locate sensitive
+ *       character spans. Used as a fallback when the backend doesn't return
+ *       span positions (e.g. LLM-only detections with no regex match).
+ *
+ *    2. buildRedactedText(text, highlights) — replaces each span with a
+ *       label token like [Email 1] or [API key 1]. Works right-to-left
+ *       through the string so earlier replacements don't shift later indices.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Runs the inline regex patterns and keyword sets against the prompt text
+ * and returns an array of character-span objects {start, end, pattern, severity}.
+ * These spans drive both the visual highlighting and the auto-redaction.
+ */
 function buildLocalHighlights(text) {
   const spans = [];
   for (const rule of INLINE_REGEX) {
@@ -990,7 +1277,15 @@ function buildLocalHighlights(text) {
   return cleaned;
 }
 
-/* ── Build redacted text string ── */
+/**
+ * Takes the original prompt text and an array of sensitive spans, and
+ * produces a redacted version where each sensitive value is replaced with
+ * a placeholder like [Email 1], [API key 1], [Financial 2], etc.
+ *
+ * Deduplication: the same raw value always gets the same alias (e.g. the
+ * same email appearing twice → [Email 1] both times, not [Email 2]).
+ * Replacement is done right-to-left so index positions remain valid.
+ */
 function buildRedactedText(text, highlights) {
   const spans = (highlights && highlights.length > 0)
     ? highlights
@@ -1033,7 +1328,23 @@ function buildRedactedText(text, highlights) {
   return redacted;
 }
 
-/* ── Type clean text into chat input (ProseMirror / React safe) ── */
+/* ── Safe text insertion into the chat composer ──────────────────────────────
+ *  After Pelta intercepts and clears the prompt, it eventually needs to put
+ *  text back (either the original for 'allow', or the redacted version for
+ *  confirmed flag/block). This is surprisingly difficult because:
+ *
+ *    - ChatGPT uses React controlled inputs — setting .value directly doesn't
+ *      update React's internal state. We must use the prototype setter.
+ *    - Gemini uses a Quill editor — we must use execCommand('insertText') or
+ *      manipulate the DOM directly and fire an InputEvent.
+ *    - Claude uses ProseMirror — similar to Gemini.
+ *
+ *  insertIntoComposer() tries three strategies in order:
+ *    1. React textarea: property descriptor setter
+ *    2. contenteditable: document.execCommand('insertText') — fires all
+ *       the right React synthetic events
+ *    3. Manual fallback: clear DOM + insert text node + dispatch InputEvent
+ * ─────────────────────────────────────────────────────────────────────────── */
 function insertIntoComposer(el, value) {
   if (el.tagName === 'TEXTAREA') {
     // Bypass React's synthetic value tracker
@@ -1110,7 +1421,12 @@ function typeIntoInput(text) {
   }
 }
 
-/* ── Build highlighted prompt HTML from API highlights ─── */
+/* ── Prompt highlight HTML builder ──────────────────────────────────────────
+ *  Converts the backend's array of sensitive spans into an HTML string
+ *  with <span class="pelta-hl pelta-hl-high"> wrapping each flagged portion.
+ *  This HTML is rendered inside the flag/block overlay to show the user
+ *  exactly which parts of their prompt were detected as sensitive.
+ * ─────────────────────────────────────────────────────────────────────────── */
 function buildHighlightedPrompt(text, highlights) {
   if (!highlights || highlights.length === 0) {
     return escapeHtml(text);
@@ -1150,7 +1466,20 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
-/* ── Overlay variants ───────────────────────────────────── */
+/* ── Overlay UI variants ──────────────────────────────────────────────────────
+ *  All overlays are rendered directly onto the AI chat page as a fixed-position
+ *  layer (z-index 999999) so they appear above the chat UI without an iframe.
+ *
+ *  Variants:
+ *    showChecking()    — spinner shown while backend check is in progress
+ *    showOcrScanning() — shown while OCR is extracting text from image/PDF
+ *    showOcrNoText()   — shown when OCR completes but finds no text (auto-dismiss)
+ *    showFlag()        — medium/high risk: editable redacted prompt + action buttons
+ *    showBlock()       — high risk: hard block with report false positive option
+ *    showError()       — backend unreachable or extension error
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/** Scanning spinner — shown immediately when the user hits send. */
 function showChecking(text) {
   const el = createOverlay();
   el.className = 'checking';
@@ -1194,6 +1523,19 @@ function showOcrNoText(isPdf = false) {
   }, 2500);
 }
 
+/**
+ * Flag overlay — shown when the backend returns verdict 'flag'.
+ * Presents the user with three options:
+ *   1. "Confirm Anonymized & Send"  — edit the auto-redacted prompt and send it
+ *   2. "Request Admin Approval"     — sends an access request and polls for
+ *                                     admin decision every 2 seconds; auto-sends
+ *                                     if approved, shows rejection message if denied
+ *   3. "Cancel"                     — restores original text, dismisses overlay
+ *
+ * Also handles the 'paste-image' and 'paste-pdf' trigger types, in which case
+ * we show the extracted OCR text with an image/PDF source badge instead of the
+ * raw prompt preview (since there's no prompt text to show).
+ */
 function showFlag(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
   const isPdf = trigger === 'paste-pdf';
@@ -1248,6 +1590,8 @@ function showFlag(response, promptText, trigger, meta = {}) {
     }, 120);
   };
 
+  // "Request Admin Approval" button — creates an access request record in the
+  // backend and polls every 2s until admin approves or rejects it.
   document.getElementById('pelta-allow').onclick = async (e) => {
     const btn = e.target;
     btn.textContent = "Request Sent \u2713";
@@ -1275,30 +1619,30 @@ function showFlag(response, promptText, trigger, meta = {}) {
             const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
-                  clearInterval(interval);
-                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                  const overlayEl = document.getElementById('pelta-overlay');
-                  if (overlayEl) {
-                    replaying = true;
-                    typeIntoInput(promptText);
-                    removeOverlay();
-                    approvedText = promptText;
-                    setTimeout(() => { replaySend(); }, 120);
-                  }
-                } else if (myReq.status === 'rejected') {
-                  clearInterval(interval);
-                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                  const overlayEl = document.getElementById('pelta-overlay');
-                  if (overlayEl) {
-                    btn.textContent = "Request Denied";
-                    btn.className = "pelta-btn pelta-btn-redact";
-                  }
+                clearInterval(interval);
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch (_) { }
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  replaying = true;
+                  typeIntoInput(promptText);
+                  removeOverlay();
+                  approvedText = promptText;
+                  setTimeout(() => { replaySend(); }, 120);
+                }
+              } else if (myReq.status === 'rejected') {
+                clearInterval(interval);
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch (_) { }
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Request Denied";
+                  btn.className = "pelta-btn pelta-btn-redact";
                 }
               }
-          } catch (err) {}
+            }
+          } catch (err) { }
         }, 2000);
       }
-    } catch(err) {}
+    } catch (err) { }
   };
   document.getElementById('pelta-cancel').onclick = () => {
     typeIntoInput(promptText); // Restore original so they don't lose work
@@ -1307,6 +1651,15 @@ function showFlag(response, promptText, trigger, meta = {}) {
   };
 }
 
+/**
+ * Block overlay — shown when the backend returns verdict 'block'.
+ * Stricter than flag: the message is NOT sent automatically.
+ * Options:
+ *   1. "Confirm Anonymized & Type" — types the redacted version into the input
+ *                                    but does NOT send. User must review first.
+ *   2. "Report False Positive"     — same admin approval flow as the flag overlay
+ *   3. "Dismiss"                   — clears the input entirely and closes overlay
+ */
 function showBlock(response, promptText, trigger, meta = {}) {
   const isImage = trigger === 'paste-image';
   const isPdf = trigger === 'paste-pdf';
@@ -1385,33 +1738,33 @@ function showBlock(response, promptText, trigger, meta = {}) {
             const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
-                  clearInterval(interval);
-                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                  const overlayEl = document.getElementById('pelta-overlay');
-                  if (overlayEl) {
-                    btn.textContent = "Approved by Admin \u2713";
-                    btn.style.background = "#10b981";
-                    btn.style.borderColor = "#10b981";
-                    btn.style.color = "white";
-                    setTimeout(() => {
-                      typeIntoInput(promptText);
-                      removeOverlay();
-                    }, 1500);
-                  }
-                } else if (myReq.status === 'rejected') {
-                  clearInterval(interval);
-                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                  const overlayEl = document.getElementById('pelta-overlay');
-                  if (overlayEl) {
-                    btn.textContent = "Report Denied";
-                    btn.className = "pelta-btn pelta-btn-redact";
-                  }
+                clearInterval(interval);
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch (_) { }
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Approved by Admin \u2713";
+                  btn.style.background = "#10b981";
+                  btn.style.borderColor = "#10b981";
+                  btn.style.color = "white";
+                  setTimeout(() => {
+                    typeIntoInput(promptText);
+                    removeOverlay();
+                  }, 1500);
+                }
+              } else if (myReq.status === 'rejected') {
+                clearInterval(interval);
+                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch (_) { }
+                const overlayEl = document.getElementById('pelta-overlay');
+                if (overlayEl) {
+                  btn.textContent = "Report Denied";
+                  btn.className = "pelta-btn pelta-btn-redact";
                 }
               }
-          } catch (err) {}
+            }
+          } catch (err) { }
         }, 2000);
       }
-    } catch(err) {
+    } catch (err) {
       btn.textContent = "Error reporting";
     }
   };
@@ -1442,20 +1795,39 @@ function showError(reason) {
   };
 }
 
-/* ── Init ───────────────────────────────────────────────── */
-detectOcrEngine(); // async, runs in background — result cached before any paste
-resolveApiBase();  // async, resolves the API base URL from storage before first use
+/* ── Initialisation ──────────────────────────────────────────────────────────
+ *  Bootstraps the extension when the content script first loads.
+ *
+ *  Step 1: Start background async tasks (non-blocking)
+ *    - detectOcrEngine() — probes for Gemini Nano availability
+ *    - resolveApiBase()  — reads the backend URL from chrome.storage.sync
+ *
+ *  Step 2: Acquire the chat composer
+ *    - If the page is still loading, wait for DOMContentLoaded
+ *    - Try acquire() immediately; if the composer isn't in the DOM yet
+ *      (common on ChatGPT which lazy-renders the input), retry once after
+ *      800ms, and if still not found start watchForMount() to observe
+ *      mutations until it appears.
+ *
+ *  This three-stage strategy handles: normal pages, lazy-rendered SPAs,
+ *  and pages that build their composer dynamically after hydration.
+ * ───────────────────────────────────────────────────────────────────────── */
+detectOcrEngine(); // async — result is cached in `nanoAvailable` before any paste event
+resolveApiBase();  // async — result is cached in `API_BASE` before any network call
 
 if (document.readyState === 'loading') {
+  // Page HTML is still being parsed — wait for full DOM before querying
   document.addEventListener('DOMContentLoaded', () => {
     if (!acquire()) {
-      // ChatGPT sometimes loads the composer after initial paint
+      // Composer not found yet (ChatGPT renders it after initial paint)
+      // — retry once after 800ms, then fall back to MutationObserver
       setTimeout(() => { if (!acquire()) watchForMount(); }, 800);
     } else {
-      watchForMount();
+      watchForMount(); // Composer found — watch for future SPA re-mounts
     }
   });
 } else {
+  // Page is already parsed (e.g. extension installed mid-session)
   if (!acquire()) {
     setTimeout(() => { if (!acquire()) watchForMount(); }, 800);
   } else {

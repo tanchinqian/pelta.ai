@@ -208,8 +208,73 @@
     "timestamp": "2026-07-17T14:10:00.000Z"
   },
   {
+<<<<<<< Updated upstream
     "id": "35eb7ce1-d349-41a2-b645-4b882a63d7d0",
     "promptSnippet": "Translate this customer feedback: 'The product is great but sarah.park@gmail.com had issues with the billing page.'",
+=======
+    "id": "213b2ca4-e128-463b-9e55-4ba15fe3d861",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T04:08:42.350Z"
+  },
+  {
+    "id": "0b63cdf5-e5a5-4ee7-b4e7-1a62680ffbd7",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T04:08:45.217Z"
+  },
+  {
+    "id": "2ae92e98-7fac-484a-a775-7fdb76569929",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T04:08:48.805Z"
+  },
+  {
+    "id": "d46d22f7-7871-472d-9648-463e22220289",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T04:08:51.369Z"
+  },
+  {
+    "id": "3301028b-b3e8-4ac2-bcb0-7f72c2d10765",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-09-24T04:09:10.639Z"
+  },
+  {
+    "id": "ed76f54d-20a1-4f74-beb5-342caf5b588a",
+    "promptSnippet": "please help me to send the email to elson@gmail.com",
+>>>>>>> Stashed changes
     "verdict": "block",
     "riskLevel": "high",
     "reason": "Regex detected high-severity patterns: Email address.",
@@ -217,6 +282,202 @@
     "dataCategory": "PII",
     "source": "extension",
     "tool": "Gemini",
+<<<<<<< Updated upstream
     "timestamp": "2026-08-05T13:46:20.376Z"
+=======
+    "timestamp": "2026-09-24T04:09:41.853Z"
+  },
+  {
+    "id": "03a515f0-6e48-4fd4-a8f8-9ad6476312d1",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-09-24T04:28:41.632Z"
+  },
+  {
+    "id": "43570207-c814-4528-8777-8e562a569e84",
+    "promptSnippet": "please access my email elson@gmail.com and this is my password 12345677",
+    "verdict": "block",
+    "riskLevel": "high",
+    "reason": "Regex detected high-severity patterns: Email address, Bank account / routing number.",
+    "detectionMethod": "regex",
+    "dataCategory": "PII",
+    "source": "extension",
+    "tool": "Gemini",
+    "timestamp": "2026-09-24T04:29:10.581Z"
+  },
+  {
+    "id": "ca1a78f1-25bb-4516-a064-09760efe565e",
+    "promptSnippet": "Tech SkillsI have learnt some basic knowledges of C++, Python, SQLexplain my tech skills, dont be too long",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:34:47.190Z"
+  },
+  {
+    "id": "17c16410-ce09-42aa-9061-787c3230c91d",
+    "promptSnippet": "Tech SkillsI have learnt some basic knowledges of C++, Python, SQLexplain my tech skills, dont be too long",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:34:51.226Z"
+  },
+  {
+    "id": "3a4c0776-2683-4f95-a0f8-ac7eb0e8a7c5",
+    "promptSnippet": "Tech SkillsI have learnt some basic knowledges of C++, Python, SQLexplain my tech skills, dont be too long",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:34:53.083Z"
+  },
+  {
+    "id": "3716d085-1ebd-48ea-8876-9abfe44f5496",
+    "promptSnippet": "Tech SkillsI have learnt some basic knowledges of C++, Python, SQLexplain my tech skills, dont be too long",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:34:54.084Z"
+  },
+  {
+    "id": "464cedb0-81ff-4f1a-a2c9-a5a6041beb50",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:39:55.520Z"
+  },
+  {
+    "id": "602fd041-21b1-4526-97d9-728becb5b707",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:39:57.029Z"
+  },
+  {
+    "id": "d3a449fa-778b-4756-9dcc-1eb0e3b4d685",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:40:00.427Z"
+  },
+  {
+    "id": "d58fe32c-e8e1-4752-a934-547e0655f36e",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:42:27.096Z"
+  },
+  {
+    "id": "2a0bbd6f-5031-4455-81d7-275632a00cec",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:42:28.021Z"
+  },
+  {
+    "id": "bd61d1c3-41d8-45bd-b94e-35b5a0102a68",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:42:30.960Z"
+  },
+  {
+    "id": "05055c0d-efaf-46a9-a080-cb84fd75d6a8",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:42:48.340Z"
+  },
+  {
+    "id": "8da95a07-ac53-4d9e-94a8-657e10f0539c",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:45:51.146Z"
+  },
+  {
+    "id": "1b4afcd4-503e-46e6-a8e8-db1369f8498a",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T10:46:31.053Z"
+  },
+  {
+    "id": "28d9b6d6-fa53-4f58-9365-f38e7362ba65",
+    "promptSnippet": "hi",
+    "verdict": "allow",
+    "riskLevel": "none",
+    "reason": "No sensitive data detected by regex scan.",
+    "detectionMethod": "regex",
+    "dataCategory": "None",
+    "source": "extension",
+    "tool": "ChatGPT",
+    "timestamp": "2026-09-24T11:17:28.460Z"
+>>>>>>> Stashed changes
   }
 ]
