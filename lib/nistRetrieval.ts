@@ -95,21 +95,28 @@ export function retrieveNistContext(
 
 /**
  * Format retrieved context for injection into a LLM prompt.
+ *
+ * Kept concise to reduce token consumption — sends function names, top keywords, and the
+ * most relevant concern. Full definitions are omitted from the prompt since the system
+ * instructions already describe each NIST function.
  */
 export function formatNistContextForPrompt(results: NistRetrievalResult[]): string {
   if (results.length === 0) return '';
 
   const lines = results.map((r) => {
+    const kwText = r.matchedKeywords.length > 0
+      ? ` (matched: ${r.matchedKeywords.slice(0, 5).join(', ')})`
+      : ' (no keyword match — baseline relevance)';
     const concernText = r.concerns.length > 0
-      ? `\n  Concerns: ${r.concerns.slice(0, 3).join(' ')}`
+      ? `\n  Examples of this function in practice: ${r.concerns.slice(0, 2).join(' ')}`
       : '';
-    return `- ${r.function}: ${r.definition}${concernText}`;
+    return `- ${r.function}${kwText}${concernText}`;
   });
 
   return [
     'Relevant NIST AI RMF context for this classification:',
     ...lines,
-    'Use this context to inform which NIST functions apply and why. Only include functions genuinely implicated by the tool.',
+    'Use this context to inform which NIST functions apply and why.',
   ].join('\n');
 }
 

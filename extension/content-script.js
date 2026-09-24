@@ -26,27 +26,29 @@ async function resolveApiBase() {
         chrome.storage.sync.get(STORAGE_KEY, resolve);
       });
       API_BASE = stored[STORAGE_KEY] || LOCAL_URL;
-      console.log('[pelta] API_BASE resolved to:', API_BASE);
     }
   } catch {}
 }
 
 /* ── Selectors (supports ChatGPT, Gemini, Claude, DeepSeek, Copilot) ──────── */
 const SELECTORS = {
-  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea',
-  sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button',
+  input: '#prompt-textarea, div.ql-editor[contenteditable="true"], div[contenteditable="true"].ProseMirror, div[contenteditable="true"][role="textbox"], textarea#chat-input, textarea[placeholder*="Ask"], textarea[placeholder*="DeepSeek"], textarea[aria-label*="Ask"], textarea, div[role="textbox"][contenteditable="true"]',
+  sendButton: 'button[type="submit"], #composer-submit-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="submit" i], [title*="send" i], [title*="submit" i], button[class*="send" i], .send-button, [id*="send-button" i], [id*="submit-button" i], form button:last-of-type, div[role="button"][data-testid*="send" i], button[aria-label*="Send"]',
 };
 
 /* ── State ───────────────────────────────────────────────── */
 let inputEl = null;
 let sendEl = null;
 let reconnectObserver = null;
+let composerBound = null;
 
 /* ── Re-entrancy guard ────────────────────────────────── */
 let replaying = false;
+let isScanning = false;
 
-/* ── Approved Prompt Cache ────────────────────────────── */
-const approvedPrompts = new Set();
+/* ── One-shot approved text (skip re-scan of confirmed rewrite) ── */
+let approvedText = null;
+const normApproved = (s) => (s || '').trim().replace(/\s+/g, ' ');
 
 /* ── OCR engine state ────────────────────────────────────── */
 let nanoAvailable = false;
@@ -289,6 +291,106 @@ function removeActiveBadge() {
   if (style) style.remove();
 }
 
+/* ── Inline Status Badge ─────────────────────────────────── */
+const STATUS_STATES = {
+  scanning: { bg: '#18181b', border: '#c9922a', color: '#fbbf24', icon: '&#9203;' },
+  safe:     { bg: '#052e16', border: '#22c55e', color: '#4ade80', icon: '&#10003;' },
+  flag:     { bg: '#1c1917', border: '#f59e0b', color: '#fbbf24', icon: '&#9888;' },
+  blocked:  { bg: '#1a0e0e', border: '#ef4444', color: '#f87171', icon: '&#10007;' },
+  error:    { bg: '#18181b', border: '#f97316', color: '#fb923c', icon: '&#9888;' },
+  clean:    { bg: '#18181b', border: '#27272a', color: '#9e9b94', icon: '&#9670;' },
+  caution:  { bg: '#1c1917', border: '#a16207', color: '#facc15', icon: '&#9670;' },
+  risky:    { bg: '#1a0e0e', border: '#991b1b', color: '#fca5a5', icon: '&#9670;' },
+};
+
+function showStatusBadge(state, text) {
+  const s = STATUS_STATES[state] || STATUS_STATES.clean;
+  let badge = document.getElementById('pelta-status-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'pelta-status-badge';
+    document.body.appendChild(badge);
+  }
+  badge.style.cssText = `
+    position: fixed; bottom: 75px; right: 12px; z-index: 999999;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px; border-radius: 6px;
+    background: ${s.bg}; border: 1px solid ${s.border};
+    color: ${s.color};
+    font-family: monospace; font-size: 10px; font-weight: 500;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    pointer-events: none;
+    opacity: 1; transition: opacity 0.2s ease;
+  `;
+  badge.innerHTML = `<span style="color:${s.color}">${s.icon}</span><span>pelta.ai ${text}</span>`;
+}
+
+function removeStatusBadge() {
+  const badge = document.getElementById('pelta-status-badge');
+  if (badge) {
+    badge.style.opacity = '0';
+    setTimeout(() => { if (badge.parentNode) badge.remove(); }, 250);
+  }
+}
+
+/* ── Inline Regex Scan (browser-side, no API call) ──────── */
+const INLINE_REGEX = [
+  { pattern: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/gi, label: 'email', severity: 'high' },
+  { pattern: /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, label: 'ssn', severity: 'high' },
+  { pattern: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, label: 'phone', severity: 'high' },
+  { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, label: 'credit-card', severity: 'high' },
+  { pattern: /\b(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|ghp_[a-zA-Z0-9]{20,})\b/g, label: 'api-key', severity: 'high' },
+];
+
+const INLINE_FINANCIAL = /\b(revenue|salary|payroll|budget|financial|compensation|pipeline|q[1-4]\s\d{4}|quarterly|forecast|profit|loss)\b/i;
+const INLINE_CONFIDENTIAL = /\b(confidential|internal|proprietary|nda|trade\s?secret|restricted|sensitive|classified)\b/i;
+const INLINE_SOURCE = /\b(function|class|import\s|require\s|export\s|public\skey|private\skey|api[\s_-]?key|endpoint|git\s|commit|pull\s?request|interface|async|await|token)\b/i;
+const INLINE_PII = /\b(first\s?name|last\s?name|date\s?of\s?birth|passport|social\s?security|maiden\s?name|address|zip\s?code)\b/i;
+
+let inlineDebounce = null;
+let inputHandler = null;
+
+function inlineScan(text) {
+  if (!text || !text.trim()) {
+    showStatusBadge('clean', 'clean');
+    return;
+  }
+  let highCount = 0;
+  let mediumCount = 0;
+
+  for (const rule of INLINE_REGEX) {
+    const matches = text.match(rule.pattern);
+    if (matches) {
+      if (rule.severity === 'high') highCount += matches.length;
+      else mediumCount += matches.length;
+    }
+  }
+
+  if (INLINE_FINANCIAL.test(text)) mediumCount++;
+  if (INLINE_CONFIDENTIAL.test(text)) mediumCount++;
+  if (INLINE_SOURCE.test(text)) mediumCount++;
+  if (INLINE_PII.test(text)) mediumCount++;
+
+  if (highCount > 0) {
+    showStatusBadge('risky', `risky (${highCount} match)`);
+  } else if (mediumCount >= 2) {
+    showStatusBadge('caution', `caution (${mediumCount} matches)`);
+  } else if (mediumCount === 1) {
+    showStatusBadge('clean', 'clean — 1 keyword');
+  } else {
+    showStatusBadge('clean', 'clean');
+  }
+}
+
+inputHandler = () => {
+  if (replaying || isScanning) return;
+  if (inlineDebounce) clearTimeout(inlineDebounce);
+  inlineDebounce = setTimeout(() => {
+    const text = getPromptText();
+    inlineScan(text);
+  }, 500);
+};
+
 /* ── Bootstrap ─────────────────────────────────────────── */
 function getPromptText() {
   if (!inputEl) return '';
@@ -296,12 +398,41 @@ function getPromptText() {
   return inputEl.innerText || inputEl.textContent || '';
 }
 
+function isComposerVisible(v) {
+  if (!v || !document.contains(v)) return false;
+  try {
+    if (!v.matches(SELECTORS.input)) return false;
+    const cs = window.getComputedStyle(v);
+    return v.offsetHeight > 0 && cs.display !== 'none' && cs.visibility !== 'hidden';
+  } catch {
+    return false;
+  }
+}
+
+/* Bind per-composer listeners. Called on every acquire so a re-acquired
+   (remounted) composer regains input/drop handlers. */
+function bindComposer(el) {
+  if (composerBound === el) return;
+  if (composerBound) {
+    composerBound.removeEventListener('input', inputHandler, false);
+    composerBound.removeEventListener('dragover', dragOverHandler, false);
+    composerBound.removeEventListener('drop', dropHandler, false);
+  }
+  composerBound = el;
+  if (el && inputHandler) {
+    el.addEventListener('input', inputHandler, false);
+    el.addEventListener('dragover', dragOverHandler, false);
+    el.addEventListener('drop', dropHandler, false);
+  }
+}
+
 function acquire() {
   const inputs = Array.from(document.querySelectorAll(SELECTORS.input));
-  inputEl = inputs.find(el => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
+  inputEl = inputs.find((el) => isComposerVisible(el)) || inputs.find((el) => el.offsetHeight > 0 && window.getComputedStyle(el).display !== 'none') || inputs[0];
 
   if (inputEl) {
     attachListeners();
+    bindComposer(inputEl); // re-bind even on re-acquire (new node)
     showActiveBadge();
     return true;
   }
@@ -314,6 +445,10 @@ function watchForMount() {
     if (!inputEl || !document.contains(inputEl)) {
       detachListeners();
       if (acquire()) console.log('[pelta] re-acquired chat elements');
+    }
+    // Also re-acquire sendEl if it was replaced
+    if (!sendEl || !document.contains(sendEl)) {
+      sendEl = document.querySelector(SELECTORS.sendButton);
     }
   });
   reconnectObserver.observe(document.body, { childList: true, subtree: true });
@@ -329,6 +464,7 @@ let dragOverHandler = null;
 let fileInputHandler = null;
 let escapeHandler = null;
 let keypressHandler = null;
+let submitHandler = null;
 
 let interceptedEnter = false;
 
@@ -343,6 +479,9 @@ const globalKeypressHandler = (e) => {
 };
 const globalOtherHandler = (e) => {
   if (interceptedEnter || document.getElementById('pelta-overlay')) {
+    // Allow editing inside the overlay (the redact textarea) — only block the host app's input/submit
+    const overlay = document.getElementById('pelta-overlay');
+    if (overlay && e.target && overlay.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -383,38 +522,54 @@ function attachListeners() {
       }
     }
 
-    if (e.key === 'Enter' && !e.shiftKey && !replaying && !e.isComposing) {
-      if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
-        // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
-        const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
-        if (isEditable) {
-          inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
-        } else {
-          return;
-        }
-      }
-      const text = getPromptText();
-      if (!text || !text.trim()) return;
-      
-      // Aggressively rip focus away
-      if (e.target && typeof e.target.blur === 'function') {
-        e.target.blur();
-      }
-      
-      // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
-      if (inputEl.tagName === 'TEXTAREA') {
-        inputEl.value = '';
+    // Detect send intent: plain Enter OR Ctrl/Cmd+Enter
+    const isSendKey =
+      (e.key === 'Enter' && !e.shiftKey && !e.isComposing) ||
+      ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.isComposing);
+    if (!isSendKey || replaying) return;
+
+    if (!inputEl || (!inputEl.contains(e.target) && e.target !== inputEl)) {
+      // Fallback: If user is pressing Enter in ANY editable field, dynamically capture it
+      const isEditable = e.target.tagName === 'TEXTAREA' || e.target.isContentEditable || e.target.closest('[contenteditable="true"]');
+      if (isEditable) {
+        inputEl = e.target.tagName === 'TEXTAREA' ? e.target : e.target.closest('[contenteditable="true"]') || e.target;
       } else {
-        inputEl.innerText = '';
+        return;
       }
-      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-      
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      interceptedEnter = true;
-      startCheck(text, 'keydown');
     }
+    const text = getPromptText();
+    if (!text || !text.trim()) return;
+
+    // One-shot bypass: the confirmed rewrite is pre-approved — let the host app send it untouched
+    if (approvedText && normApproved(text) === normApproved(approvedText)) {
+      approvedText = null;
+      showAllowToast();
+      replaying = true;
+      setTimeout(() => { replaying = false; }, 600);
+      return;
+    }
+    approvedText = null;
+
+    lockSendButton();
+
+    // Aggressively rip focus away
+    if (e.target && typeof e.target.blur === 'function') {
+      e.target.blur();
+    }
+
+    // Definitively prevent the host app from sending the prompt by deleting it from the DOM immediately
+    if (inputEl.tagName === 'TEXTAREA') {
+      inputEl.value = '';
+    } else {
+      inputEl.innerText = '';
+    }
+    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    interceptedEnter = true;
+    startCheck(text, 'keydown');
   };
 
   clickHandler = (e) => {
@@ -424,6 +579,18 @@ function attachListeners() {
 
     const text = getPromptText();
     if (!text || !text.trim()) return;
+
+    // One-shot bypass: the confirmed rewrite is pre-approved — let the click reach the host app
+    if (approvedText && normApproved(text) === normApproved(approvedText)) {
+      approvedText = null;
+      showAllowToast();
+      replaying = true;
+      setTimeout(() => { replaying = false; }, 600);
+      return;
+    }
+    approvedText = null;
+
+    lockSendButton();
 
     // Definitively prevent the host app from sending the prompt by deleting it
     if (inputEl.tagName === 'TEXTAREA') {
@@ -468,6 +635,22 @@ function attachListeners() {
       e.stopPropagation();
       e.stopImmediatePropagation();
     }
+  };
+
+  submitHandler = (e) => {
+    if (replaying || isScanning) return;
+    const text = getPromptText();
+    if (!text || !text.trim()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    lockSendButton();
+    if (inputEl) {
+      if (inputEl.tagName === 'TEXTAREA') inputEl.value = '';
+      else inputEl.innerText = '';
+      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+    }
+    startCheck(text, 'form-submit');
   };
 
   pasteHandler = async (e) => {
@@ -537,13 +720,8 @@ function attachListeners() {
   document.addEventListener('mousedown', clickHandler, true);
   document.addEventListener('pointerdown', clickHandler, true);
   window.addEventListener('paste', pasteHandler, true);
-  // File picker upload interception (capture phase — fires before Gemini's handlers)
   document.addEventListener('change', fileInputHandler, true);
-  if (inputEl) {
-    inputEl.addEventListener('dragover', dragOverHandler, false);
-    inputEl.addEventListener('drop', dropHandler, false);
-  }
-  // Fallback: catch drops anywhere on the document
+  document.addEventListener('submit', submitHandler, true);
   document.addEventListener('dragover', dragOverHandler, false);
   document.addEventListener('drop', dropHandler, false);
 }
@@ -566,14 +744,21 @@ function detachListeners() {
   if (keypressHandler) {
     window.removeEventListener('keypress', keypressHandler, true);
   }
+  if (submitHandler) {
+    document.removeEventListener('submit', submitHandler, true);
+  }
+  if (inputHandler) {
+    if (composerBound) composerBound.removeEventListener('input', inputHandler, false);
+  }
   if (dragOverHandler) {
     document.removeEventListener('dragover', dragOverHandler, false);
-    if (inputEl) inputEl.removeEventListener('dragover', dragOverHandler, false);
+    if (composerBound) composerBound.removeEventListener('dragover', dragOverHandler, false);
   }
   if (dropHandler) {
     document.removeEventListener('drop', dropHandler, false);
-    if (inputEl) inputEl.removeEventListener('drop', dropHandler, false);
+    if (composerBound) composerBound.removeEventListener('drop', dropHandler, false);
   }
+  composerBound = null;
   keydownHandler = null;
   keyupHandler = null;
   clickHandler = null;
@@ -582,6 +767,8 @@ function detachListeners() {
   dragOverHandler = null;
   fileInputHandler = null;
   escapeHandler = null;
+  submitHandler = null;
+  inputHandler = null;
   inputEl = null;
   sendEl = null;
   removeActiveBadge();
@@ -617,11 +804,30 @@ function clearPrompt() {
 /* ── Re-dispatch the send action ────────────────────────────────────── */
 function replaySend() {
   replaying = true;
-  requestAnimationFrame(() => {
-    const btn = document.querySelector(SELECTORS.sendButton);
-    if (btn) btn.click();
-    replaying = false;
-  });
+  unlockSendButton();
+  // Small delay so React/ProseMirror can process typeIntoInput first
+  setTimeout(() => {
+    try {
+      const btn = document.querySelector(SELECTORS.sendButton);
+      if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
+        btn.focus();
+        btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        btn.click();
+      } else if (inputEl) {
+        // Last resort: synthetic Enter on the input
+        inputEl.focus();
+        inputEl.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+          bubbles: true, cancelable: true,
+        }));
+      }
+    } finally {
+      setTimeout(() => { replaying = false; }, 400);
+    }
+  }, 80);
 }
 
 /* ── Send button lock ────────────────────────────────────────── */
@@ -673,6 +879,7 @@ function createOverlay() {
 }
 
 function removeOverlay() {
+  approvedText = null;
   const el = document.getElementById('pelta-overlay');
   if (el) el.remove();
 }
@@ -680,93 +887,227 @@ function removeOverlay() {
 /* ── Verification flow ──────────────────────────────────── */
 function startCheck(text, trigger, meta = {}) {
   if (!text.trim()) {
-    replaySend();
-    return;
-  }
-  if (approvedPrompts.has(text.trim())) {
-    console.log('[pelta] Prompt was previously approved in this session. Bypassing check.');
-    typeIntoInput(text);
+    showStatusBadge('clean', 'nothing to scan');
+    setTimeout(() => removeStatusBadge(), 2000);
     replaySend();
     return;
   }
 
   lockSendButton();
+  isScanning = true;
+  showStatusBadge('scanning', 'scanning...');
   showChecking(text);
-  chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
-    unlockSendButton();
-    if (!response) {
-      showError('No response from backend.');
-      typeIntoInput(text); // Restore original
-      return;
-    }
-    if (response.error) {
-      showError(response.error);
-      typeIntoInput(text); // Restore original
-      return;
-    }
+  try {
+    chrome.runtime.sendMessage({ type: 'CHECK_PROMPT', text, tool: getToolName(), trigger }, (response) => {
+      if (chrome.runtime.lastError) {
+        unlockSendButton();
+        isScanning = false;
+        showStatusBadge('error', 'check failed');
+        showError(chrome.runtime.lastError.message || 'Extension error.');
+        typeIntoInput(text);
+        return;
+      }
+      unlockSendButton();
+      isScanning = false;
+      if (!response) {
+        showStatusBadge('error', 'check failed');
+        showError('No response from backend.');
+        typeIntoInput(text);
+        return;
+      }
+      if (response.error) {
+        showStatusBadge('error', 'check failed');
+        showError(response.error);
+        typeIntoInput(text);
+        return;
+      }
 
-    switch (response.verdict) {
-      case 'allow':
-        removeOverlay();
-        showAllowToast();
-        typeIntoInput(text); // Restore original
-        replaySend();
-        break;
-      case 'flag':
-        showFlag(response, text, trigger, meta);
-        break;
-      case 'block':
-        showBlock(response, text, trigger, meta);
-        break;
-      default:
-        removeOverlay();
-        replaySend();
+      switch (response.verdict) {
+        case 'allow':
+          removeOverlay();
+          showAllowToast();
+          showStatusBadge('safe', 'safe');
+          setTimeout(() => removeStatusBadge(), 3000);
+          typeIntoInput(text);
+          replaySend();
+          break;
+        case 'flag':
+          showStatusBadge('flag', 'flag');
+          showFlag(response, text, trigger, meta);
+          break;
+        case 'block':
+          showStatusBadge('blocked', 'blocked');
+          showBlock(response, text, trigger, meta);
+          break;
+        default:
+          removeOverlay();
+          removeStatusBadge();
+          replaySend();
+      }
+    });
+  } catch (err) {
+    unlockSendButton();
+    isScanning = false;
+    showStatusBadge('error', 'check failed');
+    showError('Extension disconnected. Please reload the page.');
+    typeIntoInput(text);
+  }
+}
+
+/* ── Local highlight builder (fallback when server returns no spans) ── */
+function buildLocalHighlights(text) {
+  const spans = [];
+  for (const rule of INLINE_REGEX) {
+    const re = new RegExp(rule.pattern.source, rule.pattern.flags.includes('g') ? rule.pattern.flags : rule.pattern.flags + 'g');
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      spans.push({ start: m.index, end: m.index + m[0].length, pattern: rule.label, severity: rule.severity || 'high' });
+      if (m[0].length === 0) re.lastIndex++;
     }
-  });
+  }
+  // Keyword redaction for business-sensitive terms (LLM-only flags often have no regex spans)
+  const keywordSets = [
+    { re: /\b(revenue|salary|payroll|budget|financial|compensation|pipeline|quarterly|forecast|profit)\b/gi, label: 'Financial' },
+    { re: /\b(confidential|internal|proprietary|nda|trade\s?secret|restricted|sensitive|classified)\b/gi, label: 'Confidential' },
+    { re: /\b(password|credentials|ssn|passport|api[\s_-]?key|bearer|token)\b/gi, label: 'Secret' },
+  ];
+  for (const { re, label } of keywordSets) {
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      spans.push({ start: m.index, end: m.index + m[0].length, pattern: label, severity: 'medium' });
+    }
+  }
+  // Drop overlapping spans (keep earliest / longest)
+  spans.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  const cleaned = [];
+  let lastEnd = -1;
+  for (const s of spans) {
+    if (s.start >= lastEnd) {
+      cleaned.push(s);
+      lastEnd = s.end;
+    }
+  }
+  return cleaned;
 }
 
 /* ── Build redacted text string ── */
 function buildRedactedText(text, highlights) {
-  if (!highlights || highlights.length === 0) return text;
+  const spans = (highlights && highlights.length > 0)
+    ? highlights
+    : buildLocalHighlights(text);
+  if (!spans || spans.length === 0) return text;
 
   const aliasMap = new Map();
   const labelCounts = new Map();
 
   // First pass: assign aliases in order of appearance (left-to-right)
-  const ascending = [...highlights].sort((a, b) => a.start - b.start);
+  const ascending = [...spans].sort((a, b) => a.start - b.start);
   for (const h of ascending) {
-    const raw = text.slice(h.start, h.end);
-    if (!aliasMap.has(raw)) {
-      const label = h.pattern || 'Secret';
-      const count = (labelCounts.get(label) || 0) + 1;
-      labelCounts.set(label, count);
-      aliasMap.set(raw, `[${label} ${count}]`);
-    }
+    const start = typeof h.start === 'number' ? h.start : h.index;
+    const end = typeof h.end === 'number' ? h.end : (start + (h.match?.length || 0));
+    if (start == null || end == null || start < 0 || end > text.length || start >= end) continue;
+    const raw = text.slice(start, end);
+    if (!raw || aliasMap.has(raw)) continue;
+    const label = h.pattern || h.label || 'Secret';
+    const count = (labelCounts.get(label) || 0) + 1;
+    labelCounts.set(label, count);
+    aliasMap.set(raw, `[${label} ${count}]`);
   }
 
   // Second pass: replace text from right-to-left to keep indices valid
-  const sorted = [...highlights].sort((a, b) => b.start - a.start);
+  const sorted = [...spans]
+    .map((h) => ({
+      start: typeof h.start === 'number' ? h.start : h.index,
+      end: typeof h.end === 'number' ? h.end : ((typeof h.start === 'number' ? h.start : h.index) + (h.match?.length || 0)),
+    }))
+    .filter((h) => h.start != null && h.end != null && h.start >= 0 && h.end <= text.length && h.start < h.end)
+    .sort((a, b) => b.start - a.start);
+
   let redacted = text;
   for (const h of sorted) {
-    const raw = text.slice(h.start, h.end); // Use original text to lookup map
+    const raw = text.slice(h.start, h.end);
     const alias = aliasMap.get(raw);
+    if (!alias) continue;
     redacted = redacted.slice(0, h.start) + alias + redacted.slice(h.end);
   }
   return redacted;
 }
 
-/* ── Type clean text into chat input ── */
-function typeIntoInput(text) {
-  if (!inputEl) return;
-  if (inputEl.tagName === 'TEXTAREA') {
-    inputEl.value = text;
-  } else {
-    // ProseMirror / Quill / Gemini contenteditable
-    inputEl.innerText = text;
+/* ── Type clean text into chat input (ProseMirror / React safe) ── */
+function insertIntoComposer(el, value) {
+  if (el.tagName === 'TEXTAREA') {
+    // Bypass React's synthetic value tracker
+    const desc = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+    if (desc && desc.set) desc.set.call(el, value);
+    else el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
   }
-  inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-  inputEl.dispatchEvent(new Event('change',    { bubbles: true, cancelable: true }));
+  // contenteditable (ProseMirror / Quill / Gemini)
+  el.focus();
+  const sel = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  // Preferred path — most editors listen for beforeinput/insertText
+  let ok = false;
+  try {
+    ok = document.execCommand('insertText', false, value);
+  } catch (_) {
+    ok = false;
+  }
+  if (ok) return true;
+  // Manual fallback: clear then insert a plain text node + fire InputEvent
+  while (el.firstChild) el.removeChild(el.firstChild);
+  const tool = getToolName();
+  if (tool === 'Gemini') {
+    el.textContent = value;
+  } else {
+    const p = document.createElement('p');
+    p.textContent = value || '\u200b';
+    el.appendChild(p);
+  }
+  el.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    cancelable: true,
+    inputType: 'insertText',
+    data: value,
+  }));
+  return true;
+}
+
+function typeIntoInput(text) {
+  const value = text ?? '';
+  // Always target the visible composer — a stale/hidden node from a prior
+  // remount is the #1 cause of "text never appears" on ChatGPT.
+  if (!isComposerVisible(inputEl)) {
+    acquire();
+  }
+  if (!inputEl) {
+    console.warn('[pelta] typeIntoInput: no composer found');
+    return;
+  }
+
+  insertIntoComposer(inputEl, value);
   inputEl.focus();
+
+  if (normApproved(getPromptText()) !== normApproved(value)) {
+    console.warn('[pelta] typeIntoInput: insert not verified, re-acquiring and retrying');
+    acquire();
+    if (inputEl) {
+      insertIntoComposer(inputEl, value);
+      inputEl.focus();
+      if (normApproved(getPromptText()) !== normApproved(value)) {
+        console.error('[pelta] typeIntoInput: FINAL mismatch.', { target: value, actual: getPromptText() });
+      } else {
+        console.log('[pelta] typeIntoInput: verified after retry');
+      }
+    }
+  } else {
+    console.log('[pelta] typeIntoInput: verified ok');
+  }
 }
 
 /* ── Build highlighted prompt HTML from API highlights ─── */
@@ -870,7 +1211,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = buildRedactedText(promptText, response.highlights);
+  const rewrittenText = response.rewrittenPrompt || buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
@@ -881,7 +1222,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
     ${fileBadge}
     ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
     <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
-    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(rewrittenText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}check with admin discretion</div>
     <div class="pelta-btn-group">
       <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-send">Confirm Anonymized &amp; Send</button>
@@ -891,10 +1232,20 @@ function showFlag(response, promptText, trigger, meta = {}) {
   `;
 
   document.getElementById('pelta-confirm-send').onclick = () => {
-    const finalVal = document.getElementById('pelta-edit-area').value;
-    typeIntoInput(finalVal);
+    const area = document.getElementById('pelta-edit-area');
+    const finalVal = area ? area.value : '';
     removeOverlay();
-    replaySend();
+    removeStatusBadge();
+    unlockSendButton();
+    // Mark the confirmed rewrite as pre-approved so a manual re-send of it skips the guard
+    approvedText = finalVal;
+    // Mark replaying BEFORE typing so the real-time scanner doesn't re-flag the redacted text
+    replaying = true;
+    typeIntoInput(finalVal);
+    // Give ProseMirror/React a tick to commit the value, then send
+    setTimeout(() => {
+      replaySend();
+    }, 120);
   };
 
   document.getElementById('pelta-allow').onclick = async (e) => {
@@ -924,26 +1275,26 @@ function showFlag(response, promptText, trigger, meta = {}) {
             const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
-                approvedPrompts.add(promptText.trim());
-                clearInterval(interval);
-                // Fire desktop notification in case overlay was already dismissed
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  typeIntoInput(promptText);
-                  removeOverlay();
-                  replaySend();
-                }
-              } else if (myReq.status === 'rejected') {
-                clearInterval(interval);
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Request Denied";
-                  btn.className = "pelta-btn pelta-btn-redact";
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    replaying = true;
+                    typeIntoInput(promptText);
+                    removeOverlay();
+                    approvedText = promptText;
+                    setTimeout(() => { replaySend(); }, 120);
+                  }
+                } else if (myReq.status === 'rejected') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Request Denied";
+                    btn.className = "pelta-btn pelta-btn-redact";
+                  }
                 }
               }
-            }
           } catch (err) {}
         }, 2000);
       }
@@ -952,6 +1303,7 @@ function showFlag(response, promptText, trigger, meta = {}) {
   document.getElementById('pelta-cancel').onclick = () => {
     typeIntoInput(promptText); // Restore original so they don't lose work
     removeOverlay();
+    removeStatusBadge();
   };
 }
 
@@ -972,7 +1324,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ? `source: ${isPdf ? 'pdf-upload' : 'image-upload'} <span>·</span> engine: ${isPdf ? 'pdf.js' : 'gemini-vision'} <span>·</span> `
     : '';
   const fileBadge = meta.filename ? `<div class="pelta-file-name">📎 ${meta.filename}${meta.pageCount ? ` (${meta.pageCount} pages)` : ''}</div>` : '';
-  const redactedText = buildRedactedText(promptText, response.highlights);
+  const rewrittenText = response.rewrittenPrompt || buildRedactedText(promptText, response.highlights);
   el.innerHTML = `
     <div class="pelta-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -983,7 +1335,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     ${fileBadge}
     ${!isUpload ? `<div class="pelta-prompt-preview" style="margin-bottom:12px;">${promptHtml}</div>` : ''}
     <div class="pelta-prompt-label" style="color:#c7d2fe; margin-top:0;">Auto-rewritten prompt (editable)</div>
-    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(redactedText)}</textarea>
+    <textarea class="pelta-edit-area" id="pelta-edit-area">${escapeHtml(rewrittenText)}</textarea>
     <div class="pelta-meta">method: ${response.detectionMethod || '—'} <span>·</span> ${sourceMetaExtra}message not sent</div>
     <div class="pelta-btn-group">
       <button class="pelta-btn pelta-btn-redact" id="pelta-confirm-type">Confirm Anonymized &amp; Type</button>
@@ -993,9 +1345,17 @@ function showBlock(response, promptText, trigger, meta = {}) {
   `;
 
   document.getElementById('pelta-confirm-type').onclick = () => {
-    const finalVal = document.getElementById('pelta-edit-area').value;
-    typeIntoInput(finalVal);
+    const area = document.getElementById('pelta-edit-area');
+    const finalVal = area ? area.value : '';
     removeOverlay();
+    removeStatusBadge();
+    unlockSendButton();
+    // Mark the confirmed rewrite as pre-approved so the next send of it skips the guard
+    approvedText = finalVal;
+    replaying = true;
+    typeIntoInput(finalVal);
+    // Keep replaying true briefly so inline scanner doesn't re-flag the typed text
+    setTimeout(() => { replaying = false; }, 500);
   };
 
   document.getElementById('pelta-report').onclick = async (e) => {
@@ -1025,32 +1385,29 @@ function showBlock(response, promptText, trigger, meta = {}) {
             const myReq = (allReqs || []).find(r => r.id === data.id);
             if (myReq) {
               if (myReq.status === 'approved') {
-                approvedPrompts.add(promptText.trim());
-                clearInterval(interval);
-                // Fire desktop notification in case overlay was already dismissed
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Approved by Admin \u2713";
-                  btn.style.background = "#10b981";
-                  btn.style.borderColor = "#10b981";
-                  btn.style.color = "white";
-                  setTimeout(() => {
-                    typeIntoInput(promptText);
-                    removeOverlay();
-                    // No auto-send; user can manually send now.
-                  }, 1500);
-                }
-              } else if (myReq.status === 'rejected') {
-                clearInterval(interval);
-                try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
-                const overlayEl = document.getElementById('pelta-overlay');
-                if (overlayEl) {
-                  btn.textContent = "Report Denied";
-                  btn.className = "pelta-btn pelta-btn-redact";
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'approved' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Approved by Admin \u2713";
+                    btn.style.background = "#10b981";
+                    btn.style.borderColor = "#10b981";
+                    btn.style.color = "white";
+                    setTimeout(() => {
+                      typeIntoInput(promptText);
+                      removeOverlay();
+                    }, 1500);
+                  }
+                } else if (myReq.status === 'rejected') {
+                  clearInterval(interval);
+                  try { chrome.runtime.sendMessage({ type: 'NOTIFY_USER', status: 'rejected', reason: myReq.adminComment || '' }); } catch(_) {}
+                  const overlayEl = document.getElementById('pelta-overlay');
+                  if (overlayEl) {
+                    btn.textContent = "Report Denied";
+                    btn.className = "pelta-btn pelta-btn-redact";
+                  }
                 }
               }
-            }
           } catch (err) {}
         }, 2000);
       }
@@ -1062,6 +1419,7 @@ function showBlock(response, promptText, trigger, meta = {}) {
     typeIntoInput(promptText); // Restore original
     clearPrompt();
     removeOverlay();
+    removeStatusBadge();
   };
 }
 
@@ -1078,7 +1436,10 @@ function showError(reason) {
       <button class="pelta-btn pelta-btn-secondary" id="pelta-dismiss-error">Dismiss</button>
     </div>
   `;
-  document.getElementById('pelta-dismiss-error').onclick = removeOverlay;
+  document.getElementById('pelta-dismiss-error').onclick = () => {
+    removeOverlay();
+    removeStatusBadge();
+  };
 }
 
 /* ── Init ───────────────────────────────────────────────── */

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,8 +7,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No pdf data provided' }, { status: 400 });
     }
 
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const buffer = Buffer.from(pdf, 'base64');
-    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const uint8 = new Uint8Array(buffer);
+    const loadingTask = pdfjsLib.getDocument({ data: uint8 });
     const pdfDoc = await loadingTask.promise;
 
     const pages: string[] = [];
@@ -26,6 +27,8 @@ export async function POST(req: NextRequest) {
     }, { headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (error: any) {
     console.error('PDF extraction error:', error);
-    return NextResponse.json({ error: 'Failed to extract text from PDF' }, { status: 500 });
+    return NextResponse.json({
+      error: `Failed to extract text from PDF: ${error.message || String(error)}`,
+    }, { status: 500 });
   }
 }
